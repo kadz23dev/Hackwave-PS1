@@ -12,6 +12,9 @@ import { executeStep } from '../executor/executor.js';
 import { elementToTarget } from '../match/score.js';
 import { norm } from '../match/text.js';
 
+import { LlmPlanner } from './llm.js';
+import { NullClient } from '../llm/client.js';
+
 export async function planAndExecute(
   session: Session,
   intent: Intent,
@@ -21,6 +24,7 @@ export async function planAndExecute(
     completed: Step[];
     llm: LlmClient;
     pageIdFor(path: string): number;
+    llmMode?: string;
   }
 ): Promise<{
   steps: Step[];
@@ -46,19 +50,11 @@ export async function planAndExecute(
     };
 
     const a = nextAction(actionState);
+    let fromLlm = false;
+    let actToExecute: { action: 'click' | 'fill' | 'check' | 'select'; ref: string; dataKey: string | null } | null = null;
 
     if (a.kind === 'done') {
       return { steps, status: 'done', llmCalls: opts.llm.calls };
-    }
-
-    if (a.kind === 'stuck') {
-      // Check if the previous action triggered an in-flight navigation
-      await session.page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
-      const curPath = new URL(session.page.url()).pathname;
-      if (new RegExp(intent.planner.doneWhen.pathPattern).test(curPath)) {
-        return { steps, status: 'done', llmCalls: opts.llm.calls };
-      }
-      return { steps, status: 'stuck', llmCalls: opts.llm.calls };
     }
 
     if (a.kind === 'ambiguous') {
@@ -72,28 +68,62 @@ export async function planAndExecute(
       return { steps, status: 'ambiguous', ambiguity: candidates, llmCalls: opts.llm.calls };
     }
 
-    // a.kind === 'act'
-    const el = snap.elements.find(e => e.ref === a.ref);
+    if (a.kind === 'stuck') {
+      // Check if the previous action triggered an in-flight navigation
+      await session.page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
+      const curPath = new URL(session.page.url()).pathname;
+      if (new RegExp(intent.planner.doneWhen.pathPattern).test(curPath)) {
+        return { steps, status: 'done', llmCalls: opts.llm.calls };
+      }
+
+      const mode = opts.llmMode ?? (opts.llm instanceof NullClient ? 'off' : 'on');
+      if (mode !== 'off') {
+        const llmResult = await LlmPlanner.nextAction(
+          { snap, intent, completedSteps: [...completed, ...steps] },
+          opts.llm
+        );
+        if (llmResult.kind === 'done') {
+          return { steps, status: 'done', llmCalls: opts.llm.calls };
+        }
+        if (llmResult.kind === 'act') {
+          actToExecute = { action: llmResult.action, ref: llmResult.ref, dataKey: llmResult.dataKey };
+          fromLlm = true;
+        } else {
+          return { steps, status: 'stuck', llmCalls: opts.llm.calls };
+        }
+      } else {
+        return { steps, status: 'stuck', llmCalls: opts.llm.calls };
+      }
+    } else {
+      // a.kind === 'act'
+      actToExecute = { action: a.action, ref: a.ref, dataKey: a.dataKey };
+    }
+
+    if (!actToExecute) {
+      return { steps, status: 'stuck', llmCalls: opts.llm.calls };
+    }
+
+    const el = snap.elements.find(e => e.ref === actToExecute!.ref);
     if (!el) {
       return { steps, status: 'stuck', llmCalls: opts.llm.calls };
     }
 
     const target = elementToTarget(el, snapshotId);
     const stepId = `s${completed.length + steps.length + 1}`;
-    const provenance: Provenance = opts.repair ? 'repair-replan' : 'planner';
+    const provenance: Provenance = fromLlm ? 'llm' : (opts.repair ? 'repair-replan' : 'planner');
 
     const step: Step = {
       stepId,
-      action: a.action,
+      action: actToExecute.action,
       pagePath: snap.pagePath,
       target,
-      dataKey: a.dataKey ?? null,
+      dataKey: actToExecute.dataKey ?? null,
       provenance,
     };
 
     await executeStep(session.page, step, el, intent, snap);
 
-    if (a.action === 'click') {
+    if (actToExecute.action === 'click') {
       clickedOnPath.add(`${snap.pagePath}|${norm(el.name)}|${el.nearText}`);
     }
 

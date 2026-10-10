@@ -217,16 +217,36 @@ export async function captureSnapshot(
   page: Page,
   opts: { screenshot?: boolean } = { screenshot: false }
 ): Promise<PageSnapshot> {
-  const url = page.url();
-  const pagePath = new URL(url).pathname;
-  const title = await page.title();
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
 
-  const headings = await page.$$eval('h1, h2, h3', els =>
-    els.map(h => (h.textContent || '').trim()).filter(Boolean)
-  );
+  let url = page.url();
+  let pagePath = new URL(url).pathname;
+  let title = await page.title().catch(() => '');
 
-  const elements = await page.evaluate(collectElements);
-  const ariaYaml = await page.locator('body').ariaSnapshot();
+  let headings: string[] = [];
+  try {
+    headings = await page.$$eval('h1, h2, h3', els =>
+      els.map(h => (h.textContent || '').trim()).filter(Boolean)
+    );
+  } catch {
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    url = page.url();
+    pagePath = new URL(url).pathname;
+    title = await page.title().catch(() => '');
+    headings = await page.$$eval('h1, h2, h3', els =>
+      els.map(h => (h.textContent || '').trim()).filter(Boolean)
+    ).catch(() => []);
+  }
+
+  let elements: ElementRecord[] = [];
+  try {
+    elements = await page.evaluate(collectElements);
+  } catch {
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    elements = await page.evaluate(collectElements).catch(() => []);
+  }
+
+  const ariaYaml = await page.locator('body').ariaSnapshot().catch(() => '');
   const hash = contentHash(elements);
 
   let screenshotPath: string | null = null;

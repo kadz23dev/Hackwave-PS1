@@ -86,6 +86,7 @@ export interface StoredSnapshot {
   screenshotPath: string | null;
   contentHash: string;
   capturedAt: string;
+  pagePath?: string;
 }
 
 export interface StoredKnownGood {
@@ -146,18 +147,19 @@ export class Repo {
     const allowlistJson = typeof allowlist === 'string' ? allowlist : JSON.stringify(allowlist ?? []);
     return this.tx(actor, 'site.upsert', 'sites', () => {
       const existing = this.db.prepare(
-        'SELECT id, name, base_url, allowlist_json FROM sites WHERE base_url = ?'
-      ).get(baseUrl) as { id: number; name: string; base_url: string; allowlist_json: string } | undefined;
+        'SELECT id, name, base_url, allowlist_json FROM sites WHERE base_url = ? OR name = ?'
+      ).get(baseUrl, name) as { id: number; name: string; base_url: string; allowlist_json: string } | undefined;
 
       if (existing) {
+        this.db.prepare('UPDATE sites SET base_url = ?, allowlist_json = ? WHERE id = ?').run(baseUrl, allowlistJson, existing.id);
         return {
           id: existing.id,
           payload: { name, baseUrl },
           result: {
             id: existing.id,
             name: existing.name,
-            baseUrl: existing.base_url,
-            allowlist: tryParse(existing.allowlist_json)
+            baseUrl,
+            allowlist: tryParse(allowlistJson)
           }
         };
       }
@@ -227,7 +229,9 @@ export class Repo {
 
   getSnapshot(id: number, actor = 'system'): StoredSnapshot | null {
     return this.tx(actor, 'snapshot.get', 'snapshots', () => {
-      const row = this.db.prepare('SELECT * FROM snapshots WHERE id = ?').get(id) as {
+      const row = this.db.prepare(
+        'SELECT s.*, p.path AS page_path FROM snapshots s LEFT JOIN pages p ON s.page_id = p.id WHERE s.id = ?'
+      ).get(id) as {
         id: number;
         page_id: number;
         version_label: string;
@@ -236,6 +240,7 @@ export class Repo {
         screenshot_path: string | null;
         content_hash: string;
         captured_at: string;
+        page_path?: string;
       } | undefined;
 
       if (!row) {
@@ -251,7 +256,8 @@ export class Repo {
         ariaYaml: row.a11y_json,
         screenshotPath: row.screenshot_path,
         contentHash: row.content_hash,
-        capturedAt: row.captured_at
+        capturedAt: row.captured_at,
+        pagePath: row.page_path ?? '',
       };
       return { id, payload: { id }, result };
     });

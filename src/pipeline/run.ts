@@ -12,7 +12,9 @@ import { planAndExecute } from '../planner/plan.js';
 import { runOracles } from '../oracle/runner.js';
 import { decideVerdict } from '../classify/verdict.js';
 import { makeLlm } from '../llm/client.js';
-import type { RunOutcome } from '../types.js';
+import { replayWithRepair } from '../repair/engine.js';
+import { loadPolicy } from '../governance/policy.js';
+import type { RunOutcome, Step } from '../types.js';
 
 export async function runIntent(
   intentPath: string,
@@ -95,70 +97,179 @@ export async function runIntent(
 
     // 5. Check for reusable plan
     const plan = findPlanForRun(repo, intentRow.id, site.id, startSnap.contentHash);
-    if (plan) {
-      throw new Error('replay not implemented until T11');
-    }
 
-    // 6a. No plan (first run / baseline)
-    console.log(`[intent]   ${intent.name} sha=${sha256.slice(0, 12)}  target=${target}`);
-    console.log(`[plan]     reuse: none (baseline)`);
-
-    const r = await planAndExecute(session, intent, repo, {
-      repair: false,
-      completed: [],
-      llm,
-      pageIdFor,
-    });
-
-    let changeId: number | null = null;
+    let changeIds: number[] = [];
     let repairId: number | null = null;
+    let repaired = false;
+    let replanned = false;
+    let executionAppError = false;
+    let plannerStatus: 'done' | 'stuck' | 'ambiguous' | 'budget' | 'app_error' | 'replayed' = 'done';
+    let executedSteps: Step[] = [];
 
-    if (r.status === 'ambiguous') {
-      changeId = repo.insertChange({
-        baseSnapshotId: startSnapId,
-        headSnapshotId: startSnapId,
-        kind: 'FLOW_CHANGED',
-        severity: 'HIGH',
-        classification: 'AMBIGUOUS',
-        confidence: 0.5,
-        evidence: [],
-        affectedSteps: [],
-        explanation: 'Ambiguous replacement options during plan',
+    if (plan) {
+      // 6b. Plan exists (replay with repair)
+      console.log(`[intent]   ${intent.name} sha=${sha256.slice(0, 12)}  target=${target}`);
+      console.log(`[plan]     reuse: planId=${plan.id} (${plan.steps.length} steps)`);
+
+      const replayResult = await replayWithRepair(session, intent, plan.steps, repo, {
+        policy: loadPolicy(),
+        pageIdFor,
+        llm,
+        llmMode: opts?.llm ?? 'off',
       });
-      repairId = repo.insertRepair({
-        changeId,
-        proposer: 'heuristic',
-        proposal: { steps: r.steps, pendingChoice: { stepId: 'pending', candidates: r.ambiguity ?? [] } },
-        status: 'needs_review',
-        explanation: 'Ambiguous action encountered',
+
+      changeIds = replayResult.changeIds;
+      repaired = replayResult.repaired;
+      replanned = replayResult.replanned;
+      executionAppError = replayResult.appError;
+      plannerStatus = replayResult.plannerStatus;
+      executedSteps = replayResult.newSteps;
+
+      if (replayResult.ambiguity) {
+        repairId = repo.insertRepair({
+          changeId: replayResult.changeIds[0],
+          proposer: 'heuristic',
+          proposal: { steps: replayResult.newSteps, pendingChoice: replayResult.ambiguity },
+          status: 'needs_review',
+          explanation: 'Ambiguous replacement options detected',
+        });
+
+        const explanation = 'Run requires review due to ambiguous UI match.';
+        repo.finishRun(runId, {
+          verdict: 'NEEDS_REVIEW',
+          explanation,
+          llmCalls: llm.calls,
+          evidence: [],
+          reusedRepairId: plan?.repairId ?? null,
+        });
+
+        console.log(`[verdict]  NEEDS_REVIEW`);
+
+        return {
+          runId,
+          verdict: 'NEEDS_REVIEW',
+          exitCode: 11,
+          classification: 'AMBIGUOUS',
+          changeIds: replayResult.changeIds,
+          repairId,
+          validationRunId: null,
+          reusedRepairId: plan?.repairId ?? null,
+          llmCalls: llm.calls,
+          explanation,
+          oracleResults: [],
+        };
+      } else if (repaired) {
+        const stepPlanId = repo.insertStepPlan(
+          {
+            intentId: intentRow.id,
+            siteId: site.id,
+            steps: replayResult.newSteps,
+            origin: 'repair',
+            startHash: startSnap.contentHash,
+          },
+          'system:repair'
+        );
+        repairId = repo.insertRepair({
+          changeId: replayResult.changeIds[0],
+          proposer: replayResult.llmCalls > 0 ? 'llm' : 'heuristic',
+          proposal: { steps: replayResult.newSteps, pendingChoice: null },
+          status: 'proposed',
+          stepPlanId,
+          explanation: 'Proposed repair',
+        });
+      }
+    } else {
+      // 6a. No plan (first run / baseline)
+      console.log(`[intent]   ${intent.name} sha=${sha256.slice(0, 12)}  target=${target}`);
+      console.log(`[plan]     reuse: none (baseline)`);
+
+      const r = await planAndExecute(session, intent, repo, {
+        repair: false,
+        completed: [],
+        llm,
+        pageIdFor,
+        llmMode: opts?.llm ?? 'off',
       });
+
+      executedSteps = r.steps;
+      plannerStatus = r.status;
+      if (r.status === 'app_error') {
+        executionAppError = true;
+      }
+
+      if (r.status === 'ambiguous') {
+        const cId = repo.insertChange({
+          baseSnapshotId: startSnapId,
+          headSnapshotId: startSnapId,
+          kind: 'FLOW_CHANGED',
+          severity: 'HIGH',
+          classification: 'AMBIGUOUS',
+          confidence: 0.5,
+          evidence: [],
+          affectedSteps: [],
+          explanation: 'Ambiguous replacement options during plan',
+        });
+        repairId = repo.insertRepair({
+          changeId: cId,
+          proposer: 'heuristic',
+          proposal: { steps: r.steps, pendingChoice: { stepId: 'pending', candidates: r.ambiguity ?? [] } },
+          status: 'needs_review',
+          explanation: 'Ambiguous action encountered',
+        });
+
+        const explanation = 'Run requires review due to ambiguous UI match.';
+        repo.finishRun(runId, {
+          verdict: 'NEEDS_REVIEW',
+          explanation,
+          llmCalls: llm.calls,
+          evidence: [],
+          reusedRepairId: null,
+        });
+
+        console.log(`[verdict]  NEEDS_REVIEW`);
+
+        return {
+          runId,
+          verdict: 'NEEDS_REVIEW',
+          exitCode: 11,
+          classification: 'AMBIGUOUS',
+          changeIds: [cId],
+          repairId,
+          validationRunId: null,
+          reusedRepairId: null,
+          llmCalls: llm.calls,
+          explanation,
+          oracleResults: [],
+        };
+      }
     }
 
     const oracles = await runOracles(intent, targetOrigin, session.network, session.page);
 
     const appError =
       session.network.some(n => /^\/api\//.test(n.path) && n.status >= 500) ||
-      r.status === 'app_error';
+      executionAppError ||
+      plannerStatus === 'app_error';
 
     const verdictDecision = decideVerdict({
       toolError: false,
       appError,
       oracleResults: oracles,
-      plannerStatus: r.status === 'app_error' ? 'done' : r.status,
+      plannerStatus: plannerStatus === 'app_error' ? 'done' : plannerStatus,
       guardViolation: session.violations.length > 0,
-      repaired: false,
-      replanned: false,
-      ambiguous: r.status === 'ambiguous',
-      reusedRepair: false,
-      planIsKnownGood: false,
+      repaired,
+      replanned,
+      ambiguous: false,
+      reusedRepair: plan ? plan.repairId != null : false,
+      planIsKnownGood: plan ? plan.repairId == null : false,
     });
 
-    if (verdictDecision.verdict === 'PASS') {
+    if (!plan && verdictDecision.verdict === 'PASS') {
       const stepPlanId = repo.insertStepPlan(
         {
           intentId: intentRow.id,
           siteId: site.id,
-          steps: r.steps,
+          steps: executedSteps,
           origin: 'baseline',
           startHash: startSnap.contentHash,
         },
@@ -168,7 +279,7 @@ export async function runIntent(
     }
 
     const explanation =
-      verdictDecision.verdict === 'PASS'
+      verdictDecision.verdict === 'PASS' || verdictDecision.verdict === 'HEALED_PASS'
         ? 'Workflow completed successfully and all required oracles passed.'
         : `Run finished with verdict ${verdictDecision.verdict}.`;
 
@@ -177,7 +288,7 @@ export async function runIntent(
       explanation,
       llmCalls: llm.calls,
       evidence: [],
-      reusedRepairId: null,
+      reusedRepairId: plan?.repairId ?? null,
     });
 
     console.log(`[verdict]  ${verdictDecision.verdict}`);
@@ -187,10 +298,10 @@ export async function runIntent(
       verdict: verdictDecision.verdict,
       exitCode: verdictDecision.exitCode,
       classification: verdictDecision.classification,
-      changeIds: changeId != null ? [changeId] : [],
+      changeIds,
       repairId,
       validationRunId: null,
-      reusedRepairId: null,
+      reusedRepairId: plan?.repairId ?? null,
       llmCalls: llm.calls,
       explanation,
       oracleResults: oracles,
