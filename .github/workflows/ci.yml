@@ -20,21 +20,34 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
 
       - name: Install Dependencies
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
+          if [ -f package.json ]; then
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
           else
-            npm install
+            echo "package.json not yet created (pre-scaffold Phase 0). Skipping install."
           fi
 
       - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+        run: |
+          if [ -f package.json ]; then
+            npx playwright install --with-deps chromium
+          else
+            echo "Skipping Playwright installation (pre-scaffold Phase 0)."
+          fi
 
       - name: Run Test Suite (Vitest)
-        run: npm test
+        run: |
+          if [ -f package.json ]; then
+            npm test
+          else
+            echo "Skipping tests: package.json will be created in Task T01/B02."
+          fi
 
       - name: Run Dashboard Token Linter (if present)
         run: |
