@@ -18,15 +18,8 @@ export interface VerdictDecision {
   classification: Classification | null;
   exitCode: 0 | 1 | 10 | 11 | 12;
 }
-
-/**
- * Check if all required (non-supporting-only) oracles passed.
- * Supporting-only oracles (like DOM text) do not affect required pass.
- */
-export function allRequiredPass(oracleResults: OracleResult[]): boolean {
-  const required = oracleResults.filter(r => !r.supportingOnly);
-  return required.length > 0 ? required.every(r => r.ok) : oracleResults.every(r => r.ok);
-}
+import { allRequiredPass } from '../oracle/runner.js';
+export { allRequiredPass };
 
 /**
  * Map verdict to standard CLI exit code — PRD §10.5

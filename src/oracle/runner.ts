@@ -118,3 +118,8 @@ export async function runOracles(
 
   return results;
 }
+
+export function allRequiredPass(rs: OracleResult[]): boolean {
+  const req = rs.filter(r => !r.supportingOnly);
+  return req.length > 0 && req.every(r => r.ok);
+}
