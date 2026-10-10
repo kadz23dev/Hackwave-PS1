@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { openDb } from './db/index.js';
 import { Repo } from './db/repo.js';
 import { diffSnapshots } from './diff/differ.js';
+import { runIntent } from './pipeline/run.js';
 import type { ElementRecord, PageSnapshot } from './types.js';
 
 export const program = new Command();
@@ -71,5 +72,63 @@ program
     }
   });
 
-// Execute when run as main CLI entry point
+program
+  .command('run <intent>')
+  .description('Run an intent test against a target URL')
+  .requiredOption('--target <url>', 'Target base URL')
+  .option('--db <path>', 'Path to SQLite database')
+  .option('--llm <mode>', 'LLM mode (off, record, replay, live)', 'off')
+  .action(async (intentPath: string, opts: { target: string; db?: string; llm?: string }) => {
+    try {
+      const outcome = await runIntent(intentPath, opts.target, {
+        db: opts.db,
+        llm: opts.llm,
+      });
+      process.exitCode = outcome.exitCode;
+    } catch (err) {
+      console.error(err);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command('report <runId>')
+  .description('Display execution report for a run')
+  .option('--json', 'Output report as JSON')
+  .option('--db <path>', 'Path to SQLite database')
+  .action((runIdStr: string, opts: { json?: boolean; db?: string }) => {
+    const runId = parseInt(runIdStr, 10);
+    const db = openDb(opts.db);
+
+    const runRow = db.prepare('SELECT * FROM runs WHERE id = ?').get(runId) as
+      | {
+          id: number;
+          intent_id: number;
+          intent_sha256: string;
+          verdict: string;
+          started_at: string;
+          finished_at: string | null;
+          explanation: string;
+          llm_calls: number;
+          evidence_json: string;
+          reused_repair_id: number | null;
+        }
+      | undefined;
+
+    if (!runRow) {
+      console.error(`Error: Run #${runId} not found.`);
+      process.exit(1);
+    }
+
+    if (opts.json) {
+      console.log(JSON.stringify(runRow, null, 2));
+    } else {
+      console.log(`Run #${runRow.id}: ${runRow.verdict}`);
+      console.log(`Started: ${runRow.started_at}`);
+      console.log(`Finished: ${runRow.finished_at ?? 'in-progress'}`);
+      console.log(`Explanation: ${runRow.explanation}`);
+      console.log(`LLM Calls: ${runRow.llm_calls}`);
+    }
+  });
+
 program.parseAsync(process.argv);

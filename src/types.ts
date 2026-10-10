@@ -243,11 +243,11 @@ const BackendStateOracleSchema = z
       .object({ method: z.string(), path: z.string() })
       .strict(),
     select: z.string(),
-    where: z.record(z.string(), z.string()),
+    where: z.record(z.string(), z.union([z.string(), z.number()])),
     expect: z
       .object({
         count: z.number().optional(),
-        fields: z.record(z.string(), z.string()),
+        fields: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
       })
       .strict(),
   })

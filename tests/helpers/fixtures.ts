@@ -1,10 +1,10 @@
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 
-export async function startFixture(variant: string): Promise<{ url: string; stop(): Promise<void> }> {
+export async function startFixture(variant: string, port = '0'): Promise<{ url: string; stop(): Promise<void> }> {
   return new Promise((resolvePromise, rejectPromise) => {
     const fixturePath = resolve('fixtures/server.mjs');
-    const child = spawn(process.execPath, [fixturePath, '--variant', variant, '--port', '0']);
+    const child = spawn(process.execPath, [fixturePath, '--variant', variant, '--port', port]);
 
     let url = '';
     let resolved = false;
