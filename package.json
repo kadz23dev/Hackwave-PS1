@@ -1,0 +1,36 @@
+{
+  "name": "healtest",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts-dev/copy-sql.mjs",
+    "test": "vitest run",
+    "demo": "npm run build && node dist/demo.js",
+    "serve": "npm run build && node dist/cli.js serve",
+    "healtest": "node dist/cli.js",
+    "fixtures": "node fixtures/server.mjs --all",
+    "verify:fast": "node scripts/verify.mjs fast",
+    "verify": "node scripts/verify.mjs",
+    "verify:demo": "node scripts/verify.mjs demo",
+    "lock": "node scripts/verify.mjs lock",
+    "review": "node scripts/verify.mjs review",
+    "ralph": "node scripts/ralph.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "^2.28.0",
+    "better-sqlite3": "^13.0.3",
+    "commander": "^15.0.0",
+    "playwright": "^1.64.0",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.5",
+    "eslint": "^10.12.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^5.0.3"
+  }
+}
