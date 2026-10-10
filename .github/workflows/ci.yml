@@ -1,0 +1,49 @@
+name: HealTest CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test & Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Test Suite (Vitest)
+        run: npm test
+
+      - name: Run Dashboard Token Linter (if present)
+        run: |
+          if [ -f scripts/check-dashboard.mjs ]; then
+            node scripts/check-dashboard.mjs
+          fi
+
+      - name: Run Traceability Validator (if present)
+        run: |
+          if [ -f scripts/check-trace.mjs ]; then
+            node scripts/check-trace.mjs
+          fi

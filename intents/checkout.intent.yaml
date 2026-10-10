@@ -1,0 +1,54 @@
+name: checkout-valid-card
+site: gizmo-shop
+goal: Complete checkout with a valid credit card.
+startPath: /
+allowedOrigins:
+  - http://127.0.0.1:4101
+  - http://127.0.0.1:4102
+  - http://127.0.0.1:4103
+  - http://127.0.0.1:4104
+actionBudget: 50
+data:
+  product: Gizmo Mini
+  email: alice@example.com
+  name: Alice Tester
+  address: 12 Test Street, Pune
+  cardNumber: "4242424242424242"
+  expiry: "12/30"
+  cvc: "123"
+planner:
+  doneWhen:
+    pathPattern: "^/confirmation"
+expected:
+  - id: order-created
+    type: backend_state
+    request:
+      method: GET
+      path: /__state
+    select: orders
+    where:
+      email: "{{data.email}}"
+    expect:
+      count: 1
+      fields:
+        status: PAID
+        totalCents: 1999
+        cardLast4: "4242"
+        sku: GZ-MINI
+  - id: no-server-errors
+    type: network_status
+    urlPattern: "^/api/"
+    forbidStatusAtLeast: 500
+  - id: order-api-ok
+    type: network_status
+    urlPattern: "^/api/orders$"
+    method: POST
+    requireStatusIn:
+      - 200
+      - 201
+  - id: confirmation-shown
+    type: dom_state
+    textAny:
+      - "order confirmed"
+      - "thank you"
+    supportingOnly: true

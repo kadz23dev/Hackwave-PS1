@@ -1,0 +1,219 @@
+# ==============================================================================
+# HEALTEST PROMPTS — MEMBER 1: BACKEND & CORE ENGINE
+# Stack: Node.js (>=22) ESM, Pure JavaScript (.js), better-sqlite3, Playwright
+# ==============================================================================
+
+# ==============================================================================
+# 0. MASTER GROUNDING & ANTI-HALLUCINATION PROMPT (BACKEND ROLE)
+# (Paste this at the start of any new agent conversation or session)
+# ==============================================================================
+
+You are the Lead Backend & Core Engine Architect building "HealTest".
+You own the core engine: perception, planning, self-healing, deterministic oracles, SQLite governance, and CLI orchestration.
+
+================================================================================
+NON-NEGOTIABLE ARCHITECTURAL INVARIANTS:
+================================================================================
+1. "Steps may heal. Outcomes may not."
+   - DOM text (e.g., "Order confirmed" on screen) is SUPPORTING-ONLY evidence. It can NEVER pass a test alone.
+   - If the backend state fails or a 5xx HTTP status occurred on /api/, the verdict is ALWAYS `APP_BUG` (exit code 10), even if the UI showed success.
+   - Verdict logic (`src/classify/verdict.js`) must have ZERO LLM imports.
+2. TARGET APPLICATION SOURCE IS UNTOUCHED:
+   - HealTest NEVER edits target application files. "Heal" means repairing the TEST AUTOMATION step plan only.
+3. CONSTRAINED LLM ROLE:
+   - Emergency fallback only (default: off). Prompt receives only snapshot element lists and data KEYS (never values).
+   - Can ONLY output `{"action": "...", "ref": "...", "dataKey": "..."}`. NEVER outputs verdicts, selectors, or test values.
+4. APPEND-ONLY GOVERNANCE:
+   - SQLite tables `audit_log`, `approvals`, `validation_runs`, `oracle_results`, `step_plans` are APPEND-ONLY.
+   - Database triggers (`*_no_upd`, `*_no_del`) abort any UPDATE or DELETE operations. Never bypass these triggers.
+5. NO FLAKY ASYNC / SLEEPS:
+   - NEVER use `page.waitForTimeout()` or `setTimeout()` in Playwright code.
+   - Always use auto-waiting, locator assertions, or `page.waitForLoadState('networkidle')`.
+6. ZERO UNAUTHORIZED DEPENDENCIES:
+   - Production: `playwright`, `better-sqlite3`, `zod`, `yaml`, `commander`, `@google/genai`.
+   - Dev/Test: `vitest`, `eslint`. Pure JavaScript ESM (`.js`), no TypeScript / build step. Use Node.js built-ins (`node:http`, `node:crypto`, `node:fs`, `node:path`).
+
+================================================================================
+BACKEND FILE OWNERSHIP:
+================================================================================
+- `fixtures/` (multi-variant test servers)
+- `intents/` (test YAML intents)
+- `src/types.js` (core Zod schemas)
+- `src/config.js` (constants & timeouts)
+- `src/db/` (SQLite connection, migrations, transactions, repository)
+- `src/intent/` (YAML loader, hashing, deepFreeze)
+- `src/browser/` (Playwright session & network capture)
+- `src/snapshot/` (DOM capture, content hashing)
+- `src/match/` (text ratios, synonyms, multi-signal scoring, matcher)
+- `src/diff/` (element differ, severity rating, change reports)
+- `src/executor/` (action executor, security guards)
+- `src/oracle/` (backend state, network status, DOM oracles)
+- `src/planner/` (lexicon, heuristic state machine, constrained LLM fallback)
+- `src/repair/` (inline repair, flow replan)
+- `src/validate/` (fresh-context strict replay validation)
+- `src/classify/` (deterministic verdict engine)
+- `src/explain/` (explanation templates)
+- `src/governance/` (policy, approvals, plan reuse)
+- `src/pipeline/` (runIntent orchestrator)
+- `src/cli.js` (CLI entry point)
+- `src/demo.js` (8-Act narrated demo)
+
+
+# ==============================================================================
+# BACKEND TASK PROMPTS
+# ==============================================================================
+
+### TASK B01: Fixture Applications Server
+Implement the multi-variant target application in `fixtures/server.mjs` and HTML files:
+1. Zero npm dependencies (`node:http` only).
+2. Support CLI flags `--variant <name>`, `--port <number>`, and `--all` (spawning shop-v1:4101, shop-v2:4102, shop-v2-bug:4103, shop-v2-ambiguous:4104).
+3. Print `LISTENING <variant> <port>` on startup.
+4. Endpoints: `POST /api/cart`, `GET /api/cart`, `POST /api/orders`, `GET /__state`, `POST /__reset`.
+5. Create variant HTML files:
+   - `fixtures/shop-v1/*.html`: Single checkout flow, button id `#add-GZ-MINI`.
+   - `fixtures/shop-v2/*.html`: Redesign ("Add to bag", split checkout details + payment, terms checkbox).
+   - `fixtures/shop-v2-bug/*.html`: Returns 500 on /api/orders but navigates to confirmation page anyway (Trap for naive AI).
+   - `fixtures/shop-v2-ambiguous/*.html`: Dual submit buttons ("Pay" and "Complete order").
+Acceptance: `node fixtures/server.mjs --all` prints 4 LISTENING lines and endpoints return expected state.
+
+---
+
+### TASK B02: Package Setup & Toolchain
+Initialize package in pure JavaScript:
+1. `package.json` with `"type": "module"`, dependencies: `playwright`, `better-sqlite3`, `zod`, `yaml`, `commander`, `@google/genai`. Dev dependencies: `vitest`, `eslint`.
+   Scripts: `"test": "vitest run"`, `"fixtures": "node fixtures/server.mjs --all"`, `"demo": "node src/demo.js"`, `"healtest": "node src/cli.js"`.
+2. `.gitignore`: `node_modules .healtest`.
+3. `src/config.js`: VIEWPORT (1280x800), NAV_TIMEOUT_MS (8000), ACTION_TIMEOUT_MS (5000), HOME (.healtest), LLM_MODE.
+4. `tests/helpers/fixtures.js`: Helper function to start fixture server and wait for `LISTENING`.
+5. `tests/unit/smoke.test.js`: `it('[R-PS-01] toolchain runs', () => expect(1 + 1).toBe(2))`.
+Acceptance: `npx vitest run` exits 0.
+
+---
+
+### TASK B03: Database, Migrations & Append-Only Triggers
+Implement the SQLite database layer:
+1. `src/db/migrations/001_init.sql`: Tables `sites`, `pages`, `snapshots`, `intents`, `runs`, `changes`, `repairs`, `validation_runs`, `oracle_results`, `approvals`, `known_good`, `audit_log`. Add append-only triggers (`*_no_upd`, `*_no_del`) on `audit_log`, `approvals`, `validation_runs`, `oracle_results`.
+2. `src/db/migrations/002_plans.sql`: `step_plans` table with triggers, plus `reused_repair_id`, `llm_calls`, `evidence_json`, `target_origin` on `runs`.
+3. `src/db/index.js`: `openDb(path)`. WAL mode, foreign keys ON, automatic migration tracking.
+4. `src/db/repo.js`: `Repo` class wrapping every write in a single transaction that also writes an `audit_log` row.
+5. `tests/unit/db.test.js`: Assert [R-F3-01] through [R-F3-07], [R-F4-07], and [R-F4-04].
+Acceptance: Unit tests pass. Deletes on `audit_log` fail with SQLite abort trigger.
+
+---
+
+### TASK B04: Intent Loader & Immutability (G1)
+Implement the intent specification loader:
+1. `src/types.js`: Define strict Zod schemas (`IntentSchema`, `ElementRecordSchema`, `PageSnapshotSchema`, `StepSchema`, `MatchResultSchema`, etc.).
+2. `src/intent/load.js`: `loadIntent(path)`:
+   - Read YAML, validate with `IntentSchema.strict()`.
+   - Calculate sha256 hex hash.
+   - Resolve `{{data.X}}` templates against `intent.data`.
+   - Recursively freeze with `deepFreeze()` (G1).
+3. `intents/checkout.intent.yaml`: Goal, allowedOrigins (4101-4104), actionBudget (50), approved data, expected oracles.
+4. `tests/unit/intent.test.js` & `tests/guardrails/intent.test.js`: Assert [R-PS-01] and [R-F4-01].
+Acceptance: Mutating loaded intent throws TypeError; sha256 is stable.
+
+---
+
+### TASK B05: Browser Session & Snapshotter (Perception)
+Implement Playwright page inspection and content hashing:
+1. `src/browser/session.js`: Launch Chromium (1280x800), record network events (`page.on('response')`).
+2. `src/snapshot/capture.js`: One `page.evaluate()` extracting elements, roles, accessible names, tags, computed attributes, and `nearText` (ancestor headings up to 6 levels). Inject `data-healtest-ref="eN"`. Capture `ariaSnapshot()` via `page.locator('body').ariaSnapshot()`.
+3. `src/snapshot/hash.js`: Content hash using sha256 excluding bounding boxes and normalizing digits (`Cart (1)` -> `Cart (#)`).
+4. `tests/integration/snapshot.test.js`: Assert [R-F1-01] and [R-F3-02].
+Acceptance: Byte-identical snapshot JSON and content hash across identical page renders.
+
+---
+
+### TASK B06: Multi-Signal Matcher & Differ
+Implement element similarity matching and snapshot diffing:
+1. `src/match/text.js`: Levenshtein distance, Levenshtein ratio, `tokenSetRatio` (empty returns 0), `norm()`.
+2. `src/match/synonyms.js`: `SYNONYM_GROUPS` and `synonymBoost`.
+3. `src/match/score.js`: 6-factor similarity score (35% name, 20% role, 15% attrs, 10% text, 10% nearText, 10% posSim).
+4. `src/match/matcher.js`: `findReplacement(target, snapshot, policy)` (filter, context anchoring, forbidden name checks, candidate ranking, margin ambiguity check) and `resolveBySelector`.
+5. `src/diff/differ.js` & `src/diff/severity.js`: Greedy element pairing, change kind categorization, deterministic severity.
+6. `src/diff/report.js` & `src/explain/templates.js`: Build `ChangeReport` with templated explanations.
+7. Tests in `tests/unit/score.test.js` and `tests/integration/matcher.test.js` asserting [R-F1-02]..[R-F1-06], [R-F2-01], [R-F3-03].
+Acceptance: "Add to cart" under Gizmo Mini matches "Add to bag" with score >= 0.60; ambiguous buttons trigger `kind: 'ambiguous'`.
+
+---
+
+### TASK B07: Step Executor & Security Guards (G2/G3)
+Implement step execution and safety guards:
+1. `src/executor/guards.ts`: Throw `GuardViolation` for origin not in allowlist, dataKey not in intent, step count exceeding action budget, or element ref unobserved in snapshot.
+2. `src/executor/executor.ts`: Execute step on page locator `[data-healtest-ref="eN"]` for click, fill, check, select. Wait for networkidle.
+3. `tests/guardrails/guards.test.js`: Assert [R-PS-02], [R-F4-02], and [R-F4-03].
+Acceptance: Execution fails immediately if an unauthorized origin or unobserved element ref is attempted.
+
+---
+
+### TASK B08: Deterministic Oracles & Verdict Engine (G4/G5)
+Implement test outcome verification:
+1. `src/oracle/runner.js`: `runOracles()`:
+   - `backend_state`: GET `/__state`, filter records, assert counts and expected fields.
+   - `network_status`: Check network logs for forbidden 5xx or required 200/201 codes.
+   - `dom_state`: Text presence check, marked `supportingOnly: true`.
+2. `src/classify/verdict.js`: `decideVerdict()`. Pure deterministic logic (PASS: 0, HEALED_PASS: 0, APP_BUG: 10, NEEDS_REVIEW: 11, FAIL_UNREPAIRABLE: 12). NO LLM imports.
+3. Tests in `tests/integration/oracles.test.js` and `tests/unit/verdict.test.js` asserting [R-PS-05], [R-PS-06], [R-SC-B], [R-F4-04], [R-F4-05].
+Acceptance: When /api/orders returns 500, verdict is strictly APP_BUG (exit code 10) despite DOM showing "Order confirmed".
+
+---
+
+### TASK B09: Heuristic Planner & Baseline First Run (CHECKPOINT: v1 PASS)
+Implement planning loop and orchestrator baseline:
+1. `src/planner/lexicon.js`: `FIELD_PATTERNS`, `STAGES`, `FORBIDDEN_NAME`.
+2. `src/planner/heuristic.js`: `HeuristicPlanner.nextAction(state)`: done check, fill fields, check terms, click stage buttons with context anchoring.
+3. `src/planner/plan.js`: `planAndExecute()` loop capturing snapshots before each step.
+4. `src/pipeline/run.js`: Orchestrator steps 1–5, 6a (baseline run), and 8. Store baseline step plan and record `known_good`.
+5. `src/cli.js`: CLI command `healtest run <intent> --target <url>`.
+Acceptance: `node src/cli.js run intents/checkout.intent.yaml --target http://127.0.0.1:4101` exits with 0 and prints `[verdict] PASS`.
+
+---
+
+### TASK B10: Replay, Repair Engine & Constrained LLM Fallback (G2/G6)
+Implement self-healing replay and replan:
+1. `src/repair/engine.js`: Replay existing plan; if a selector breaks, diff snapshot against baseline and call `findReplacement`.
+   - Single match: execute replacement, log change, mark `repaired = true`.
+   - Ambiguous: insert repair with status `needs_review` and stop with verdict `NEEDS_REVIEW`.
+   - None: record `FLOW_CHANGED`, trigger heuristic replan for remaining steps.
+2. `src/llm/client.js`, `src/llm/gemini.js`, `src/llm/replay.js`, `src/planner/llm.js`: Fallback LLM client with Zod parsing (ref and dataKey only).
+3. Tests asserting [R-F2-01], [R-F2-02], [R-F1-05], [R-PS-03], [R-SC-C], and [R-F4-02].
+Acceptance: Replaying v1 plan on v2 automatically heals "Add to cart" -> "Add to bag" and replans split checkout.
+
+---
+
+### TASK B11: Deterministic Validation Loop
+Implement fresh-context validation:
+1. `src/validate/validation.js`:
+   - Open fresh browser context, POST `/__reset` to target.
+   - Strictly replay proposed plan using `resolveBySelector` (no matcher, no planner).
+   - Run oracles against backend state and network history.
+   - Insert validation run records and link `change_id -> repair_id -> validation_run_id`.
+2. Update `src/pipeline/run.js`: mark repair `validated` (or `rejected` on failure).
+Acceptance: Running against v2 yields `HEALED_PASS` (exit 0). Running against v2-bug yields `APP_BUG` (exit 10).
+
+---
+
+### TASK B12: Governance, Approvals, Rollback & Plan Reuse
+Implement governance lifecycle:
+1. `src/governance/policy.js`: `canAutoAccept(classification, candidatesCount, oracles, policy)`.
+2. `src/governance/approvals.js`: `approve()`, `reject()`, `resolveCandidate()`, `retry()`, and `rollback()` with status transition checks and audit logging.
+3. `src/governance/reuse.js`: Reuse validated/applied repairs matching start-page content hash with 0 LLM calls.
+4. `src/cli.js`: Wire up `scan`, `diff`, `repair`, `validate`, `approve`, `reject`, `resolve`, `rollback`, `report`.
+Acceptance: Second run on v2 reuses repair with `llm_calls = 0`. Rollback restores previous known-good plan.
+
+---
+
+### TASK B13: 8-Act Demo Script & Verification
+Automate the demonstration journey:
+1. `src/demo.js`: Implement Acts 1 to 8:
+   - Act 1: Baseline v1 (PASS).
+   - Act 2: v2 Redesign (HEALED_PASS, repair validated).
+   - Act 3: v2 Re-run (reuse repair, 0 LLM calls).
+   - Act 4: Human approve (status: applied -> subsequent runs PASS).
+   - Act 5: v2-bug (APP_BUG, repair rejected).
+   - Act 6: v2-ambiguous (NEEDS_REVIEW, 2 candidates).
+   - Act 7: Resolve candidate -> validate -> approve.
+   - Act 8: Summary table.
+2. Assert against `oracles/demo.oracle.mjs`.
+Acceptance: `node src/demo.js` completes all 8 acts in under 4 minutes.

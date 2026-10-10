@@ -1,0 +1,311 @@
+# ==============================================================================
+# HEALTEST MASTER PROMPT REPOSITORY (JAVASCRIPT ESM + VANILLA CSS + NODE.JS)
+# Intent-Aware, Self-Healing End-to-End Testing & Governance Platform
+# ==============================================================================
+
+# ==============================================================================
+# 0. MASTER GROUNDING & ANTI-HALLUCINATION PROMPT
+# (Paste this at the start of any new agent conversation or session)
+# ==============================================================================
+
+You are an expert systems engineer and principal testing architect building "HealTest".
+Before writing or proposing any code, you must strictly internalize the project architecture, boundaries, and non-negotiable invariants defined below.
+
+================================================================================
+1. WHAT HEALTEST IS vs WHAT IT IS NOT
+================================================================================
+• WHAT IT IS:
+  HealTest is an Intent-Aware, Self-Healing End-to-End (E2E) Test Automation and Governance Engine.
+  It observes browser UI workflows via Playwright, generates and replays execution step plans, automatically heals broken UI steps when redesigns occur, validates repairs in fresh isolated browser contexts against deterministic backend oracles, and logs tamper-proof audit trails into SQLite.
+
+• WHAT IT IS NOT (STRICT PROHIBITIONS):
+  1. DO NOT use TypeScript or compilation tools. Use pure modern JavaScript (Node.js ESM, "type": "module", .js files).
+  2. DO NOT use Tailwind CSS, Bootstrap, or any CSS framework. Use pure Vanilla CSS with design tokens.
+  3. DO NOT use Express, Fastify, or external web frameworks. Use native Node.js standard libraries (node:http, node:crypto, node:fs, node:path).
+  4. DO NOT build a frontend SPA (React, Vue, Next.js). The dashboard is plain HTML5, vanilla CSS, and vanilla JS.
+  5. HealTest NEVER modifies the target application's source code. "Fix/Heal" means repairing the TEST AUTOMATION step plan only.
+  6. HealTest NEVER uses an LLM to decide test verdicts. Verdicts come EXCLUSIVELY from deterministic backend oracles and network telemetry.
+
+================================================================================
+2. CORE PHILOSOPHY & NON-NEGOTIABLE INVARIANTS
+================================================================================
+Tagline: "Steps may heal. Outcomes may not."
+
+[INVARIANT 1 - DETERMINISTIC VERDICTS (G4/G5)]
+- DOM text (e.g., "Order confirmed" on screen) is SUPPORTING-ONLY evidence. It can NEVER pass a test alone.
+- If the backend state fails or a 5xx HTTP status occurred on /api/, the verdict is ALWAYS `APP_BUG` (exit code 10), even if the UI showed success.
+- Verdict logic (`src/classify/verdict.js`) must have ZERO LLM imports.
+
+[INVARIANT 2 - CONSTRAINED LLM ROLE]
+- The LLM is an emergency fallback ONLY (default: off).
+- When active, the LLM prompt receives only snapshot element lists and data KEYS (never values).
+- The LLM can ONLY output: `{"action": "...", "ref": "...", "dataKey": "..."}`.
+- The LLM CANNOT output verdicts, selectors, arbitrary values, or JavaScript code.
+
+[INVARIANT 3 - APPEND-ONLY GOVERNANCE (G7)]
+- SQLite tables `audit_log`, `approvals`, `validation_runs`, `oracle_results`, and `step_plans` are APPEND-ONLY.
+- Database triggers (`*_no_upd`, `*_no_del`) strictly abort any UPDATE or DELETE operations. Never bypass these triggers.
+
+[INVARIANT 4 - NO FLAKY ASYNC / SLEEPS]
+- NEVER use `page.waitForTimeout()` or `setTimeout()` sleeps in Playwright code.
+- Always use auto-waiting, locator assertions, or `page.waitForLoadState('networkidle')`.
+
+[INVARIANT 5 - ZERO UNAUTHORIZED DEPENDENCIES]
+- Production: `playwright`, `better-sqlite3`, `zod`, `yaml`, `commander`, `@google/genai`
+- Dev/Test: `vitest`, `eslint`
+- All other networking and system needs must use standard Node.js built-ins (`node:http`, `node:crypto`, `node:path`, `node:fs`).
+
+================================================================================
+3. TECHNICAL SPECIFICATIONS & STANDARDS
+================================================================================
+- Language & Runtime: Node.js (>= 22), pure JavaScript with ES Modules (`"type": "module"` in package.json, `.js` extensions). No build step required!
+- Styling: Pure Vanilla CSS using custom properties (`tokens.css`, `app.css`).
+- Accessibility API: Use `page.locator('body').ariaSnapshot()`. DO NOT use `page.accessibility` (removed in current Playwright).
+- Hashing: Page snapshots are hashed using sha256 excluding bounding boxes and normalizing numeric counts (`Cart (1)` -> `Cart (#)`).
+- Traceability: Every unit, integration, and guardrail test title must include its explicit `[R-ID]` tag (e.g., `it('[R-PS-01] loads an intent ...')`).
+
+================================================================================
+4. OPERATIONAL PROTOCOL FOR EVERY TASK
+================================================================================
+When given a task card (e.g., T01, T02...):
+1. Implement in pure `.js` files in `src/`. No transpile step needed.
+2. Implement exact file paths, exported symbol names, and signatures specified in the task.
+3. Write matching unit/integration/guardrail tests alongside the implementation.
+4. Verify all tests pass and ensure no syntax or execution errors before concluding.
+5. If an ambiguity or contradiction occurs, STOP and ask for clarification—do NOT invent arbitrary behavior.
+
+Acknowledge that you have fully understood this context, boundaries, and rules, and state that you are ready to receive the first task card.
+
+
+# ==============================================================================
+# PHASE 0: GROUND TRUTH & SPECIFICATIONS
+# ==============================================================================
+
+### PROMPT H1 & H4: Directory Setup & Spec Files
+Set up the workspace directories and specification files:
+1. Create directories: `docs/`, `intents/`, `fixtures/`, `dashboard/`, `oracles/`, `scripts/`, `src/`, `tests/`.
+2. Ensure `docs/PRD.md` and `docs/WORKSPLIT.md` exist.
+3. Create `intents/checkout.intent.yaml` with the goal, allowedOrigins, actionBudget, approved data keys, and expected oracles.
+4. Create `policy.json` at root:
+   ```json
+   {
+     "autoAccept": { "classification": ["HARMLESS_UI"], "maxCandidates": 1, "requireAllOracles": true },
+     "match": { "strong": 0.60, "margin": 0.10, "selectorVerify": 0.85 }
+   }
+   ```
+5. Create `dashboard/tokens.css` with the vanilla CSS design tokens.
+
+---
+
+### PROMPT H2: Test Fixtures
+Implement the target application fixtures in `fixtures/server.mjs` and HTML files:
+1. Zero npm dependencies (`node:http` only).
+2. Support CLI flags `--variant <name>`, `--port <number>`, and `--all` (running shop-v1:4101, shop-v2:4102, shop-v2-bug:4103, shop-v2-ambiguous:4104).
+3. Print `LISTENING <variant> <port>` on server start.
+4. In-memory state: cart, orders, network request history. Endpoints: `POST /api/cart`, `GET /api/cart`, `POST /api/orders`, `GET /__state`, `POST /__reset`.
+5. Create variant HTML files for:
+   - `fixtures/shop-v1/*.html`: Single checkout flow, button id #add-GZ-MINI.
+   - `fixtures/shop-v2/*.html`: Harmless redesign ("Add to bag", split checkout details + payment, terms checkbox).
+   - `fixtures/shop-v2-bug/*.html`: Returns 500 on /api/orders but navigates to confirmation page anyway (Trap for naive AI).
+   - `fixtures/shop-v2-ambiguous/*.html`: Two adjacent identical submit buttons ("Pay" and "Complete order").
+
+
+# ==============================================================================
+# PHASE 1: TOOLCHAIN & STORAGE (PURE JS)
+# ==============================================================================
+
+### PROMPT T01: Scaffold & Toolchain (JavaScript ESM)
+Execute task card T01 in pure JavaScript:
+1. Configure `package.json` with `"type": "module"` and dependencies: `playwright`, `better-sqlite3`, `zod`, `yaml`, `commander`, `@google/genai`. Dev dependencies: `vitest`, `eslint`.
+   Scripts:
+   ```json
+   {
+     "test": "vitest run",
+     "demo": "node src/demo.js",
+     "serve": "node src/cli.js serve",
+     "healtest": "node src/cli.js",
+     "fixtures": "node fixtures/server.mjs --all"
+   }
+   ```
+2. Create `.gitignore`: `node_modules .healtest`.
+3. Create `src/config.js` with VIEWPORT, NAV_TIMEOUT_MS, ACTION_TIMEOUT_MS, HOME, LLM_MODE.
+4. Create `tests/helpers/fixtures.js` to spawn `fixtures/server.mjs` and wait for the `LISTENING` signal.
+5. Create `tests/unit/smoke.test.js` with `[R-PS-01] toolchain runs`.
+Acceptance: `npx vitest run` exits 0.
+
+---
+
+### PROMPT T02: Database, Migrations & Append-Only Triggers
+Execute task card T02 in JavaScript:
+1. Create `src/db/migrations/001_init.sql` containing the baseline schema plus append-only triggers (`*_no_upd`, `*_no_del`) on `audit_log`, `approvals`, `validation_runs`, and `oracle_results`.
+2. Create `src/db/migrations/002_plans.sql` adding `step_plans`, run metadata columns, and foreign keys.
+3. Create `src/db/index.js` exporting `openDb(path)` with WAL mode, foreign keys enabled, and migration tracking. Reads migration SQL files using `node:fs`.
+4. Create `src/db/repo.js` wrapping every database write in a transaction that automatically writes an `audit_log` row.
+5. Write unit tests in `tests/unit/db.test.js` asserting [R-F3-01] through [R-F3-07], [R-F4-07], and [R-F4-04].
+Acceptance: `npx vitest run tests/unit/db.test.js` passes with all [R-ID] tags.
+
+---
+
+### PROMPT T03: Intent Loader & Immutability (G1)
+Execute task card T03 in JavaScript:
+1. In `src/types.js`, define strict Zod schemas (`IntentSchema`, `ElementRecordSchema`, `PageSnapshotSchema`, etc.).
+2. In `src/intent/load.js`, implement `loadIntent(path)`:
+   - Read YAML, validate with `IntentSchema.strict()`.
+   - Calculate sha256 hex hash.
+   - Resolve `{{data.X}}` templates against `intent.data`.
+   - Apply deepFreeze() using recursive `Object.freeze()` (G1).
+3. Add unit and guardrail tests in `tests/unit/intent.test.js` and `tests/guardrails/intent.test.js` asserting [R-PS-01] and [R-F4-01].
+Acceptance: `npx vitest run tests/unit/intent.test.js tests/guardrails/intent.test.js` exits 0.
+
+
+# ==============================================================================
+# PHASE 2: PERCEPTION & MATCHING ENGINE
+# ==============================================================================
+
+### PROMPT T04: Snapshotter & Content Hashing
+Execute task card T04 in JavaScript:
+1. Implement `src/browser/session.js` to launch Playwright Chromium (1280x800) and capture network responses.
+2. Implement `src/snapshot/capture.js` using a single `page.evaluate()` query to extract interactive elements, accessible names, tags, computed attributes, selectors, and `nearText` (ancestor headings up to 6 levels). Inject `data-healtest-ref="eN"` onto live DOM elements. Capture ariaSnapshot using `page.locator('body').ariaSnapshot()`.
+3. Implement `src/snapshot/hash.js`: compute sha256 excluding bounding boxes and normalizing digits (e.g. "Cart (1)" equals "Cart (2)").
+4. Write tests in `tests/integration/snapshot.test.js` asserting [R-F1-01] and [R-F3-02].
+Acceptance: Tests pass against live fixture servers.
+
+---
+
+### PROMPT T05 & T06: Multi-Signal Matcher, Differ & Change Reporting
+Execute task cards T05 & T06 in JavaScript:
+1. In `src/match/text.js`, implement Levenshtein distance, Levenshtein ratio, and `tokenSetRatio`.
+2. In `src/match/synonyms.js`, implement `SYNONYM_GROUPS` and `synonymBoost`.
+3. In `src/match/score.js`, implement the exact 6-factor `similarity(target, element)` formula.
+4. In `src/match/matcher.js`, implement `findReplacement(target, snapshot, policy)` (filter, context anchoring, forbidden name checks, candidate ranking, margin ambiguity check) and `resolveBySelector`.
+5. In `src/diff/differ.js` and `src/diff/severity.js`, implement greedy element diffing and deterministic severity rating.
+6. In `src/diff/report.js` and `src/explain/templates.js`, build `ChangeReport` with templated explanations.
+7. Write unit & integration tests asserting [R-F1-02] through [R-F1-06], [R-F2-01], and [R-F3-03].
+Acceptance: `healtest diff` correctly identifies renamed elements and layout changes between v1 and v2 snapshots.
+
+
+# ==============================================================================
+# PHASE 3: EXECUTION, ORACLES & VERDICTS
+# ==============================================================================
+
+### PROMPT T07: Step Executor & Security Guards (G2/G3)
+Execute task card T07 in JavaScript:
+1. Implement `src/executor/guards.js`: throw `GuardViolation` for origin not in allowlist, dataKey not in intent, step count exceeding action budget, or element ref unobserved in snapshot.
+2. Implement `src/executor/executor.js`: execute step on page locator `[data-healtest-ref="eN"]` for click, fill, check, select.
+3. Write guardrail tests in `tests/guardrails/guards.test.js` asserting [R-PS-02], [R-F4-02], and [R-F4-03].
+Acceptance: Negative tests prove that out-of-bounds origins, unauthorized data keys, and unobserved refs are blocked.
+
+---
+
+### PROMPT T08 & T09: Deterministic Oracles & Verdict Engine (G4/G5)
+Execute task cards T08 & T09 in JavaScript:
+1. In `src/oracle/runner.js`, execute backend state checks (`/__state`), network status checks (HTTP codes in network log), and DOM state checks (marked `supportingOnly: true`). Wrap each oracle in try/catch (exceptions count as ok=false).
+2. In `src/classify/verdict.js`, implement `decideVerdict()` implementing rows 1 to 6 of the PRD table in exact priority order (PASS: 0, HEALED_PASS: 0, APP_BUG: 10, NEEDS_REVIEW: 11, FAIL_UNREPAIRABLE: 12).
+3. Ensure `src/classify/verdict.js` contains ZERO LLM imports.
+4. Write tests asserting [R-PS-05], [R-PS-06], [R-SC-B], [R-F4-04], and [R-F4-05].
+Acceptance: On v2-bug, despite "Order confirmed" in DOM, the verdict is strictly `APP_BUG` with exit code 10.
+
+
+# ==============================================================================
+# PHASE 4: PLANNER & CORE PIPELINE (CHECKPOINT: v1 PASS)
+# ==============================================================================
+
+### PROMPT T10: Heuristic Planner & Baseline First Run
+Execute task card T10 in JavaScript:
+1. In `src/planner/lexicon.js`, export `FIELD_PATTERNS`, `STAGES`, and `FORBIDDEN_NAME`.
+2. In `src/planner/heuristic.js`, implement `HeuristicPlanner.nextAction(state)` following steps 1–5: done check, fill matching fields, check terms, click highest stage button with context anchoring.
+3. In `src/planner/plan.js`, implement `planAndExecute()` loop capturing snapshots before each action.
+4. In `src/pipeline/run.js`, wire up Steps 1–5, 6a (baseline run when no plan exists), and 8. If PASS, store the baseline step plan and record `known_good`.
+5. Wire up CLI `run` in `src/cli.js`.
+6. Write integration tests asserting [R-PS-04], [R-F2-03], and [R-PS-07].
+Acceptance: `node src/cli.js run intents/checkout.intent.yaml --target http://127.0.0.1:4101` exits with 0 and prints `[verdict] PASS`.
+
+
+# ==============================================================================
+# PHASE 5: SELF-HEALING & VALIDATION LOOP (CHECKPOINT: CORE DEMO)
+# ==============================================================================
+
+### PROMPT T11: Replay & Self-Healing Engine (G2/G6)
+Execute task card T11 in JavaScript:
+1. Implement `src/repair/engine.js`: replay existing plan; if a selector breaks, diff snapshot against baseline and call `findReplacement`.
+   - If match is single: execute replacement, log change, mark `repaired = true`.
+   - If match is ambiguous: insert repair with status `needs_review` and stop with verdict `NEEDS_REVIEW` (G6).
+   - If match is none: record `FLOW_CHANGED`, trigger heuristic replan for remaining steps.
+2. Implement `src/llm/client.js`, `src/llm/gemini.js`, and `src/llm/replay.js` for fallback LLM planning with strict Zod validation.
+3. Write integration and guardrail tests asserting [R-F2-01], [R-F2-02], [R-F1-05], [R-PS-03], [R-SC-C], and [R-F4-02].
+Acceptance: Replaying v1 plan on v2 automatically heals "Add to cart" -> "Add to bag" and replans the split checkout.
+
+---
+
+### PROMPT T12: Deterministic Validation Loop
+Execute task card T12 in JavaScript:
+1. Implement `src/validate/validation.js`:
+   - Open a fresh browser context, POST `/__reset` to the fixture.
+   - Strictly replay the proposed step plan using `resolveBySelector` (no matcher, no planner).
+   - Run oracles against backend state and network history.
+   - Insert validation run records and link `change_id -> repair_id -> validation_run_id`.
+2. Update `src/pipeline/run.js`: if validation passes, mark repair `validated` (or `rejected` on failure).
+3. Write tests asserting [R-F2-04], [R-F3-04], [R-F3-06], [R-F3-07], [R-SC-A], and [R-SC-B].
+Acceptance: Running against v2 yields `HEALED_PASS` (exit 0). Running against v2-bug yields `APP_BUG` (exit 10).
+
+
+# ==============================================================================
+# PHASE 6: GOVERNANCE, APPROVALS & ROLLBACK
+# ==============================================================================
+
+### PROMPT T13, T14, T15: Governance Engine & CLI Completion
+Execute task cards T13, T14, T15 in JavaScript:
+1. In `src/governance/policy.js`, implement `canAutoAccept(classification, candidatesCount, oracles, policy)`.
+2. In `src/governance/approvals.js`, implement `approve()`, `reject()`, `resolveCandidate()`, `retry()`, and `rollback()` with state transition validation and audit logging.
+3. In `src/governance/reuse.js`, implement plan reuse: validated/applied repairs matching start-page content hash are reused with 0 LLM calls.
+4. In `src/explain/templates.js`, implement templated explanations for all repair scenarios (sanitizing sensitive data like card numbers).
+5. In `src/cli.js`, wire up `scan`, `diff`, `repair`, `validate`, `approve`, `reject`, `resolve`, `rollback`, `report`, and `serve`.
+6. Write tests asserting [R-PIPE-01], [R-F4-06], [R-F3-05], [R-F4-07], [R-PS-03], and [R-F2-05].
+Acceptance: Second run on v2 reuses repair with `llm_calls = 0`.
+
+
+# ==============================================================================
+# PHASE 7: LOCAL SERVER & DASHBOARD (VANILLA CSS + HTML + JS)
+# ==============================================================================
+
+### PROMPT T16: Local API Server
+Execute task card T16 in JavaScript:
+1. In `src/server/http.js`, implement a lightweight `node:http` router with static file serving for `dashboard/` (path-traversal protected). Bind strictly to `127.0.0.1`.
+2. In `src/server/csrf.js`, implement per-process random CSRF token validation.
+3. In `src/server/api.js`, implement endpoints: `/api/session`, `/api/sites`, `/api/pages`, `/api/snapshots/:id`, `/api/snapshots/:id/screenshot`, `/api/changes`, `/api/repairs/:id`, `/api/repairs/:id/{approve|reject|retry|rollback|resolve}`, `/api/runs`, `/api/audit`.
+Acceptance: `npx vitest run tests/integration/api.test.js` passes.
+
+---
+
+### PROMPT T17, T18, T19: Dashboard Views (Pure HTML + Vanilla CSS + Plain JS)
+Execute task cards T17, T18, T19:
+1. In `dashboard/index.html`, set up hash routes (`#/`, `#/changes`, `#/changes/:id`, `#/repairs/:id`, `#/audit`) and `#confirm-dialog`.
+2. In `dashboard/app.css`, implement styles using strictly Vanilla CSS variables from `tokens.css` (zero Tailwind, zero Bootstrap, no raw hex/rgb). Support light and dark themes.
+3. In `dashboard/app.js` (vanilla browser JavaScript):
+   - D1: Monitored sites table and recent runs with verdict badges (icon + text).
+   - D2 & D3: Side-by-side screenshots and two-column selector diff marking changed fields with `≠`.
+   - D4: Change timeline with severity and classification filters.
+   - D5: Repair steps table showing Old Target -> New Target and confidence scores.
+   - D6: Action dialogs for Approve, Reject, Rollback, and candidate selection for ambiguous repairs. Display "APPROVED" seal stamp.
+   - D7: Validation runs, oracle results (✓/✕), and audit trail.
+Acceptance: Dashboard loads on `http://127.0.0.1:4300`, renders in both themes with pure CSS.
+
+
+# ==============================================================================
+# PHASE 8: DEMO AUTOMATION & ACCEPTANCE VERIFICATION
+# ==============================================================================
+
+### PROMPT T20, T21, T22: 8-Act Demo & Final Audit
+Execute task cards T20, T21, T22 in JavaScript:
+1. In `src/demo.js`, implement the 8-Act narrated demo from PRD §14:
+   - Act 1: Baseline v1 (PASS).
+   - Act 2: v2 Redesign (detect -> explain -> repair -> HEALED_PASS).
+   - Act 3: v2 Re-run (reuse repair, 0 LLM calls).
+   - Act 4: Human approval via CLI/API (status: applied -> subsequent runs PASS).
+   - Act 5: v2-bug (APP_BUG, repair rejected).
+   - Act 6: v2-ambiguous (NEEDS_REVIEW, 2 candidates).
+   - Act 7: Resolve candidate -> validate -> approve.
+   - Act 8: Summary table & start dashboard server.
+2. Ensure all assertions in `oracles/demo.oracle.mjs` pass.
+3. Write comprehensive `README.md` with architecture diagrams and setup instructions.
+Acceptance: `node src/demo.js` executes all 8 acts in under 4 minutes.

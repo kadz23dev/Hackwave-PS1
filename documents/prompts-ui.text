@@ -1,0 +1,150 @@
+# ==============================================================================
+# HEALTEST PROMPTS — MEMBER 2: FRONTEND / UI & DASHBOARD
+# Stack: Vanilla HTML5, Pure Vanilla CSS, Vanilla JavaScript (Browser), Node.js API
+# ==============================================================================
+
+# ==============================================================================
+# 0. MASTER GROUNDING & ANTI-HALLUCINATION PROMPT (UI ROLE)
+# (Paste this at the start of any new agent conversation or session)
+# ==============================================================================
+
+You are the Lead Frontend & Dashboard Architect building the "HealTest" Governance UI.
+You own the local API server, design system, dashboard views (D1–D7), and approval workflow interfaces.
+
+================================================================================
+NON-NEGOTIABLE UI & STYLING INVARIANTS:
+================================================================================
+1. ZERO CSS FRAMEWORKS:
+   - DO NOT install or use Tailwind CSS, Bootstrap, Material UI, Bulma, or any other framework.
+   - Use ONLY pure Vanilla CSS with design tokens defined in `dashboard/tokens.css`.
+   - Never write raw hex or rgb colors in `app.css`. Use CSS custom properties: `var(--token)`.
+2. ZERO JAVASCRIPT FRAMEWORKS / BUNDLERS:
+   - DO NOT use React, Vue, Svelte, Next.js, Vite, Webpack, or Babel.
+   - The dashboard is plain HTML5, vanilla browser JavaScript (`dashboard/app.js`), and standard DOM APIs.
+3. SECURITY & UNTRUSTED DATA RENDERING:
+   - Snapshot content, element names, and page text are UNTRUSTED.
+   - ALWAYS render dynamic data using `element.textContent` or safe DOM creation helpers (`el(tag, attrs, ...children)`).
+   - NEVER use `innerHTML` with server or snapshot data.
+4. LOCAL BINDING & CSRF PROTECTION:
+   - The API server (`src/server/http.js`) binds STRICTLY to `127.0.0.1` (never 0.0.0.0).
+   - All mutating POST requests require a valid `X-CSRF-Token` header retrieved from `GET /api/session` and `{ confirm: true }` in the body.
+5. STATUS ACCESSIBILITY (ICON + TEXT):
+   - Statuses and verdicts must NEVER be communicated by color alone.
+   - Always include both an icon and an explicit text label (e.g., `✓ PASS`, `⚡ HEALED_PASS`, `✕ APP_BUG`, `? NEEDS_REVIEW`).
+6. DUAL THEME SUPPORT:
+   - The UI must support both Dark and Light themes via `document.documentElement.dataset.theme`.
+   - Theme preference is persisted in `localStorage` inside a try/catch block.
+
+================================================================================
+FRONTEND FILE OWNERSHIP:
+================================================================================
+- `dashboard/tokens.css` (locked design tokens: crimson, surface, text, status colors)
+- `dashboard/index.html` (single-page hash router shell & modals)
+- `dashboard/app.css` (vanilla CSS components and layout)
+- `dashboard/app.js` (vanilla browser client, routing, API client, DOM views)
+- `src/server/http.js` (native node:http router & static file server)
+- `src/server/csrf.js` (per-process crypto CSRF token validation)
+- `src/server/api.js` (/api/* endpoints querying backend repo)
+- `tests/integration/api.test.js` (API integration tests)
+- `tests/integration/dashboard-*.test.js` (Playwright UI integration tests)
+
+
+# ==============================================================================
+# FRONTEND TASK PROMPTS
+# ==============================================================================
+
+### TASK U01: Design Tokens & Base Theme
+Create the design system tokens in `dashboard/tokens.css`:
+1. Use standard CSS custom properties on `:root` (dark mode default) and `[data-theme="light"]`.
+2. Define:
+   - Crimson brand accent: `--crimson`, `--crimson-glow`, `--crimson-wash`.
+   - Surfaces: `--surface-0`, `--surface-1`, `--surface-2`, `--surface-border`.
+   - Typography: `--font-sans` (system font stack), `--font-mono` (monospace for selectors & diffs).
+   - Text colors: `--text-primary`, `--text-secondary`, `--text-muted`.
+   - Status semantics: `--status-pass`, `--status-healed`, `--status-bug`, `--status-review`, `--status-fail`.
+Acceptance: `tokens.css` loads cleanly with no syntax errors.
+
+---
+
+### TASK U02: Local HTTP Router & CSRF Security Layer
+Implement the lightweight backend server in `src/server/http.js` and `src/server/csrf.js`:
+1. `src/server/http.js`: Pure `node:http` router (no Express). Support route registration: `{ method, pattern, handler }`.
+   - Static file server for `dashboard/` with path-traversal protection (`path.resolve` + `startsWith(dashboardDir)`).
+   - Only serve allowed extensions: `.html`, `.css`, `.js`, `.png`, `.svg`.
+   - JSON body parser with a 1 MB limit.
+2. `src/server/csrf.js`: Generate 24-byte random hex token at startup. Check `x-csrf-token` header using `crypto.timingSafeEqual`.
+3. Bind server strictly to `127.0.0.1` (default port 4300).
+4. `tests/integration/api.test.js`: Test static serving, traversal blocking, and CSRF enforcement.
+Acceptance: Static files serve correctly; path traversal `../` is rejected with 403/404; server binds only to 127.0.0.1.
+
+---
+
+### TASK U03: Governance REST API Handlers
+Implement the API endpoints in `src/server/api.js` interfacing with `repo`:
+1. Endpoints:
+   - `GET /api/session`: `{ csrf }`
+   - `GET /api/sites`: Monitored sites list with health badge
+   - `GET /api/pages?siteId=`: Monitored pages
+   - `GET /api/pages/:id/snapshots`: Version list for a page
+   - `GET /api/snapshots/:id`: PageSnapshot data (omit ariaYaml unless `?aria=1`)
+   - `GET /api/snapshots/:id/screenshot`: Serves PNG screenshot file
+   - `GET /api/changes?severity=&classification=&limit=`: Change summaries
+   - `GET /api/changes/:id`: Full ChangeReport with base/head snapshot ids
+   - `GET /api/repairs/:id`: RepairProposal with validation runs & oracle results
+   - `GET /api/runs?limit=`: RunOutcome list
+   - `GET /api/audit?entity=&id=&limit=`: Audit log entries
+   - `POST /api/repairs/:id/{approve|reject|retry|rollback|resolve}`:
+     Requires valid CSRF header and body `{ confirm: true, actor, reason, candidateRef? }`.
+2. Wire up CLI command `healtest serve [--port 4300]`.
+Acceptance: API tests pass for all endpoints; mutating endpoints reject requests lacking CSRF or confirm:true.
+
+---
+
+### TASK U04: Dashboard Shell & D1 Overview View
+Implement the main interface and overview dashboard in `dashboard/index.html`, `dashboard/app.css`, and `dashboard/app.js`:
+1. `index.html`:
+   - Include `<link rel="stylesheet" href="tokens.css">` and `<link rel="stylesheet" href="app.css">`.
+   - Header with crimson accent bar, nav links (`#/`, `#/changes`, `#/audit`), and Theme toggle button.
+   - Main container with section containers: `#view-overview`, `#view-changes`, `#view-change`, `#view-repair`, `#view-audit`.
+   - Native `<dialog id="confirm-dialog">` for action confirmations.
+2. `app.js`:
+   - Hash router (`window.onhashchange`).
+   - Safe API fetcher with CSRF token retrieval from `/api/session`.
+   - Safe DOM builder `el(tag, attrs, ...children)` ensuring all strings use `textContent`.
+   - D1: `renderOverview()`: Sites table and recent test runs table. Verdict badges with icon + text label (`✓ PASS`, `⚡ HEALED_PASS`, `✕ APP_BUG`, `? NEEDS_REVIEW`).
+   - Theme toggle toggling `data-theme="light"` on `<html>`, saved in `localStorage`.
+3. `tests/integration/dashboard-d1.test.js`: Playwright test verifying overview loads and badges display correctly.
+Acceptance: Overview renders sites and runs with accessible badges; theme toggles without errors.
+
+---
+
+### TASK U05: Dashboard D2, D3 & D4 (Screenshots, Selector Diff, Changes Timeline)
+Implement change inspection views:
+1. `#/changes` (D4 Timeline):
+   - Left filter rail: Severity checkboxes (CRITICAL, HIGH, MEDIUM, LOW) and Classification dropdown (HARMLESS_UI, BREAKING_UI, APP_BUG, AMBIGUOUS).
+   - Change timeline list: Change ID (e.g. `chg_0003`), kind, severity badge, classification, timestamp, and explanation snippet.
+2. `#/changes/:id` (D2 Screenshots & D3 Diff):
+   - D2: Side-by-side screenshots `<figure>` with `<img src="/api/snapshots/<id>/screenshot">` (Before vs After).
+   - D3: Two-column selector comparison table: Role, Name, Tag, Selector, Attributes.
+   - Highlight changed cells with `--crimson-wash` and prefix with `≠ `.
+3. `tests/integration/dashboard-d2-d4.test.js`: Verify filter interactions and diff highlighting.
+Acceptance: Filtering hides unselected severities; changed selector attributes display with `≠` marker and contrast wash.
+
+---
+
+### TASK U06: Dashboard D5, D6 & D7 (Repair Preview, Governance Actions & Audit Trail)
+Implement repair reviews, approval controls, and audit trails:
+1. `#/repairs/:id` & `#/changes/:id` (D5 Repair Preview):
+   - Steps table: Step ID, Action, Old Target -> New Target, Provenance badge, Score bar/percentage, Alternatives count.
+   - Plain-text templated explanation block.
+2. D6 Governance Controls:
+   - Action buttons: Approve, Reject, Retry, Rollback. Enable/disable buttons based on repair status.
+   - For `needs_review` repairs: Candidate radio choice list and "Validate choice" button (calls `resolve`).
+   - Clicking Approve, Reject, or Rollback opens `#confirm-dialog` prompting for Actor name and Reason.
+   - On successful approval, display the `.seal` stamp "APPROVED".
+3. D7 Validation & Audit:
+   - Validation runs summary: Verdict badge, timestamp.
+   - Per-oracle results table: `✓` or `✕`, Oracle ID, and mismatch details.
+   - `#/audit` (Global Audit): Searchable audit log table showing timestamp, actor, action, entity, entity ID, and details.
+4. `tests/integration/dashboard-d5-d7.test.js`: Verify dialog interactions, approval flows, and seal display.
+Acceptance: Approving a validated repair sends CSRF-authenticated POST, updates the UI, and displays the "APPROVED" seal stamp.
