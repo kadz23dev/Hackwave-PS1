@@ -9,6 +9,7 @@ describe('text utils', () => {
 
   it('levenshtein identical strings === 0', () => {
     expect(levenshtein('hello', 'hello')).toBe(0);
+    expect(levRatio('hello', 'hello')).toBe(1);
   });
 
   it('tokenSetRatio("add to cart","add to bag") > 0.6', () => {

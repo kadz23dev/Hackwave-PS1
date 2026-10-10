@@ -2,6 +2,7 @@
   "name": "healtest",
   "version": "1.0.0",
   "type": "module",
+  "bin": "./dist/cli.js",
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts-dev/copy-sql.mjs",
     "test": "vitest run",
