@@ -1,6 +1,7 @@
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { VIEWPORT, NAV_TIMEOUT_MS, ACTION_TIMEOUT_MS } from '../config.js';
-import type { NetworkEvent } from '../types.js';
+import type { Intent, NetworkEvent } from '../types.js';
+import { assertOriginAllowed } from '../executor/guards.js';
 
 export interface Session {
   browser: Browser;
@@ -11,7 +12,7 @@ export interface Session {
   close(): Promise<void>;
 }
 
-export async function openSession(opts?: { headless?: boolean }): Promise<Session> {
+export async function openSession(opts?: { headless?: boolean; intent?: Intent }): Promise<Session> {
   const headless = opts?.headless ?? true;
   const browser = await chromium.launch({ headless });
   const context = await browser.newContext({ viewport: VIEWPORT });
@@ -22,6 +23,19 @@ export async function openSession(opts?: { headless?: boolean }): Promise<Sessio
   const page = await context.newPage();
   const network: NetworkEvent[] = [];
   const violations: string[] = [];
+
+  if (opts?.intent) {
+    const intent = opts.intent;
+    page.on('framenavigated', f => {
+      if (f === page.mainFrame()) {
+        try {
+          assertOriginAllowed(f.url(), intent);
+        } catch (e) {
+          violations.push(String(e));
+        }
+      }
+    });
+  }
 
   page.on('response', r => {
     try {
