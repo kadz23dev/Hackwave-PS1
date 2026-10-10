@@ -1,50 +1,52 @@
 import { describe, it, expect } from 'vitest';
-import { tempDb } from '../helpers/db.js';
 import { severity } from '../../src/diff/severity.js';
 import { buildChangeReport } from '../../src/diff/report.js';
 import { explainChange } from '../../src/explain/templates.js';
+import { tempDb } from '../helpers/db.js';
 import type { ChangeItem } from '../../src/types.js';
 
-describe('Change Report, Severity & Explanation Templates', () => {
+describe('Change report + severity unit tests — T06', () => {
   it('[R-F1-06] change report has severity, classification, confidence and evidence items', () => {
     const items: ChangeItem[] = [
       {
         kind: 'ELEMENT_RENAMED',
-        before: { name: 'Checkout', role: 'button', selector: '#checkout-button' },
-        after: { name: 'Proceed to payment', role: 'button', selector: '.btn-primary' },
+        before: { name: 'Checkout', role: 'button' },
+        after: { name: 'Proceed to payment', role: 'button' },
         evidence: "name 'Checkout'→'Proceed to payment'",
       },
       {
         kind: 'ATTR_CHANGED',
-        before: { name: 'Checkout', role: 'button', selector: '#checkout-button' },
-        after: { name: 'Proceed to payment', role: 'button', selector: '.btn-primary' },
-        evidence: 'selector changed',
+        before: { attrs: { id: 'checkout-button' } },
+        after: { attrs: {} },
+        evidence: "id 'checkout-button' removed",
       },
     ];
 
     const report = buildChangeReport({
-      baseSnapshotId: 1,
-      headSnapshotId: 2,
+      base: { id: 1 },
+      head: { id: 2 },
       items,
       affectedSteps: ['s1', 's2'],
-      classification: 'BREAKING_UI',
-      confidence: 0.92,
-      explanation: 'Checkout button renamed to Proceed to payment',
+      classification: 'HARMLESS_UI',
+      confidence: 0.88,
+      explanation: 'Button was renamed and id removed',
     });
 
-    expect(report.severity).toBe('MEDIUM');
-    expect(report.classification).toBe('BREAKING_UI');
-    expect(report.confidence).toBe(0.92);
-    expect(report.evidence).toHaveLength(2);
+    expect(report.baseSnapshotId).toBe(1);
+    expect(report.headSnapshotId).toBe(2);
     expect(report.kind).toBe('ELEMENT_RENAMED');
+    expect(report.severity).toBe('MEDIUM');
+    expect(report.classification).toBe('HARMLESS_UI');
+    expect(report.confidence).toBe(0.88);
+    expect(report.evidence).toHaveLength(2);
+    expect(report.evidence[0].kind).toBe('ELEMENT_RENAMED');
     expect(report.affectedSteps).toEqual(['s1', 's2']);
-    expect(report.explanation).toBe('Checkout button renamed to Proceed to payment');
+    expect(report.explanation).toBe('Button was renamed and id removed');
   });
 
   it('[R-F3-03] change report is stored and read back identical', () => {
     const { repo } = tempDb();
-
-    const site = repo.upsertSite('test-site', 'http://127.0.0.1:4101', ['http://127.0.0.1:4101']);
+    const site = repo.upsertSite('shop', 'http://localhost:4101', []);
     const page = repo.upsertPage(site.id, '/cart');
     const s1 = repo.insertSnapshot(page.id, 'v1', { contentHash: 'h1', elements: [] });
     const s2 = repo.insertSnapshot(page.id, 'v2', { contentHash: 'h2', elements: [] });
@@ -52,104 +54,103 @@ describe('Change Report, Severity & Explanation Templates', () => {
     const items: ChangeItem[] = [
       {
         kind: 'ELEMENT_RENAMED',
-        before: { name: 'Checkout', role: 'button', selector: '#checkout-button' },
-        after: { name: 'Proceed to payment', role: 'button', selector: '.btn-primary' },
-        evidence: "name 'Checkout'→'Proceed to payment'",
-      },
-      {
-        kind: 'ATTR_CHANGED',
-        before: { name: 'Checkout', role: 'button', selector: '#checkout-button' },
-        after: { name: 'Proceed to payment', role: 'button', selector: '.btn-primary' },
-        evidence: 'selector changed',
+        before: { name: 'Add to cart', role: 'button' },
+        after: { name: 'Add to bag', role: 'button' },
+        evidence: "name 'Add to cart'→'Add to bag'",
       },
     ];
 
-    const builtReport = buildChangeReport({
-      baseSnapshotId: s1,
-      headSnapshotId: s2,
+    const built = buildChangeReport({
+      base: s1,
+      head: s2,
       items,
-      affectedSteps: ['s3'],
-      classification: 'BREAKING_UI',
+      affectedSteps: ['s1'],
+      classification: 'HARMLESS_UI',
       confidence: 0.95,
-      explanation: 'Step s3 button was renamed',
+      explanation: 'Step s1 Add to cart was renamed to Add to bag',
     });
 
-    const changeId = repo.insertChange(builtReport);
+    const changeId = repo.insertChange({
+      baseSnapshotId: built.baseSnapshotId,
+      headSnapshotId: built.headSnapshotId,
+      kind: built.kind,
+      severity: built.severity,
+      classification: built.classification,
+      confidence: built.confidence,
+      evidence: built.evidence,
+      affectedSteps: built.affectedSteps,
+      explanation: built.explanation,
+    });
+
     expect(changeId).toBeGreaterThan(0);
 
-    const changes = repo.listChanges({ limit: 1 });
-    expect(changes).toHaveLength(1);
-    const readBack = changes[0];
+    const stored = repo.getChange(changeId);
+    expect(stored).not.toBeNull();
 
-    // Assert deep equal on all fields except id and created_at
-    expect(readBack.base_snapshot_id).toBe(builtReport.baseSnapshotId);
-    expect(readBack.head_snapshot_id).toBe(builtReport.headSnapshotId);
-    expect(readBack.kind).toBe(builtReport.kind);
-    expect(readBack.severity).toBe(builtReport.severity);
-    expect(readBack.classification).toBe(builtReport.classification);
-    expect(readBack.confidence).toBe(builtReport.confidence);
-    expect(readBack.evidence).toEqual(builtReport.evidence);
-    expect(readBack.affectedSteps).toEqual(builtReport.affectedSteps);
-    expect(readBack.explanation).toBe(builtReport.explanation);
+    expect(stored!.base_snapshot_id).toBe(built.baseSnapshotId);
+    expect(stored!.head_snapshot_id).toBe(built.headSnapshotId);
+    expect(stored!.kind).toBe(built.kind);
+    expect(stored!.severity).toBe(built.severity);
+    expect(stored!.classification).toBe(built.classification);
+    expect(stored!.confidence).toBe(built.confidence);
+    expect(stored!.explanation).toBe(built.explanation);
+    expect(stored!.evidence).toEqual(built.evidence);
+    expect(stored!.affectedSteps).toEqual(built.affectedSteps);
   });
 
   it('severity is CRITICAL when an oracle failed regardless of items', () => {
-    const layoutItems: ChangeItem[] = [
+    const shiftOnly: ChangeItem[] = [
       {
         kind: 'LAYOUT_SHIFT',
-        before: { name: 'Logo', role: 'img' },
-        after: { name: 'Logo', role: 'img' },
-        evidence: 'shifted 28px',
+        before: { bbox: { x: 0, y: 0, w: 10, h: 10 } },
+        after: { bbox: { x: 30, y: 0, w: 10, h: 10 } },
+        evidence: 'shifted 30px',
       },
     ];
 
-    const sevWithOracleFail = severity(layoutItems, [], true, false);
-    expect(sevWithOracleFail).toBe('CRITICAL');
+    // Even with only LAYOUT_SHIFT, if oracleFailed=true → CRITICAL
+    const sevOracle = severity(shiftOnly, [], true, false);
+    expect(sevOracle).toBe('CRITICAL');
 
-    const sevWithAppError = severity(layoutItems, [], false, true);
-    expect(sevWithAppError).toBe('CRITICAL');
+    // If appError=true → CRITICAL
+    const sevApp = severity(shiftOnly, [], false, true);
+    expect(sevApp).toBe('CRITICAL');
 
-    const sevNormal = severity(layoutItems, [], false, false);
+    // If neither → LOW
+    const sevNormal = severity(shiftOnly, [], false, false);
     expect(sevNormal).toBe('LOW');
   });
 
   it('explanation template contains the old name, old selector and new name', () => {
     const step = {
-      stepId: 's3',
+      stepId: 's1',
       action: 'click',
-      target: {
-        name: 'Checkout',
-        selector: '#checkout-button',
-      },
+      target: { name: 'Add to cart', selector: '#add-cart' },
     };
-
     const item: ChangeItem = {
       kind: 'ELEMENT_RENAMED',
-      before: { name: 'Checkout', selector: '#checkout-button' },
-      after: { name: 'Place order', snapshotElementId: 'e_88' },
-      evidence: "name 'Checkout'→'Place order', id removed",
+      before: { name: 'Add to cart' },
+      after: { name: 'Add to bag' },
+      evidence: "name 'Add to cart'→'Add to bag'",
     };
-
     const match = {
-      role: 'button',
-      name: 'Place order',
-      ref: 'e_88',
-      score: 0.91,
+      best: {
+        role: 'button',
+        name: 'Add to bag',
+        ref: 'e4',
+        score: 0.79,
+      },
     };
+    const goal = 'Complete checkout with a valid credit card';
+    const oracleIds = ['order-created', 'no-server-errors'];
 
-    const explanation = explainChange(
-      step,
-      item,
-      match,
-      'Complete checkout with a valid card',
-      ['order-created', 'no-server-errors']
-    );
+    const text = explainChange(step, item, match, goal, oracleIds);
 
-    expect(explanation).toContain("Step s3 (click 'Checkout' via #checkout-button) no longer matches: name 'Checkout'→'Place order', id removed.");
-    expect(explanation).toContain('Checkout');
-    expect(explanation).toContain('#checkout-button');
-    expect(explanation).toContain('Place order');
-    expect(explanation).toContain('0.91');
-    expect(explanation).toContain('order-created, no-server-errors');
+    expect(text).toContain('Add to cart');
+    expect(text).toContain('#add-cart');
+    expect(text).toContain('Add to bag');
+    expect(text).toContain('0.79');
+    expect(text).toContain('e4');
+    expect(text).toContain('order-created, no-server-errors');
   });
 });

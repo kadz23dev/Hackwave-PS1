@@ -356,6 +356,35 @@ export class Repo {
     });
   }
 
+  getChange(id: number, actor = 'system'): StoredChange | null {
+    return this.tx(actor, 'change.get', 'changes', () => {
+      const row = this.db.prepare('SELECT * FROM changes WHERE id = ?').get(id) as {
+        id: number;
+        base_snapshot_id: number;
+        head_snapshot_id: number;
+        kind: string;
+        severity: string;
+        classification: string;
+        confidence: number;
+        evidence_json: string;
+        affected_steps_json: string;
+        explanation: string;
+        created_at: string;
+      } | undefined;
+
+      if (!row) {
+        return { id, payload: { id }, result: null };
+      }
+
+      const result: StoredChange = {
+        ...row,
+        evidence: tryParse(row.evidence_json),
+        affectedSteps: tryParse(row.affected_steps_json)
+      };
+      return { id, payload: { id }, result };
+    });
+  }
+
   insertStepPlan(plan: StepPlanInput, actor = 'system'): number {
     return this.tx(actor, 'plan.insert', 'step_plans', () => {
       const stepsJson = typeof plan.steps === 'string'
