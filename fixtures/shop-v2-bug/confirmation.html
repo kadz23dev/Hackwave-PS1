@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order confirmed</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>Order confirmed</h1>
+  <p>Thank you! Order reference: <span data-testid="order-ref"></span></p>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    document.querySelector('[data-testid="order-ref"]').textContent = params.get('order') || '';
+  </script>
+</body>
+</html>

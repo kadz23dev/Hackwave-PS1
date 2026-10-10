@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    form { display: flex; flex-direction: column; width: 300px; gap: 0.8rem; }
+    label { font-weight: 500; font-size: 0.9rem; }
+    input { padding: 0.4rem; }
+    .terms-group { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+    .buttons-group { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .btn-submit { cursor: pointer; padding: 0.6rem 1rem; flex: 1; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    [role="alert"] { color: red; margin-top: 1rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Payment</h1>
+  <form id="payment-form" onsubmit="handlePlaceOrder(event)">
+    <div>
+      <label for="cc">Card no.</label>
+      <input id="cc" type="text" required>
+    </div>
+    <div>
+      <label for="exp">Expiry date</label>
+      <input id="exp" type="text" required>
+    </div>
+    <div>
+      <label for="sec">Security code</label>
+      <input id="sec" type="text" required>
+    </div>
+    <div class="terms-group">
+      <input type="checkbox" id="terms" onchange="toggleButtons()">
+      <label for="terms">I agree to the terms</label>
+    </div>
+    <div class="buttons-group">
+      <button type="submit" id="pay-btn" class="btn-submit" disabled>Pay</button>
+      <button type="submit" id="complete-btn" class="btn-submit" disabled>Complete order</button>
+    </div>
+  </form>
+  <div id="alert-container"></div>
+  <script>
+    function toggleButtons() {
+      const terms = document.getElementById('terms');
+      document.getElementById('pay-btn').disabled = !terms.checked;
+      document.getElementById('complete-btn').disabled = !terms.checked;
+    }
+
+    async function handlePlaceOrder(e) {
+      e.preventDefault();
+      const payload = {
+        email: sessionStorage.getItem('email') || '',
+        name: sessionStorage.getItem('name') || '',
+        address: sessionStorage.getItem('address') || '',
+        cardNumber: document.getElementById('cc').value,
+        expiry: document.getElementById('exp').value,
+        cvc: document.getElementById('sec').value,
+      };
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.status === 201) {
+          const data = await res.json();
+          location.href = `/confirmation?order=${data.orderId}`;
+        } else {
+          document.getElementById('alert-container').innerHTML = '<p role="alert">Payment failed</p>';
+        }
+      } catch {
+        document.getElementById('alert-container').innerHTML = '<p role="alert">Payment failed</p>';
+      }
+    }
+  </script>
+</body>
+</html>

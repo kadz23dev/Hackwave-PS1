@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gizmo Shop v2</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; display: flex; gap: 2rem; }
+    nav { width: 180px; border-right: 1px solid #ccc; padding-right: 1rem; }
+    .products { display: flex; gap: 2rem; flex: 1; }
+    article { border: 1px solid #ddd; padding: 1rem; border-radius: 4px; width: 200px; }
+    .price { font-weight: bold; margin: 0.5rem 0; }
+    button { cursor: pointer; padding: 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <button aria-label="Shopping bag" onclick="location.href='/bag'">🛍 <span class="count" id="bag-count">0</span></button>
+  </nav>
+  <main class="products">
+    <article data-sku="GZ-MINI">
+      <h3>Gizmo Mini</h3>
+      <div class="price">$19.99</div>
+      <button class="btn" data-action="add" onclick="addToBag('GZ-MINI')">Add to bag</button>
+    </article>
+    <article data-sku="GZ-PRO">
+      <h3>Gizmo Pro</h3>
+      <div class="price">$29.99</div>
+      <button class="btn" data-action="add" onclick="addToBag('GZ-PRO')">Add to bag</button>
+    </article>
+  </main>
+  <script>
+    async function updateBag() {
+      const res = await fetch('/api/cart');
+      const data = await res.json();
+      document.getElementById('bag-count').textContent = data.items ? data.items.length : 0;
+    }
+    async function addToBag(sku) {
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sku })
+      });
+      const data = await res.json();
+      document.getElementById('bag-count').textContent = data.count;
+    }
+    updateBag();
+  </script>
+</body>
+</html>

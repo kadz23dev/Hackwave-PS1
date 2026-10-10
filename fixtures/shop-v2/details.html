@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Delivery details</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    form { display: flex; flex-direction: column; width: 300px; gap: 0.8rem; }
+    label { font-weight: 500; font-size: 0.9rem; }
+    input { padding: 0.4rem; }
+    button { cursor: pointer; padding: 0.6rem; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Delivery details</h1>
+  <form id="details-form" onsubmit="handleDetails(event)">
+    <div>
+      <label for="user-email">Email address</label>
+      <input id="user-email" type="email" required>
+    </div>
+    <div>
+      <label for="fullname">Name</label>
+      <input id="fullname" type="text" required>
+    </div>
+    <div>
+      <label for="ship-addr">Shipping address</label>
+      <input id="ship-addr" type="text" required>
+    </div>
+    <button type="submit">Continue</button>
+  </form>
+  <script>
+    function handleDetails(e) {
+      e.preventDefault();
+      sessionStorage.setItem('email', document.getElementById('user-email').value);
+      sessionStorage.setItem('name', document.getElementById('fullname').value);
+      sessionStorage.setItem('address', document.getElementById('ship-addr').value);
+      location.href = '/checkout/payment';
+    }
+  </script>
+</body>
+</html>

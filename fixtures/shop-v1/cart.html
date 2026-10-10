@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your cart</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.5rem 0; }
+    .total { font-weight: bold; margin: 1rem 0; font-size: 1.2rem; }
+    button { cursor: pointer; padding: 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Your cart</h1>
+  <ul id="cart-items"></ul>
+  <div class="total" id="cart-total">Total: $0.00</div>
+  <div>
+    <button id="checkout-button" onclick="location.href='/checkout'">Checkout</button>
+  </div>
+  <script>
+    async function loadCart() {
+      const res = await fetch('/api/cart');
+      const data = await res.json();
+      const list = document.getElementById('cart-items');
+      list.innerHTML = '';
+      (data.items || []).forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} - $${(item.priceCents / 100).toFixed(2)}`;
+        list.appendChild(li);
+      });
+      document.getElementById('cart-total').textContent = `Total: $${((data.totalCents || 0) / 100).toFixed(2)}`;
+    }
+    loadCart();
+  </script>
+</body>
+</html>

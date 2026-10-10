@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order confirmed</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>Order confirmed</h1>
+  <p>Thank you! Order <span id="order-id"></span></p>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById('order-id').textContent = params.get('order') || '';
+  </script>
+</body>
+</html>

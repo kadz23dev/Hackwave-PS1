@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    form { display: flex; flex-direction: column; width: 300px; gap: 0.8rem; }
+    label { font-weight: 500; font-size: 0.9rem; }
+    input { padding: 0.4rem; }
+    button { cursor: pointer; padding: 0.6rem; margin-top: 1rem; }
+    [role="alert"] { color: red; margin-top: 1rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Checkout</h1>
+  <form id="checkout-form" onsubmit="handlePay(event)">
+    <div>
+      <label for="email">Email</label>
+      <input id="email" type="email" required>
+    </div>
+    <div>
+      <label for="name">Full name</label>
+      <input id="name" type="text" required>
+    </div>
+    <div>
+      <label for="address">Address</label>
+      <input id="address" type="text" required>
+    </div>
+    <div>
+      <label for="card-number">Card number</label>
+      <input id="card-number" type="text" required>
+    </div>
+    <div>
+      <label for="expiry">Expiry (MM/YY)</label>
+      <input id="expiry" type="text" required>
+    </div>
+    <div>
+      <label for="cvc">CVC</label>
+      <input id="cvc" type="text" required>
+    </div>
+    <button id="pay-button" type="submit">Pay now</button>
+  </form>
+  <div id="alert-container"></div>
+  <script>
+    async function handlePay(e) {
+      e.preventDefault();
+      const payload = {
+        email: document.getElementById('email').value,
+        name: document.getElementById('name').value,
+        address: document.getElementById('address').value,
+        cardNumber: document.getElementById('card-number').value,
+        expiry: document.getElementById('expiry').value,
+        cvc: document.getElementById('cvc').value,
+      };
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.status === 201) {
+          const data = await res.json();
+          location.href = `/confirmation?order=${data.orderId}`;
+        } else {
+          document.getElementById('alert-container').innerHTML = '<p role="alert">Payment failed</p>';
+        }
+      } catch {
+        document.getElementById('alert-container').innerHTML = '<p role="alert">Payment failed</p>';
+      }
+    }
+  </script>
+</body>
+</html>
