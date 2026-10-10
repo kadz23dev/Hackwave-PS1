@@ -1,0 +1,2 @@
+{ "autoAccept": { "classification": ["HARMLESS_UI"], "maxCandidates": 1, "requireAllOracles": true },
+  "match": { "strong": 0.60, "margin": 0.10, "selectorVerify": 0.85 } }
