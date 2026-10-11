@@ -171,13 +171,20 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
           resolvedFile = candidate;
         }
       } else {
-        // General asset lookup: check dashboard first, then root directory
+        // General asset lookup: check dashboard first, then allowed static asset directories
         const candDash = resolve(dashboardDir, '.' + pathname);
-        const candRoot = resolve(rootDir, '.' + pathname);
-        if (existsSync(candDash) && statSync(candDash).isFile()) {
+        if (existsSync(candDash) && statSync(candDash).isFile() && candDash.startsWith(dashboardDir)) {
           resolvedFile = candDash;
-        } else if (existsSync(candRoot) && statSync(candRoot).isFile()) {
-          resolvedFile = candRoot;
+        } else if (
+          pathname.startsWith('/css/') ||
+          pathname.startsWith('/fonts/') ||
+          pathname.startsWith('/images/') ||
+          pathname === '/favicon.ico'
+        ) {
+          const candRoot = resolve(rootDir, '.' + pathname);
+          if (existsSync(candRoot) && statSync(candRoot).isFile() && candRoot.startsWith(rootDir)) {
+            resolvedFile = candRoot;
+          }
         }
       }
 

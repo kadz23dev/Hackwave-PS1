@@ -381,12 +381,13 @@ header {
 
 .kpi-label {
   font-family: var(--font-sans) !important;
-  font-size: 0.72rem !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.06em !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
   color: var(--text-muted) !important;
-  margin-top: 6px !important;
+  margin-top: 2px !important;
+  margin-bottom: 4px !important;
 }
 
 .kpi-trend {
