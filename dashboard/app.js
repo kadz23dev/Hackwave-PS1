@@ -455,13 +455,13 @@ export function renderLandingHero(container) {
 
   // 1. Hero
   const hero = el('div', { class: 'landing-hero' });
-  hero.appendChild(el('div', { class: 'hero-pill' }, '⚡ Intent-Aware E2E Testing Platform'));
+  hero.appendChild(el('div', { class: 'hero-pill' }, '⚡ Kaizen AI — Intent-Aware E2E Testing Platform'));
   hero.appendChild(el('h1', { class: 'hero-title' }, 'Tests that heal. Confidence that stays.'));
   hero.appendChild(
     el(
       'p',
       { class: 'hero-subtitle' },
-      'Author high-level user intents in natural language. When UI drift or frontend redesigns break fragile CSS selectors, HealTest automatically synthesizes and validates robust repairs against backend oracles with zero flaky assertions.'
+      'Author high-level user intents in natural language. When UI drift or frontend redesigns break fragile CSS selectors, Kaizen AI automatically synthesizes and validates robust repairs against backend oracles with zero flaky assertions.'
     )
   );
 
@@ -486,7 +486,7 @@ export function renderLandingHero(container) {
     el('span', { class: 'mockup-dot' }),
     el('span', { class: 'mockup-dot' })
   );
-  const mockupUrl = el('span', { class: 'mockup-url mono' }, 'healtest.studio/#/dashboard');
+  const mockupUrl = el('span', { class: 'mockup-url mono' }, 'kaizen.ai/#/dashboard');
   mockupBar.appendChild(mockupDots);
   mockupBar.appendChild(mockupUrl);
   mockupFrame.appendChild(mockupBar);
@@ -525,12 +525,12 @@ export function renderLandingHero(container) {
   // 2. Demo Video Section
   const videoSection = el('section', { class: 'video-section' });
   videoSection.appendChild(el('div', { class: 'section-tag' }, 'Interactive Simulation'));
-  videoSection.appendChild(el('h2', { class: 'section-title' }, 'Watch HealTest in Action'));
+  videoSection.appendChild(el('h2', { class: 'section-title' }, 'Watch Kaizen AI in Action'));
   videoSection.appendChild(
     el(
       'p',
       { class: 'section-desc' },
-      'Observe how HealTest encounters a button ID redesign on shop-v2, identifies candidate alternatives, and verifies backend order creation before greenlighting the test.'
+      'Observe how Kaizen AI encounters a button ID redesign on shop-v2, identifies candidate alternatives, and verifies backend order creation before greenlighting the test.'
     )
   );
 
@@ -541,7 +541,7 @@ export function renderLandingHero(container) {
     el('span', { class: 'player-dot red' }),
     el('span', { class: 'player-dot yellow' }),
     el('span', { class: 'player-dot green' }),
-    el('span', { class: 'player-title mono' }, 'healtest-act2-drift-recovery.mp4')
+    el('span', { class: 'player-title mono' }, 'kaizen-ai-act2-drift-recovery.mp4')
   );
   videoCard.appendChild(topBar);
 
@@ -592,7 +592,7 @@ export function renderLandingHero(container) {
     el(
       'p',
       { class: 'section-desc' },
-      'Traditional E2E tests break whenever frontend code changes. HealTest bridges user intent and execution reality.'
+      'Traditional E2E tests break whenever frontend code changes. Kaizen AI bridges user intent and execution reality.'
     )
   );
 
@@ -606,7 +606,7 @@ export function renderLandingHero(container) {
     {
       icon: '⚡',
       title: 'Automatic UI-Drift Recovery',
-      desc: 'When UI structures shift, HealTest inspects surrounding semantics, computes candidate match scores, and synthesizes localized selector repairs.'
+      desc: 'When UI structures shift, Kaizen AI inspects surrounding semantics, computes candidate match scores, and synthesizes localized selector repairs.'
     },
     {
       icon: '🛡️',
@@ -633,7 +633,7 @@ export function renderLandingHero(container) {
   // 4. How It Works Section
   const howSection = el('section', { class: 'how-it-works-section' });
   howSection.appendChild(el('div', { class: 'section-tag' }, 'Workflow Architecture'));
-  howSection.appendChild(el('h2', { class: 'section-title' }, 'How HealTest Works'));
+  howSection.appendChild(el('h2', { class: 'section-title' }, 'How Kaizen AI Works'));
   howSection.appendChild(
     el('p', { class: 'section-desc' }, 'Four disciplined steps from high-level user journey to deterministic CI greenlight.')
   );
@@ -1962,7 +1962,7 @@ export function renderSettings() {
   // Header
   const hdr = el('div', { class: 'settings-header' });
   hdr.appendChild(el('h2', {}, 'Workspace & Account Settings'));
-  hdr.appendChild(el('p', { class: 'section-desc', style: 'margin: 0;' }, 'Manage user profile, security policies, and HealTest runtime configuration.'));
+  hdr.appendChild(el('p', { class: 'section-desc', style: 'margin: 0;' }, 'Manage user profile, security policies, and Kaizen AI runtime configuration.'));
   wrap.appendChild(hdr);
 
   // Settings feedback toast placeholder
@@ -1984,7 +1984,7 @@ export function renderSettings() {
   avatarRow.appendChild(el('div', { class: 'avatar-circle' }, 'DL'));
   const avatarMeta = el('div', {});
   avatarMeta.appendChild(el('div', { style: 'font-weight: 700;' }, 'Demo Lead / QA Engineer'));
-  avatarMeta.appendChild(el('div', { style: 'font-size: 0.8rem; color: var(--text-secondary);' }, 'Organization: HealTest Core Workspace'));
+  avatarMeta.appendChild(el('div', { style: 'font-size: 0.8rem; color: var(--text-secondary);' }, 'Organization: Kaizen AI Core Workspace'));
   avatarRow.appendChild(avatarMeta);
   profCard.appendChild(avatarRow);
 
@@ -2159,7 +2159,7 @@ export function renderBilling() {
   proCard.appendChild(proList);
   const upgradeBtn = el('button', { class: 'btn btn--primary', type: 'button' }, 'Upgrade to Pro');
   upgradeBtn.addEventListener('click', () => {
-    alert('Thank you for your interest in HealTest Pro. Our engineering team will contact you shortly.');
+    alert('Thank you for your interest in Kaizen AI Pro. Our engineering team will contact you shortly.');
   });
   proCard.appendChild(upgradeBtn);
   grid.appendChild(proCard);
@@ -2226,7 +2226,7 @@ export function renderAuth(initialMode = 'login') {
 
   // Header
   const hdr = el('div', { class: 'auth-header' });
-  hdr.appendChild(el('h2', {}, 'HealTest'));
+  hdr.appendChild(el('h2', {}, 'Kaizen AI'));
   hdr.appendChild(
     el('p', {}, 'Sign in to access your self-healing testing workspace and execution governance.')
   );
