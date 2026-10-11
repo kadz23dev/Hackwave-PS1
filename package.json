@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts-dev/copy-sql.mjs",
     "test": "vitest run",
-    "start": "npm run build && node dist/demo.js --serve",
+    "start": "node scripts/start-app.mjs",
+    "start:demo": "npm run build && node dist/demo.js --serve",
     "demo": "npm run build && node dist/demo.js",
     "serve": "npm run build && node dist/cli.js serve",
     "healtest": "node dist/cli.js",

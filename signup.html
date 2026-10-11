@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In / Sign Up | KaizenAI — Autonomous E2E Test Governance</title>
+  <link rel="preload" href="fonts/FacultyGlyphic-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="fonts/Elagern-nRPoO.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="css/morphism.css">
+  <link rel="stylesheet" href="css/signup.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Ambient Floating Liquid Glow Orbs (Dynamic Refraction Layer) -->
+  <div class="ambient-glow-container">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+  </div>
+
+  <!-- Subtle Cyber Grid Background -->
+  <div class="cyber-grid"></div>
+
+  <!-- Back to Home & Direct Dashboard Floating Badges -->
+  <div class="back-home-wrap" style="display: flex; gap: 12px; align-items: center;">
+    <a href="index.html" class="back-home-link">
+      <span>←</span>
+      <span>Back to KaizenAI Home</span>
+    </a>
+    <a href="/dashboard/" class="back-home-link" style="background: rgba(185, 28, 28, 0.15); border-color: rgba(185, 28, 28, 0.4); color: #b91c1c; font-weight: 700;">
+      <span>⚡</span>
+      <span>Skip to Real Dashboard</span>
+    </a>
+  </div>
+
+  <!-- Main Multi-Segment Card -->
+  <main class="card signup" id="auth-card">
+    
+    <!-- 1. Horizontal Top Header with Logo & Gliding Pill Switcher -->
+    <header class="card-nav">
+      <a href="index.html" class="logo-wrap" title="KaizenAI Home">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4C5 3.45 5.45 3 6 3C6.55 3 7 3.45 7 4V20C7 20.55 6.55 21 6 21C5.45 21 5 20.55 5 20V4Z" fill="white"/>
+            <path d="M19 4.2C19.6 3.6 20.5 3.6 21.1 4.2C21.7 4.8 21.7 5.7 21.1 6.3L12.5 14.8C11.9 15.4 11 15.4 10.4 14.8C9.8 14.2 9.8 13.3 10.4 12.7L19 4.2Z" fill="white"/>
+            <path d="M11.6 11.4C11 10.8 11 9.9 11.6 9.3C12.2 8.7 13.1 8.7 13.7 9.3L21.1 16.7C21.7 17.3 21.7 18.2 21.1 18.8C20.5 19.4 19.6 19.4 19 18.8L11.6 11.4Z" fill="#ffccd2"/>
+          </svg>
+        </div>
+        <span class="logo-brand">Kaizen<span>AI</span></span>
+      </a>
+
+      <!-- Horizontal Segmented Tabs with Smooth Sliding Pill -->
+      <div class="nav-segmented-tabs" id="nav-tabs-container">
+        <div class="nav-indicator" id="nav-indicator"></div>
+
+        <button type="button" id="nav-btn-signin" class="card-nav-btn" onclick="setView('signin')">
+          <span class="icon">🔑</span>
+          <span>Sign In</span>
+        </button>
+
+        <button type="button" id="nav-btn-signup" class="card-nav-btn active" onclick="setView('signup')">
+          <span class="icon">⚡</span>
+          <span>Sign Up</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. Horizontal Body: Hero Left & Form Right -->
+    <div class="card-body">
+      
+      <!-- Left Hero Banner with Horizontal Slide Track -->
+      <aside class="card-hero">
+        <div class="card-hero-bg"></div>
+        <div class="hero-carousel-viewport">
+          <div class="hero-carousel-track" id="hero-carousel-track">
+            
+            <!-- Hero Pane: Sign In -->
+            <div class="hero-pane hero-pane-signin" id="hero-signin">
+              <span class="hero-tag">WORKSPACE ACCESS</span>
+              <h2>Welcome back</h2>
+              <h3>Enter your credentials to access your company testing workspace.</h3>
+              <a href="index.html" class="hero-link">Learn about KaizenAI ↗</a>
+            </div>
+
+            <!-- Hero Pane: Sign Up -->
+            <div class="hero-pane hero-pane-signup" id="hero-signup">
+              <span class="hero-tag">B2B PLATFORM</span>
+              <h2>Join KaizenAI</h2>
+              <h3>Start your 14-day free trial with dedicated tenant isolation and deterministic oracles.</h3>
+              <a href="index.html#features" class="hero-link">Security & Compliance ↗</a>
+            </div>
+
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Form Section with Horizontal Carousel Track -->
+      <section class="card-form">
+        <div id="form-alert" class="form-alert"></div>
+
+        <div class="form-carousel-viewport">
+          <div class="form-carousel-track" id="form-carousel-track">
+            
+            <!-- PANE 1: SIGN IN FORM -->
+            <div class="form-pane form-pane-signin" id="pane-signin">
+              <form id="signin-form" onsubmit="handleAuthSubmit(event, 'signin')">
+                <div class="form-field">
+                  <label for="signin-email">Email address</label>
+                  <input type="email" id="signin-email" placeholder="you@company.com" autocomplete="email" />
+                </div>
+
+                <div class="form-field">
+                  <label for="signin-password">Password</label>
+                  <input type="password" id="signin-password" placeholder="Enter your password" autocomplete="current-password" />
+                </div>
+
+                <div class="form-row">
+                  <label class="remember">
+                    <input type="checkbox" id="signin-remember" checked /> Remember me
+                  </label>
+                  <a href="#forgot" onclick="handleForgotPassword(event)">Forgot password?</a>
+                </div>
+
+                <button class="submit-btn" id="signin-submit-btn" type="submit">
+                  Sign In
+                </button>
+
+                <p class="toggle-footer">
+                  Don’t have an account? 
+                  <button type="button" class="toggle-link-btn" onclick="setView('signup')">Create one</button>
+                </p>
+              </form>
+            </div>
+
+            <!-- PANE 2: SIGN UP FORM -->
+            <div class="form-pane form-pane-signup" id="pane-signup">
+              <form id="signup-form" onsubmit="handleAuthSubmit(event, 'signup')">
+                <div class="form-field">
+                  <label for="signup-name">Full name</label>
+                  <input type="text" id="signup-name" placeholder="Enter your full name" autocomplete="name" required />
+                </div>
+
+                <div class="form-field">
+                  <label for="signup-company">Company name</label>
+                  <input type="text" id="signup-company" placeholder="Acme Technologies, Inc." autocomplete="organization" required />
+                </div>
+
+                <div class="form-field">
+                  <label for="signup-email">Email address</label>
+                  <input type="email" id="signup-email" placeholder="you@company.com" autocomplete="email" required />
+                </div>
+
+                <div class="form-field">
+                  <label for="signup-password">Password</label>
+                  <input type="password" id="signup-password" placeholder="Enter your password" autocomplete="new-password" required />
+                </div>
+
+                <button class="submit-btn" id="signup-submit-btn" type="submit">
+                  Create Account
+                </button>
+
+                <p class="toggle-footer">
+                  Already have an account? 
+                  <button type="button" class="toggle-link-btn" onclick="setView('signin')">Sign in</button>
+                </p>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Interactive JavaScript State Controller -->
+  <script>
+    let currentView = 'signup';
+
+    function updateNavIndicator() {
+      const activeBtn = currentView === 'signin' 
+        ? document.getElementById('nav-btn-signin') 
+        : document.getElementById('nav-btn-signup');
+      const firstBtn = document.getElementById('nav-btn-signin');
+      const indicator = document.getElementById('nav-indicator');
+
+      if (activeBtn && firstBtn && indicator) {
+        const offset = activeBtn.offsetLeft - firstBtn.offsetLeft;
+        indicator.style.transform = `translateX(${offset}px)`;
+        indicator.style.width = activeBtn.offsetWidth + 'px';
+      }
+    }
+
+    function setView(view) {
+      currentView = view;
+      const card = document.getElementById('auth-card');
+      const navBtnSignin = document.getElementById('nav-btn-signin');
+      const navBtnSignup = document.getElementById('nav-btn-signup');
+
+      // Update Card State Class (drives horizontal track transitions)
+      card.className = `card ${view}`;
+
+      // Update Nav Button States
+      navBtnSignin.classList.toggle('active', view === 'signin');
+      navBtnSignup.classList.toggle('active', view === 'signup');
+
+      // Slide Horizontal Indicator Pill
+      updateNavIndicator();
+
+      // Configure Inputs Accessibility & Validation
+      const signinInputs = document.querySelectorAll('#pane-signin input');
+      const signupInputs = document.querySelectorAll('#pane-signup input');
+
+      if (view === 'signin') {
+        signinInputs.forEach(input => {
+          if (input.type !== 'checkbox') input.required = true;
+          input.tabIndex = 0;
+        });
+        signupInputs.forEach(input => {
+          input.required = false;
+          input.tabIndex = -1;
+        });
+      } else {
+        signupInputs.forEach(input => {
+          input.required = true;
+          input.tabIndex = 0;
+        });
+        signinInputs.forEach(input => {
+          input.required = false;
+          input.tabIndex = -1;
+        });
+      }
+    }
+
+    function handleAuthSubmit(e, viewType) {
+      e.preventDefault();
+      const emailInput = viewType === 'signup' 
+        ? document.getElementById('signup-email')
+        : document.getElementById('signin-email');
+      const email = emailInput.value;
+      const alertEl = document.getElementById('form-alert');
+      const submitBtn = viewType === 'signup' 
+        ? document.getElementById('signup-submit-btn')
+        : document.getElementById('signin-submit-btn');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = viewType === 'signup' ? 'Provisioning Workspace...' : 'Authenticating...';
+
+      setTimeout(() => {
+        alertEl.className = 'form-alert success';
+        alertEl.style.display = 'flex';
+        alertEl.innerHTML = viewType === 'signup'
+          ? `✓ Workspace initialized for ${email}! Redirecting to KaizenAI...`
+          : `✓ Authenticated successfully! Entering workspace...`;
+
+        setTimeout(() => {
+          window.location.href = '/dashboard/';
+        }, 1200);
+      }, 700);
+    }
+
+    function handleForgotPassword(e) {
+      e.preventDefault();
+      const email = document.getElementById('signin-email').value || prompt('Enter your work email address for password reset:');
+      if (email) {
+        alert(`Password reset instructions sent to ${email}`);
+      }
+    }
+
+    // Initialize View & Setup Dynamic Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('mode') === 'signin' ? 'signin' : 'signup';
+      setView(mode);
+
+      // Recalculate indicator position on resize & font readiness
+      window.addEventListener('resize', updateNavIndicator);
+      if (document.fonts) {
+        document.fonts.ready.then(updateNavIndicator);
+      }
+    });
+  </script>
+</body>
+</html>

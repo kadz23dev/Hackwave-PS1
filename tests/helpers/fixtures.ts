@@ -29,8 +29,24 @@ export async function startFixture(variant: string, port = '0'): Promise<{ url: 
             url,
             stop: () => {
               return new Promise((resolveStop) => {
-                child.on('exit', () => resolveStop());
-                child.kill();
+                let resolvedStop = false;
+                const done = () => {
+                  if (!resolvedStop) {
+                    resolvedStop = true;
+                    resolveStop();
+                  }
+                };
+                child.on('exit', done);
+                if (process.platform === 'win32' && child.pid) {
+                  try {
+                    spawn('taskkill', ['/pid', String(child.pid), '/f', '/t']);
+                  } catch {
+                    child.kill();
+                  }
+                } else {
+                  child.kill();
+                }
+                setTimeout(done, 300);
               });
             },
           });

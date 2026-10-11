@@ -3,323 +3,128 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kaizen AI — Intent-Aware Self-Healing E2E Testing</title>
-  <link rel="stylesheet" href="tokens.css">
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="tokens.css?v=6">
+  <link rel="stylesheet" href="app.css?v=6">
+  <link rel="stylesheet" href="ui-premium.css?v=6">
 </head>
 <body>
-  <div class="band"></div>
-
   <div class="app-layout">
-    <!-- Left Japanese Lacquer Sidebar -->
-    <aside class="app-sidebar" id="app-sidebar">
-      <div class="sidebar-brand-wrap">
-        <a href="#/dashboard" class="brand">
-          <svg class="brand-origami-crane" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <path d="M4 24L16 6L28 24L16 19L4 24Z" fill="var(--crimson)" />
-            <path d="M16 6L22 17L16 19L10 17L16 6Z" fill="var(--crimson-deep)" />
-            <path d="M16 19L16 28L12 25L16 19Z" fill="var(--gold-leaf)" />
-            <path d="M16 19L16 28L20 25L16 19Z" fill="var(--gold-leaf)" />
-            <path d="M16 6L14 3L11 5L14 7L16 6Z" fill="var(--paper)" />
-          </svg>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-crest">K</div>
+        <a href="#/" class="brand sidebar-title-link">
           <span class="brand-text">Kaizen AI</span>
         </a>
+        <a href="/" class="btn-icon-round" title="Back to Landing Page" style="margin-left: auto; font-size: 0.85rem; text-decoration: none; color: var(--sidebar-muted); display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--sidebar-sub);" aria-label="Back to Landing Page">⌂</a>
       </div>
-
-      <nav class="sidebar-nav main-nav" aria-label="Main Navigation">
-        <a href="#/dashboard" id="nav-dashboard" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
-          </span>
-          <span class="nav-text">Dashboard</span>
+      <nav class="sidebar-nav" role="navigation">
+        <a href="#/" class="nav-item">
+          <span class="nav-icon">⊞</span>
+          <span class="nav-label">Dashboard</span>
+          <span class="sr-only">Overview</span>
         </a>
-
-        <a href="#/simulation" id="nav-simulation" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M7 2a1 1 0 00-.707 1.707L8 5.414V11a4 4 0 001.172 2.828l2.586 2.586A2 2 0 0013.172 17h.656a2 2 0 001.414-.586l-2.414-2.414A4 4 0 0012 11V5.414l1.707-1.707A1 1 0 0013 2H7z"/></svg>
-          </span>
-          <span class="nav-text">Simulation</span>
-          <span class="nav-badge-dot" aria-hidden="true"></span>
+        <a href="#/dashboard" class="nav-item">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-label">Studio Workspace</span>
         </a>
-
-        <a href="#/test-runs" id="nav-test-runs" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
-          </span>
-          <span class="nav-text">Test Runs</span>
+        <a href="#/simulation" class="nav-item">
+          <span class="nav-icon">◈</span>
+          <span class="nav-label">Simulation</span>
         </a>
-
-        <a href="#/changes" id="nav-changes" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 10a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zm10-10a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2zM9 6h6m-6 8h6"/></svg>
-          </span>
-          <span class="nav-text">Changes</span>
+        <a href="#/runs" class="nav-item">
+          <span class="nav-icon">▶</span>
+          <span class="nav-label">Test Runs</span>
         </a>
-
-        <a href="#/repairs" id="nav-repairs" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"/></svg>
-          </span>
-          <span class="nav-text">Repairs</span>
+        <a href="#/changes" class="nav-item">
+          <span class="nav-icon">☵</span>
+          <span class="nav-label">Changes</span>
         </a>
-
-        <a href="#/ai-agent" id="nav-ai-agent" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 01-1 1H7a3 3 0 00-3 3v5a3 3 0 003 3h6a3 3 0 003-3V8a3 3 0 00-3-3h-1a1 1 0 01-1-1V3zM8 10a1 1 0 100-2 1 1 0 000 2zm4 0a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          </span>
-          <span class="nav-text">AI Agent</span>
+        <a href="#/repairs" class="nav-item">
+          <span class="nav-icon">↻</span>
+          <span class="nav-label">Repairs</span>
         </a>
-
-        <a href="#/comparison" id="nav-comparison" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
-          </span>
-          <span class="nav-text">Before & After</span>
+        <a href="#/agent" class="nav-item">
+          <span class="nav-icon">✦</span>
+          <span class="nav-label">AI Agent</span>
         </a>
-
-        <a href="#/reports" id="nav-reports" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
-          </span>
-          <span class="nav-text">Reports</span>
+        <a href="#/reports" class="nav-item">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">Reports</span>
         </a>
-
-        <a href="#/analytics" id="nav-analytics" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
-          </span>
-          <span class="nav-text">Analytics</span>
+        <a href="#/analytics" class="nav-item">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Analytics</span>
         </a>
-
-        <a href="#/storage" id="nav-storage" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"/><path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"/><path d="M17 4c0 1.657-3.134 3-7 3S3 5.657 3 4s3.134-3 7-3 7 1.343 7 3z"/></svg>
-          </span>
-          <span class="nav-text">Storage</span>
+        <a href="#/storage" class="nav-item">
+          <span class="nav-icon">⛃</span>
+          <span class="nav-label">Storage</span>
         </a>
-
-        <a href="#/settings" id="nav-settings" class="nav-link">
-          <span class="nav-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-          </span>
-          <span class="nav-text">Settings</span>
+        <a href="#/audit" class="nav-item">
+          <span class="nav-icon">📜</span>
+          <span class="nav-label">Audit Log</span>
         </a>
-
-        <!-- Compatibility & Secondary Nav Links -->
-        <a href="#/" id="nav-overview" class="nav-link nav-link--subtle">
-          <span class="nav-icon" aria-hidden="true">🌐</span>
-          <span class="nav-text">Overview</span>
+        <a href="#/settings" class="nav-item">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Settings</span>
         </a>
-        <a href="#/audit" id="nav-audit" class="nav-link nav-link--subtle">
-          <span class="nav-icon" aria-hidden="true">📜</span>
-          <span class="nav-text">Audit</span>
-        </a>
-        <a href="#/billing" id="nav-billing" class="nav-link nav-link--subtle">
-          <span class="nav-icon" aria-hidden="true">💳</span>
-          <span class="nav-text">Billing</span>
+        <a href="#/billing" class="nav-item">
+          <span class="nav-icon">💳</span>
+          <span class="nav-label">Billing</span>
         </a>
       </nav>
-
-      <!-- Sidebar Watermark Silhouette (Torii gate + Mount Fuji) -->
-      <div class="sidebar-watermark-wrap" aria-hidden="true">
-        <svg class="sidebar-watermark-art" viewBox="0 0 240 180" fill="none">
-          <!-- Mount Fuji silhouette -->
-          <path d="M120 40L170 140H70L120 40Z" fill="var(--sidebar-border)" opacity="0.6" />
-          <path d="M120 40L135 70H105L120 40Z" fill="var(--sidebar-muted)" opacity="0.3" />
-          <!-- Torii Gate silhouette -->
-          <path d="M40 110H140V116H40V110Z" fill="var(--torii-wood)" />
-          <path d="M48 122H132V126H48V122Z" fill="var(--torii-wood)" />
-          <path d="M55 116V170H63V116H55Z" fill="var(--torii-wood)" />
-          <path d="M117 116V170H125V116H117Z" fill="var(--torii-wood)" />
-          <!-- Cherry blossoms / sakura petals silhouette -->
-          <circle cx="160" cy="95" r="4" fill="var(--sakura-pink)" opacity="0.4" />
-          <circle cx="175" cy="80" r="5" fill="var(--sakura-pink)" opacity="0.4" />
-          <circle cx="190" cy="100" r="3" fill="var(--sakura-pink)" opacity="0.3" />
-          <circle cx="205" cy="85" r="4" fill="var(--sakura-pink)" opacity="0.3" />
+      <div class="sidebar-wave-art" aria-hidden="true">
+        <svg viewBox="0 0 200 45" class="wave-art-svg">
+          <path d="M0,35 Q30,15 60,35 T120,35 T180,35 T240,35" fill="none" stroke="var(--crimson-deep)" stroke-width="1.5" opacity="0.4"/>
+          <path d="M0,40 Q30,22 60,40 T120,40 T180,40 T240,40" fill="none" stroke="var(--crimson-deep)" stroke-width="1.2" opacity="0.3"/>
         </svg>
       </div>
-
-      <!-- User Profile Card -->
-      <div class="sidebar-user-card" id="sidebar-user-card">
-        <div class="user-avatar-circle">PS</div>
-        <div class="user-details">
-          <div class="user-org">Acme Corp</div>
-          <div class="user-tier">Enterprise Plan</div>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">P</div>
+          <div class="user-meta">
+            <span class="user-name">Piyush Sharma</span>
+            <span class="user-org">Acme Corp</span>
+          </div>
         </div>
-        <div class="user-chevron">▾</div>
       </div>
     </aside>
 
-    <!-- Main Content Viewport -->
-    <div class="app-viewport">
-      <!-- Japanese Watercolor Banner Watermark Header -->
-      <header class="app-header">
-        <div class="header-art-background" aria-hidden="true">
-          <svg class="header-banner-svg" viewBox="0 0 1000 90" preserveAspectRatio="none" fill="none">
-            <!-- Rising Red Sun -->
-            <circle cx="680" cy="35" r="28" fill="var(--sun-red)" opacity="0.85" />
-            <!-- Mount Fuji Silhouette -->
-            <path d="M560 90L640 25L690 90Z" fill="var(--header-art-tint)" opacity="0.8" />
-            <path d="M640 25L655 45L625 45Z" fill="var(--cloud-cream)" opacity="0.9" />
-            <!-- Pagoda silhouette -->
-            <path d="M740 38H770L755 26Z" fill="var(--torii-wood)" opacity="0.75" />
-            <path d="M736 50H774L755 40Z" fill="var(--torii-wood)" opacity="0.75" />
-            <path d="M732 64H778L755 52Z" fill="var(--torii-wood)" opacity="0.75" />
-            <path d="M752 64V90H758V64Z" fill="var(--torii-wood)" opacity="0.75" />
-            <!-- Stylized Clouds & Mist -->
-            <path d="M480 60C500 50 540 50 560 62C580 74 620 70 650 64" stroke="var(--cloud-cream)" stroke-width="4" stroke-linecap="round" opacity="0.7" />
-            <path d="M600 45C620 40 650 40 670 48" stroke="var(--cloud-cream)" stroke-width="3" stroke-linecap="round" opacity="0.6" />
-            <!-- Sakura floral branch in corner -->
-            <path d="M850 15Q900 35 940 30" stroke="var(--sakura-stem)" stroke-width="2" fill="none" opacity="0.6" />
-            <circle cx="890" cy="28" r="4" fill="var(--sakura-pink)" opacity="0.8" />
-            <circle cx="910" cy="34" r="5" fill="var(--sakura-pink)" opacity="0.8" />
-            <circle cx="930" cy="27" r="4.5" fill="var(--sakura-pink)" opacity="0.8" />
-            <circle cx="945" cy="32" r="3.5" fill="var(--sakura-pink)" opacity="0.8" />
-          </svg>
-        </div>
-
-        <div class="header-left">
-          <div class="header-title-group">
-            <span class="header-page-icon" id="header-page-icon">🧪</span>
-            <div>
-              <h1 class="header-page-title" id="header-page-title">Simulation Studio</h1>
-              <p class="header-page-subtitle" id="header-page-subtitle">Experiment with changes safely before applying to production.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="header-right">
-          <div class="header-search-wrap">
-            <span class="search-lens-icon" aria-hidden="true">🔍</span>
-            <input type="search" id="header-search-input" class="header-search-input" placeholder="Search experiments..." aria-label="Search">
-          </div>
-
-          <button class="btn btn--icon notif-bell-btn" id="notif-btn" aria-label="Notifications (1 unread)">
-            <span class="notif-bell-icon">🔔</span>
-            <span class="notif-count-badge">1</span>
-          </button>
-
-          <div class="header-user-pill" id="header-user-pill">
-            <span class="pill-avatar">PS</span>
-            <span class="pill-name">Piyush Sharma</span>
-            <span class="pill-org">Acme Corp</span>
-            <span class="pill-arrow">▾</span>
-          </div>
-
-          <button id="theme-toggle" class="btn btn--icon theme-toggle-btn" aria-label="Toggle theme">◐</button>
-        </div>
-      </header>
-
-      <main class="app-main">
-        <!-- 1. Simulation Studio (Active default from Reference UI 1) -->
-        <section id="view-simulation"></section>
-
-        <!-- 2. Dashboard Analytics & Health (Reference UI 2 Screen 1) -->
+    <div class="app-main-column">
+      <div class="top-utility-actions">
+        <button id="mobile-sidebar-toggle" class="btn btn-icon-round mobile-only-toggle" aria-label="Toggle navigation menu" title="Toggle navigation">☰</button>
+        <button id="theme-toggle" class="btn btn-icon-round" aria-label="Toggle theme" title="Toggle theme">◐</button>
+        <button class="btn btn-icon-round" aria-label="Notifications" title="Notifications">🔔</button>
+      </div>
+      <main>
+        <section id="view-overview"></section>
         <section id="view-dashboard" hidden></section>
-
-        <!-- 3. Test Runs Execution & Logs (Reference UI 2 Screen 2) -->
-        <section id="view-test-runs" hidden></section>
-
-        <!-- 4. Changes Timeline & Detection (Reference UI 2 Screen 3) -->
+        <section id="view-simulation" hidden></section>
+        <section id="view-runs" hidden></section>
         <section id="view-changes" hidden></section>
-
-        <!-- 5. Single Change Details (Existing D2-D4) -->
         <section id="view-change" hidden></section>
-
-        <!-- 6. Repairs & Self-Healing (Existing D5-D7) -->
         <section id="view-repair" hidden></section>
-
-        <!-- 7. AI Agent & Repairs Stepper (Reference UI 2 Screen 4) -->
-        <section id="view-ai-agent" hidden></section>
-
-        <!-- 8. Before & After Visual / DOM / Code Comparison (Reference UI 2 Screen 5) -->
-        <section id="view-comparison" hidden></section>
-
-        <!-- 9. Repair Workflow 6-Stage Stepper (Reference UI 2 Screen 6) -->
-        <section id="view-repair-workflow" hidden></section>
-
-        <!-- 10. Reports Summary & History (Reference UI 2 Screen 7) -->
+        <section id="view-agent" hidden></section>
+        <section id="view-compare" hidden></section>
         <section id="view-reports" hidden></section>
-
-        <!-- 11. Analytics & Trends (Reference UI 2 Screen 8) -->
         <section id="view-analytics" hidden></section>
-
-        <!-- 12. Storage & History Artifacts (Reference UI 2 Screen 9) -->
         <section id="view-storage" hidden></section>
-
-        <!-- 13. Monitored Sites Overview (Existing D1) -->
-        <section id="view-overview" hidden></section>
-
-        <!-- 14. Audit Log Records (Existing D7) -->
         <section id="view-audit" hidden></section>
-
-    <!-- 4. Settings Page -->
-    <section id="view-settings" hidden></section>
-
-    <!-- 5. Billing Page -->
-    <section id="view-billing" hidden></section>
-
-    <!-- 6. Authentication (Login & Signup) -->
-    <section id="view-auth" hidden></section>
-  </main>
-
-  <!-- Interactive Demo Video Modal -->
-  <dialog id="demo-video-dialog" class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Kaizen AI in Action: Intent-Aware Self-Healing</h3>
-        <button id="close-video-modal" class="btn btn--icon">✕</button>
-      </div>
-      <div class="modal-body video-simulation-body">
-        <div class="video-player-frame">
-          <div class="player-top-bar">
-            <span class="player-dot red"></span>
-            <span class="player-dot yellow"></span>
-            <span class="player-dot green"></span>
-            <span class="player-title mono">kaizen-ai-demo-v1-to-v2.mp4</span>
-          </div>
-          <div class="player-viewport">
-            <div id="sim-video-canvas" class="sim-viewport-canvas">
-              <div class="sim-step-badge mono">ACT 2 · Version B: Redesign Detected</div>
-              <div class="sim-browser-mockup">
-                <div class="sim-browser-bar mono">http://127.0.0.1:4102/cart.html</div>
-                <div class="sim-page-content">
-                  <h4>Shopping Bag</h4>
-                  <p class="sim-item">Gizmo Mini — $19.99</p>
-                  <div class="sim-action-highlight">
-                    <button class="btn btn--primary">Add to bag</button>
-                    <span class="sim-tag mono">Healed: #add-to-bag (Score 0.74)</span>
-                  </div>
-                </div>
-              </div>
-              <div class="sim-oracle-toast mono">
-                Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS
-              </div>
-            </div>
-          </div>
-          <div class="player-controls">
-            <button id="sim-play-pause-btn" class="btn btn--sm btn--primary">❚❚ Pause</button>
-            <div class="player-scrubber">
-              <div id="sim-progress-fill" class="scrubber-fill"></div>
-            </div>
-            <span id="sim-time-text" class="player-time mono">00:14 / 00:42</span>
-          </div>
-        </div>
-      </div>
+        <section id="view-settings" hidden></section>
+        <section id="view-billing" hidden></section>
+        <section id="view-auth" hidden></section>
+      </main>
     </div>
-  </dialog>
-
-  <!-- Governance Action Confirm Dialog (T19 D6) -->
+  </div>
   <dialog id="confirm-dialog">
     <form method="dialog">
       <h3>Confirm Action</h3>
       <div class="form-group">
         <label for="actor">Actor</label>
-        <input id="actor" name="actor" type="text" required placeholder="e.g. demo-lead or tech-lead">
+        <input id="actor" name="actor" type="text" required>
       </div>
       <div class="form-group">
         <label for="reason">Reason</label>
-        <input id="reason" name="reason" type="text" required placeholder="e.g. Validated harmless redesign">
+        <input id="reason" name="reason" type="text" required>
       </div>
       <div class="dialog-actions">
         <button value="cancel" class="btn">Cancel</button>
@@ -327,10 +132,63 @@
       </div>
     </form>
   </dialog>
-
-  <!-- Toast Notification Feedback -->
-  <div id="toast-container" class="toast-container" aria-live="polite"></div>
-
+  <!-- Floating AI Assistant Chat Bot (Gemini / ChatGPT Minimalist Architecture) -->
+  <div id="ai-chat-drawer" class="chat-drawer" hidden>
+    <div class="chat-header">
+      <div class="chat-title-group">
+        <span class="chat-avatar" aria-hidden="true">✦</span>
+        <div class="chat-title-meta">
+          <span class="chat-title-text">KaizenAI</span>
+          <span class="chat-subtitle mono">SARVAM 105B · PLAYWRIGHT</span>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <button id="chat-clear-btn" class="chat-tool-btn" aria-label="Clear chat" title="Clear conversation">↺</button>
+        <button id="chat-close-btn" class="chat-tool-btn" aria-label="Close chat" title="Close chat">✕</button>
+      </div>
+    </div>
+    <div id="chat-messages" class="chat-body">
+      <div class="chat-msg chat-msg--assistant">
+        <div class="msg-bubble">
+          <div class="msg-author-header">
+            <span class="msg-author-sparkle">✦</span>
+            <span class="msg-author-name">KaizenAI Assistant</span>
+          </div>
+          <div class="msg-content">
+            Hello! I am your <strong>KaizenAI Test Engineer</strong> powered by Sarvam AI 105B. Ask me anything about your Playwright test runs, broken selectors, or healing recommendations.
+          </div>
+          <div class="chat-prompt-starters">
+            <button type="button" class="prompt-starter-pill" data-prompt="Analyze broken selector drift for cart checkout">✦ Analyze selector drift</button>
+            <button type="button" class="prompt-starter-pill" data-prompt="Generate resilient Playwright patch code">⚡ Generate test patch</button>
+            <button type="button" class="prompt-starter-pill" data-prompt="Diagnose 500 error on checkout submission">🔍 Diagnose server 500 bug</button>
+            <button type="button" class="prompt-starter-pill" data-prompt="Verify backend order database invariants">⚖️ Verify oracle invariants</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <form id="chat-form" class="chat-input-capsule-wrapper">
+      <div class="chat-input-capsule">
+        <span class="capsule-sparkle-icon" aria-hidden="true">✦</span>
+        <input id="chat-input" type="text" class="chat-prompt-input" placeholder="Ask anything about tests, selectors, or healing..." autocomplete="off" required>
+        <button type="submit" id="chat-send-btn" class="capsule-send-btn" aria-label="Send message" title="Send message">
+          <svg viewBox="0 0 24 24" class="send-arrow-svg" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="capsule-footnote mono">
+        <span>Sarvam 105B Engine</span>
+        <span>•</span>
+        <span>Playwright Chromium 124.0</span>
+      </div>
+    </form>
+  </div>
+  <button id="ai-chat-fab" class="chat-fab" aria-label="Open AI Assistant" title="Open AI Assistant">
+    <span class="fab-icon">✦</span>
+    <span class="fab-text">Ask AI</span>
+  </button>
+  <!-- Premium UI/UX Interactions: Mouse gradient, ripple, tilt, reveals -->
+  <script src="ui-premium.js" defer></script>
   <script src="app.js" type="module"></script>
 </body>
 </html>
