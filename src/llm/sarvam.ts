@@ -12,8 +12,8 @@ export class SarvamClient implements LlmClient {
   private baseUrl: string;
 
   constructor(
-    apiKey = process.env.SARVAM_API_KEY || 'sk_ekfawdoa_EqK9ryvbEiVHRvPC1TMfs5Al',
-    model = LLM_MODEL || 'sarvam-105b',
+    apiKey = process.env.SARVAM_API_KEY || '',
+    model = LLM_MODEL || 'sarvam-105b-conversations',
     baseUrl = process.env.SARVAM_BASE_URL || 'https://api.sarvam.ai/v1'
   ) {
     if (!apiKey) {

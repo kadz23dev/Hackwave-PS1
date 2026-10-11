@@ -7,8 +7,8 @@
   --line:#E4D9C3; --line-strong:#8C7B62; --focus:#B3202A; --gold-leaf:#C9A227;
   --sidebar-bg:#350B0B; --sidebar-sub:#541212; --sidebar-text:#F8F3E8; --sidebar-muted:#C4B2A7;
   --radius:8px; --gap:8px;
-  --font-serif:"Songti SC","Noto Serif SC","Source Han Serif SC","STSong","SimSun",Georgia,serif;
-  --font-sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-serif:"DM Serif Display","Songti SC","Noto Serif SC","Source Han Serif SC","STSong","SimSun",Georgia,serif;
+  --font-sans:"Inter","Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --font-mono:"JetBrains Mono",ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;
   --primary-charcoal:#111111;
   --secondary-charcoal:#44403C;
@@ -21,6 +21,21 @@
   --border:#E5E0DA;
   --text-primary:#191817;
   --text-secondary:#78716C;
+  --btn-hover-primary-bg:#C4242F;
+  --btn-hover-primary-deep:#961921;
+  --btn-hover-success-bg:#1B8064;
+  --btn-hover-danger-bg:#D32F2F;
+  --btn-hover-outline-bg:#EFE6D5;
+  --btn-hover-outline-border:#B3202A;
+  --btn-hover-icon-bg:#EFE7D8;
+  --btn-hover-chip-bg:#EDE6DC;
+  --glass-specular:#FFFFFF;
+  --glass-specular-soft:#EFE6D8;
+  --glass-surface:#F4EFE6;
+  --glass-border-light:#DDD1BB;
+  --aurora-glow:#C9A227;
+  --violet-hover:#705FE6;
+  --emerald-glow:#1F6B57;
 }
 /* @dark */
 @media (prefers-color-scheme: dark) {
@@ -43,6 +58,21 @@
     --border:#3B3530;
     --text-primary:#F5F3EF;
     --text-secondary:#A8A29E;
+    --btn-hover-primary-bg:#F0434F;
+    --btn-hover-primary-deep:#B3202A;
+    --btn-hover-success-bg:#2FB38C;
+    --btn-hover-danger-bg:#EF5350;
+    --btn-hover-outline-bg:#2A221E;
+    --btn-hover-outline-border:#E5646C;
+    --btn-hover-icon-bg:#332722;
+    --btn-hover-chip-bg:#2E2522;
+    --glass-specular:#FFFFFF;
+    --glass-specular-soft:#332924;
+    --glass-surface:#221A17;
+    --glass-border-light:#42352E;
+    --aurora-glow:#E0B84A;
+    --violet-hover:#AC9FF8;
+    --emerald-glow:#5FBFA3;
   }
 }
 :root[data-theme="dark"] {
@@ -64,4 +94,19 @@
   --border:#3B3530;
   --text-primary:#F5F3EF;
   --text-secondary:#A8A29E;
+  --btn-hover-primary-bg:#F0434F;
+  --btn-hover-primary-deep:#B3202A;
+  --btn-hover-success-bg:#2FB38C;
+  --btn-hover-danger-bg:#EF5350;
+  --btn-hover-outline-bg:#2A221E;
+  --btn-hover-outline-border:#E5646C;
+  --btn-hover-icon-bg:#332722;
+  --btn-hover-chip-bg:#2E2522;
+  --glass-specular:#FFFFFF;
+  --glass-specular-soft:#332924;
+  --glass-surface:#221A17;
+  --glass-border-light:#42352E;
+  --aurora-glow:#E0B84A;
+  --violet-hover:#AC9FF8;
+  --emerald-glow:#5FBFA3;
 }

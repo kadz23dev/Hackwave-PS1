@@ -6,6 +6,8 @@
   <title>Kaizen AI</title>
   <link rel="stylesheet" href="tokens.css?v=2">
   <link rel="stylesheet" href="app.css?v=2">
+  <!-- Premium UI/UX Layer v4.0 — Glass · Motion · Polish -->
+  <link rel="stylesheet" href="ui-premium.css?v=4">
 </head>
 <body>
   <div class="app-layout">
@@ -21,6 +23,14 @@
           <span class="nav-icon">⊞</span>
           <span class="nav-label">Dashboard</span>
           <span class="sr-only">Overview</span>
+        </a>
+        <a href="#/dashboard" class="nav-item">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-label">Studio Workspace</span>
+        </a>
+        <a href="#/simulation" class="nav-item">
+          <span class="nav-icon">◈</span>
+          <span class="nav-label">Simulation</span>
         </a>
         <a href="#/runs" class="nav-item">
           <span class="nav-icon">▶</span>
@@ -63,11 +73,11 @@
         </svg>
       </div>
       <div class="sidebar-footer">
-        <div class="user-profile">
-          <div class="user-avatar">P</div>
+        <div class="user-profile" id="sidebar-user-profile" role="button" tabindex="0" title="Account Authentication">
+          <div class="user-avatar" id="sidebar-user-avatar">P</div>
           <div class="user-meta">
-            <span class="user-name">Piyush Sharma</span>
-            <span class="user-org">Acme Corp</span>
+            <span class="user-name" id="sidebar-user-name">Piyush Sharma</span>
+            <span class="user-org" id="sidebar-user-org">Acme Corp</span>
           </div>
         </div>
       </div>
@@ -75,11 +85,14 @@
 
     <div class="app-main-column">
       <div class="top-utility-actions">
+        <a id="nav-auth-btn" href="#/login" class="btn btn--sm btn--primary nav-auth-pill">Sign In</a>
         <button id="theme-toggle" class="btn btn-icon-round" aria-label="Toggle theme" title="Toggle theme">◐</button>
         <button class="btn btn-icon-round" aria-label="Notifications" title="Notifications">🔔</button>
       </div>
       <main>
         <section id="view-overview"></section>
+        <section id="view-dashboard" hidden></section>
+        <section id="view-simulation" hidden></section>
         <section id="view-runs" hidden></section>
         <section id="view-changes" hidden></section>
         <section id="view-change" hidden></section>
@@ -90,6 +103,9 @@
         <section id="view-analytics" hidden></section>
         <section id="view-storage" hidden></section>
         <section id="view-audit" hidden></section>
+        <section id="view-settings" hidden></section>
+        <section id="view-billing" hidden></section>
+        <section id="view-auth" hidden></section>
       </main>
     </div>
   </div>
@@ -138,6 +154,8 @@
     <span class="fab-icon">✦</span>
     <span class="fab-text">Ask AI</span>
   </button>
+  <!-- Premium UI/UX Interactions: Mouse gradient, ripple, tilt, reveals -->
+  <script src="ui-premium.js" defer></script>
   <script src="app.js" type="module"></script>
 </body>
 </html>

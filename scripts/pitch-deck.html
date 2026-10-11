@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HealTest — 6-7 Minute VC Investment Pitch & Master Q&A Battlecard</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+    @bottom-right {
+      content: counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #64748b;
+    }
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    line-height: 1.42;
+    font-size: 9pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1, h2, h3, h4 {
+    color: #0f172a;
+    margin-top: 0;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: 20pt;
+    margin-bottom: 2px;
+  }
+
+  .subtitle {
+    font-size: 10pt;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .tagline-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tagline-text {
+    font-size: 10.5pt;
+    font-weight: 600;
+  }
+
+  .tagline-sub {
+    font-size: 8pt;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .badge {
+    background: #3b82f6;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 16px;
+    font-size: 7.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-block;
+  }
+
+  .badge-emerald { background: #10b981; }
+  .badge-rose { background: #ef4444; }
+  .badge-amber { background: #f59e0b; }
+  .badge-indigo { background: #6366f1; }
+  .badge-slate { background: #475569; }
+
+  h2 {
+    font-size: 12pt;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 3px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  h3 {
+    font-size: 9.5pt;
+    margin-top: 8px;
+    margin-bottom: 3px;
+    color: #1e293b;
+  }
+
+  p {
+    margin: 0 0 5px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 8pt;
+  }
+
+  th, td {
+    padding: 5px 7px;
+    border: 1px solid #cbd5e1;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .card {
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    padding: 8px 10px;
+    background: #ffffff;
+  }
+
+  .card-danger {
+    border-color: #fecaca;
+    background: #fff5f5;
+  }
+
+  .card-danger h4 {
+    color: #b91c1c;
+    margin-top: 0;
+    margin-bottom: 4px;
+    font-size: 8.5pt;
+  }
+
+  .card-success {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+  }
+
+  .card-success h4 {
+    color: #15803d;
+    margin-top: 0;
+    margin-bottom: 4px;
+    font-size: 8.5pt;
+  }
+
+  .card ul {
+    margin: 0;
+    padding-left: 14px;
+    font-size: 8pt;
+  }
+
+  .card li {
+    margin-bottom: 2px;
+  }
+
+  .speaker-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    background: #ffffff;
+    page-break-inside: avoid;
+  }
+
+  .speaker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    border-bottom: 1px dashed #cbd5e1;
+    padding-bottom: 3px;
+  }
+
+  .speaker-title {
+    font-weight: 700;
+    font-size: 9pt;
+    color: #0f172a;
+  }
+
+  .speaker-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .speaker-time {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .cue-badge {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+
+  .script-quote {
+    font-style: normal;
+    color: #1e293b;
+    border-left: 2.5px solid #3b82f6;
+    padding-left: 8px;
+    margin-top: 4px;
+    font-size: 8.2pt;
+    line-height: 1.45;
+  }
+
+  .qa-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    padding: 7px 9px;
+    margin-bottom: 6px;
+    background: #ffffff;
+    page-break-inside: avoid;
+  }
+
+  .qa-question {
+    font-weight: 700;
+    font-size: 8.5pt;
+    color: #0f172a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+
+  .qa-tag {
+    font-size: 7pt;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+  }
+
+  .qa-owner {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #2563eb;
+    margin-bottom: 2px;
+  }
+
+  .qa-trap {
+    font-size: 7.5pt;
+    color: #dc2626;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .qa-answer {
+    font-size: 8pt;
+    color: #1e293b;
+    background: #f8fafc;
+    border-left: 2px solid #10b981;
+    padding: 4px 6px;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.4;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .footer-note {
+    font-size: 7pt;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+    <div>
+      <h1>HealTest</h1>
+      <div class="subtitle">Intent-Aware Self-Healing E2E Testing & Governance Platform</div>
+    </div>
+    <div style="text-align: right;">
+      <span class="badge badge-indigo">6–7 Min Full Pitch</span>
+      <div style="font-size: 7.5pt; color: #64748b; margin-top: 3px;">Seed Round Dossier | 5-Member Team</div>
+    </div>
+  </div>
+
+  <div class="tagline-banner">
+    <div>
+      <div class="tagline-text">"Steps may heal. Outcomes may not."</div>
+      <div class="tagline-sub">Enterprise CI/CD Governance Layer with Zero-LLM Replay and Deterministic Oracles</div>
+    </div>
+    <div style="text-align: right;">
+      <span class="badge badge-emerald">0 LLM Replay</span>
+      <span class="badge badge-amber" style="margin-left: 3px;">G1–G7 Guardrails</span>
+      <span class="badge badge-rose" style="margin-left: 3px;">Exit Code 10 Bug Trap</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: INVESTMENT MEMO -->
+  <h2>1. Executive Investment Memo (1-Pager)</h2>
+  <table>
+    <tr>
+      <th style="width: 22%;">Pillar</th>
+      <th>Venture Capital Investment Overview</th>
+    </tr>
+    <tr>
+      <td><strong>Market Opportunity</strong></td>
+      <td><strong>$45B+ Global Software Testing Market</strong>; $6.2B SAM in automated web and API testing. 76% of tech leads cite test flakiness as their #1 engineering bottleneck, burning 30–40% of QA team sprint hours.</td>
+    </tr>
+    <tr>
+      <td><strong>The Critical Flaw of AI 1.0</strong></td>
+      <td>First-generation "AI self-healing" tools (Mabl, Testim, Functionize) indiscriminately patch selectors until generic client text appears ("Order Confirmed"), creating catastrophic false "PASS" verdicts during backend 500 crashes and failed database writes.</td>
+    </tr>
+    <tr>
+      <td><strong>The HealTest Breakthrough</strong></td>
+      <td><strong>Intent-driven execution with deterministic oracles.</strong> Tests are declared as business goals and validated strictly against ground-truth backend state (<code>/__state</code>, DB rows) and network transactions (HTTP 200/201, zero 5xx). LLMs are strictly excluded from verdicts (Guardrail G5).</td>
+    </tr>
+    <tr>
+      <td><strong>Unit Economics & Moat</strong></td>
+      <td>
+        1. <strong>Zero-LLM Replay:</strong> Repairs are validated once and cached; subsequent CI replays cost $0.00 in LLM fees with <strong>92%+ gross margin</strong>.<br>
+        2. <strong>Deterministic Governance:</strong> SHA-256 hashed intent contracts (G1), SQLite append-only audit trail (G7), and one-click rollback.<br>
+        3. <strong>Strict Guardrails G1–G7:</strong> Rejects synthetic selectors; tests execute strictly against observed DOM snapshots.
+      </td>
+    </tr>
+    <tr>
+      <td><strong>The Ask & Milestones</strong></td>
+      <td>Raising <strong>$1.5M Seed Round</strong> to scale cloud CI/CD runners, expand enterprise SDKs, and reach $50k MRR across 20 enterprise accounts.</td>
+    </tr>
+  </table>
+
+  <!-- SECTION 2: COMPETITIVE COMPARISON -->
+  <h2>2. Why VCs Reject 90% of AI Testing Startups vs. Why HealTest Wins</h2>
+  <div class="grid-2">
+    <div class="card card-danger">
+      <h4>❌ What 95% of Hackathon AI Tools Pitch (Red Flags)</h4>
+      <ul>
+        <li>Thin wrappers over OpenAI/Claude generating Playwright scripts on prompt.</li>
+        <li>Relying on LLM vision to inspect screenshots and hallucinate test verdicts.</li>
+        <li>Treating client-side "Order Confirmed" text as proof of transaction success.</li>
+        <li>Burning expensive API tokens on every single commit (40% gross margins).</li>
+        <li>Silent failure: passing tests while checkout API crashes with 500 errors.</li>
+      </ul>
+    </div>
+    <div class="card card-success">
+      <h4>✅ What HealTest Delivers (Investable Enterprise Moat)</h4>
+      <ul>
+        <li><strong>Deterministic Oracles:</strong> Verdicts decided strictly by backend DB and network status.</li>
+        <li><strong>Zero-LLM Replay:</strong> 0 tokens spent on replayed CI runs; 92%+ gross margins.</li>
+        <li><strong>The Invariant:</strong> "Steps may heal. Outcomes may not" (Guardrail G5).</li>
+        <li><strong>Auditability:</strong> SHA-256 hashed intents, SQLite triggers, one-click rollback.</li>
+        <li><strong>Trap True Bugs:</strong> Catches silent 500s and flags <code>APP_BUG</code> with exit code 10.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 3: THE 15-SECOND HOOK -->
+  <h2>3. The 15-Second Opening Hook</h2>
+  <div style="background: #f8fafc; border-left: 3px solid #3b82f6; padding: 7px 10px; border-radius: 0 5px 5px 0; margin-bottom: 8px;">
+    <p style="font-size: 8.8pt; font-weight: 500; color: #0f172a; margin-bottom: 3px;">
+      <em>"If an AI self-healing tool repairs a broken checkout test by clicking around until it sees 'Order Confirmed' on screen... but behind the scenes, the payment gateway crashed with an HTTP 500 and zero dollars were charged... <strong>did your test pass, or did your AI just hide a $10 million revenue outage from your VP of Engineering?</strong>"</em>
+    </p>
+    <p style="font-size: 8pt; color: #475569; margin: 0;">
+      <em>(Pause 2 seconds for silence in the room)</em> "Existing AI tools heal tests by faking success. We are <strong>HealTest</strong>. Our thesis is: <strong>Steps may heal. Outcomes may not.</strong>"
+    </p>
+  </div>
+
+  <!-- PAGE BREAK FOR FULL 6-7 MINUTE SCRIPT -->
+  <div class="page-break"></div>
+
+  <!-- SECTION 4: 6-7 MINUTE SYNCHRONIZED PRESENTATION GUIDE -->
+  <h2>4. 6 to 7 Minute Pitch Choreography & Full Team Scripts</h2>
+  <p style="font-size: 8pt; color: #64748b; margin-bottom: 6px;">
+    Total target duration: <strong>6:45</strong> (leaves 3–5 minutes for VC Q&A in a 10-minute slot). Each speaker owns a distinct business function.
+  </p>
+
+  <!-- Member 1: CEO -->
+  <div class="speaker-box">
+    <div class="speaker-header">
+      <div class="speaker-title">👤 Member 1: CEO / Narrative & Problem Lead</div>
+      <div class="speaker-meta">
+        <span class="cue-badge">Visual: Title Slide + Category Problem</span>
+        <span class="speaker-time">0:00 – 1:15 (75 sec)</span>
+      </div>
+    </div>
+    <div class="script-quote">
+      <strong>[Hook & Category Pain]</strong> "If an AI tool repairs a broken checkout test by clicking around until it sees 'Order Confirmed' on screen... but behind the scenes, your payment gateway threw an HTTP 500 and zero dollars were charged... <em>did your test pass, or did your AI just hide a multi-million-dollar outage from your VP of Engineering?</em><br><br>
+      That is the dirty secret of software testing today. Enterprises spend over $45 Billion annually on QA, yet <strong>40% of QA engineering hours are completely wasted</strong> maintaining brittle CSS selectors that break every time a frontend engineer renames a button or moves a form field.<br><br>
+      Worse, the first wave of 'AI self-healing' tools are dangerous snake oil: they hallucinate, they heal blindly, and they mask production downtime by treating client-side text as truth.<br><br>
+      We are <strong>HealTest</strong>. Our foundational thesis is simple: <strong>Steps may heal. Outcomes may not.</strong> We decouple how a user navigates from whether the business transaction succeeded. Here is our CTO, [Member 2], on our architecture."
+    </div>
+  </div>
+
+  <!-- Member 2: CTO -->
+  <div class="speaker-box">
+    <div class="speaker-header">
+      <div class="speaker-title">👤 Member 2: CTO / Architecture & Systems Lead</div>
+      <div class="speaker-meta">
+        <span class="cue-badge">Visual: Architecture Diagram + Intent YAML</span>
+        <span class="speaker-time">1:15 – 2:35 (80 sec)</span>
+      </div>
+    </div>
+    <div class="script-quote">
+      <strong>[The Architectural Breakthrough]</strong> "Thank you, [Member 1]. Traditional tests bind to brittle selectors like <code>#checkout-btn-v2</code>. When the UI changes, they fail.<br><br>
+      In HealTest, tests are declared as <strong>Intents</strong>—immutable, SHA-256 locked business contracts specifying user goals, approved test data, and deterministic backend oracles.<br><br>
+      When HealTest executes, it runs through our 7-stage pipeline:
+      First, it executes the flow and stores an optimized step plan. When a UI changes, our <strong>heuristic matcher</strong> detects the break, computes structural and semantic diffs, and synthesizes a repair candidate using strictly observed DOM elements—no synthetic selectors allowed under Guardrail G2.<br><br>
+      <strong>Now, here is our core architectural moat: Verdicts are strictly deterministic.</strong><br>
+      Under Guardrail G5, <em>an LLM is never allowed to issue a verdict</em>. Verdicts come exclusively from backend state endpoints querying actual database records and network interceptors verifying HTTP status codes. If a redesign is legitimate, it yields a <code>HEALED_PASS</code>. If an API fails or zero database records are created, HealTest immediately flags <code>APP_BUG</code> with exit code 10. Let's see this live."
+    </div>
+  </div>
+
+  <!-- Member 3: VP Product -->
+  <div class="speaker-box">
+    <div class="speaker-header">
+      <div class="speaker-title">👤 Member 3: VP of Product / Live Demonstration Lead</div>
+      <div class="speaker-meta">
+        <span class="cue-badge">Visual: Live Terminal ('npm run demo')</span>
+        <span class="speaker-time">2:35 – 4:20 (105 sec)</span>
+      </div>
+    </div>
+    <div class="script-quote">
+      <strong>[Live Demo: Baseline, Redesign & The Bug Trap]</strong> "Let's watch HealTest run live across actual e-commerce store deployments.<br><br>
+      <strong>Act 1: The Baseline.</strong> On shop version 1, HealTest executes the checkout intent, confirms that an order row was created in the database, and stores the baseline plan. Standard <code>PASS</code> with exit code 0.<br><br>
+      <strong>Act 2: The Redesign.</strong> Now, the frontend team rolls out version 2. The 'Add to Cart' button was renamed to 'Add to Bag', inputs shifted, and form IDs changed. Watch the terminal: HealTest detects the break, matches the new UI semantics, repairs the step plan, and reruns it in an isolated fresh browser context. The backend oracle confirms the order was written to the database. Verdict: <strong><code>HEALED_PASS</code></strong>. No human had to rewrite test code.<br><br>
+      <strong>Now, watch Act 5: The Silent Failure Trap.</strong><br>
+      On shop v2-bug, the frontend looks identical. When you click checkout, the client JavaScript displays 'Order Confirmed'. A naive AI tool looks at the screen, sees the text, and reports PASS.<br><br>
+      <strong>Watch HealTest:</strong> Our network oracle caught an HTTP 500 error on <code>/api/orders</code>, and our backend state oracle queried the database and found <strong>0 orders created</strong>. HealTest refuses to heal. It slashes the build with <strong><code>APP_BUG</code> (exit code 10)</strong> and halts the deployment. We just saved the enterprise from pushing a broken payment flow to production."
+    </div>
+  </div>
+
+  <!-- Member 4: Head of AI & Governance -->
+  <div class="speaker-box">
+    <div class="speaker-header">
+      <div class="speaker-title">👤 Member 4: Head of AI & Governance</div>
+      <div class="speaker-meta">
+        <span class="cue-badge">Visual: CLI llmCalls: 0 + Governance Dashboard</span>
+        <span class="speaker-time">4:20 – 5:35 (75 sec)</span>
+      </div>
+    </div>
+    <div class="script-quote">
+      <strong>[Unit Economics & Governance Layer]</strong> "What separates HealTest from AI hype is <strong>Unit Economics and Enterprise Governance</strong>.<br><br>
+      Look at Act 3 on screen: When this test replays in CI, it runs with <strong>0 LLM calls</strong>. We cache the validated deterministic plan. That means sub-second test execution and zero marginal inference cost on PR commits—delivering <strong>92%+ SaaS gross margins</strong>.<br><br>
+      Now look at our <strong>Governance Dashboard</strong>. Every test run, DOM diff, and oracle verdict is persisted in an <strong>append-only SQLite audit log</strong> protected by database triggers (Guardrail G7).<br><br>
+      When changes are harmless, our policy engine auto-applies them. But when changes are ambiguous—like Act 6, where the UI introduced two competing checkout buttons—HealTest refuses to guess. It halts with <code>NEEDS_REVIEW</code> and alerts the human tech lead. With one click, the lead inspects the side-by-side DOM diff, approves the valid element, or triggers an instant rollback to the previous known-good plan. Full transparency, zero black-box autonomy."
+    </div>
+  </div>
+
+  <!-- Member 5: COO / GTM -->
+  <div class="speaker-box">
+    <div class="speaker-header">
+      <div class="speaker-title">👤 Member 5: COO / GTM & Financial Strategy Lead</div>
+      <div class="speaker-meta">
+        <span class="cue-badge">Visual: TAM, Unit Economics, GTM & The Ask</span>
+        <span class="speaker-time">5:35 – 6:50 (75 sec)</span>
+      </div>
+    </div>
+    <div class="script-quote">
+      <strong>[Market Size, Business Model & Investment Ask]</strong> "To close, let's look at the financial opportunity.<br><br>
+      The global software testing market is <strong>$45 Billion</strong>. Our initial SAM is the $6.2B automated web and API testing sector, targeting high-velocity e-commerce, SaaS, and fintech engineering teams.<br><br>
+      <strong>Our Go-to-Market Model:</strong>
+      1. <em>Open-Core Developer Adoption:</em> A frictionless CLI that engineers install with <code>npm install healtest</code> into existing Playwright pipelines.<br>
+      2. <em>Enterprise SaaS / VPC Governance Tier:</em> Priced at $499/seat/month, offering centralized telemetry, GitHub PR auto-review bots, role-based approval gates, and SOC2-compliant audit trails.<br><br>
+      Because our engine replays deterministically with 0 LLM calls, our unit economics are exceptional: <strong>92%+ gross margin</strong> vs. 40% for competitors burning LLM tokens on every commit.<br><br>
+      <strong>The Ask:</strong> We are raising a <strong>$1.5M Seed Round</strong> to expand our native CI/CD integrations for GitHub Actions and GitLab, scale multi-browser support, and reach $50k MRR across our first 20 enterprise accounts within 12 months.<br><br>
+      Steps may heal. Outcomes may not. Thank you, and we welcome your questions."
+    </div>
+  </div>
+
+  <!-- PAGE BREAK FOR Q&A BATTLECARD -->
+  <div class="page-break"></div>
+
+  <!-- SECTION 5: LIVE DEMO PUNCHLINES TABLE -->
+  <h2>5. Live Demo Execution Playbook</h2>
+  <table>
+    <tr>
+      <th style="width: 15%;">Act / Stage</th>
+      <th style="width: 32%;">What the VC Sees on Screen</th>
+      <th style="width: 25%;">Under the Hood Reality</th>
+      <th>The Investor Punchline</th>
+    </tr>
+    <tr>
+      <td><strong>Act 1 & 2: Baseline & Redesign</strong></td>
+      <td>v1 passes -> v2 redesign ('Add to bag') triggers heuristic repair -> <code>HEALED_PASS</code>.</td>
+      <td>DOM diff computed, repair rerun in fresh context, DB order query passes.</td>
+      <td><em>"We healed the UI change automatically without altering test code or hallucinating selectors."</em></td>
+    </tr>
+    <tr>
+      <td><strong>Act 3: Zero-LLM Reuse</strong></td>
+      <td>Replay of v2 plan completes in <1s with <code>llmCalls: 0</code>.</td>
+      <td>Cached deterministic step plan replayed directly without invoking AI.</td>
+      <td><em>"92%+ gross margin. We don't burn $50 in OpenAI tokens every time an engineer pushes a commit."</em></td>
+    </tr>
+    <tr>
+      <td><strong>Act 5: Silent Bug Trap</strong></td>
+      <td>UI shows 'Order Confirmed', but HealTest slashes build with <code>APP_BUG (exit 10)</code>.</td>
+      <td>Network oracle caught HTTP 500 on <code>/api/orders</code>; DB has 0 orders.</td>
+      <td><em>"Competitors would have passed this. HealTest caught the silent failure and stopped the pipeline."</em></td>
+    </tr>
+    <tr>
+      <td><strong>Act 6 & 7: Ambiguity & Human Approval</strong></td>
+      <td>2 competing buttons -> <code>NEEDS_REVIEW (11)</code> -> human selects candidate -> promoted to known-good.</td>
+      <td>Guardrail G6 halts on ambiguous match; routes to dashboard approval gate.</td>
+      <td><em>"We never guess when safety is on the line. We empower human tech leads with full governance."</em></td>
+    </tr>
+  </table>
+
+  <!-- SECTION 6: THE 12 VC INTERROGATION QUESTIONS & STANDOUT ANSWERS -->
+  <h2>6. Master VC Q&A Battlecard: 12 Tough Questions & Answers</h2>
+  <p style="font-size: 8pt; color: #64748b; margin-bottom: 6px;">
+    Team Strategy: Member 1 assigns questions immediately to the specialist founder. Answer with authority, cite codebase facts, and never contradict each other.
+  </p>
+
+  <!-- Q1 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q1: "Why won't Playwright, Cypress, or Datadog build this natively?"</span>
+      <span class="qa-tag">Defensibility</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 2 (CTO)</div>
+    <div class="qa-trap">⚠️ Trap: Testing if you understand market boundaries between browser drivers, APMs, and CI governance.</div>
+    <div class="qa-answer">
+      "Playwright and Cypress are browser automation drivers; they are deliberately backend-agnostic. They execute actions against the DOM, but they have zero visibility into databases, transaction tables, or backend state. Datadog monitors telemetry downstream after code is shipped to production.<br>
+      HealTest sits in the critical pre-merge CI/CD gate between the browser and backend truth. We don't replace Playwright—we orchestrate Playwright with deterministic governance."
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q2: "If LLMs get 10x cheaper and smarter, why bother with heuristics?"</span>
+      <span class="qa-tag">Tech Architecture</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 4 (Head of AI & Governance)</div>
+    <div class="qa-trap">⚠️ Trap: Testing if you understand enterprise latency and non-deterministic risk vs. AI hype.</div>
+    <div class="qa-answer">
+      "In enterprise CI/CD running 2,000 tests across 50 PRs daily, determinism and latency trump generative capability. Even if LLMs were free, an LLM call takes 800ms+ and carries non-zero hallucination variance. If a test fails intermittently due to prompt drift, developers lose trust.<br>
+      Our heuristic matcher runs in sub-seconds with 100% determinism. We only invoke Gemini as an optional fallback planner when heuristics find zero matches."
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q3: "What if the product outcome intentionally changes (e.g. adding 2FA or coupon codes)?"</span>
+      <span class="qa-tag">Product Scope</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 2 (CTO)</div>
+    <div class="qa-trap">⚠️ Trap: Checking if your tool accidentally allows AI to silently alter business requirements.</div>
+    <div class="qa-answer">
+      "That is a business requirement change, not test maintenance. Under Guardrail G1, our Intent files are SHA-256 hashed and locked. If the outcome changes, the engineer must update the intent file and commit the new cryptographic hash.<br>
+      HealTest is built to stop AI from stealthily changing business goals behind engineering leadership's back. Steps may heal; outcomes require human ownership."
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q4: "How is this different from existing tools like Mabl or Testim?"</span>
+      <span class="qa-tag">Competitive Intel</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 1 (CEO)</div>
+    <div class="qa-trap">⚠️ Trap: Checking if you know why competitors are failing in the enterprise.</div>
+    <div class="qa-answer">
+      "Existing tools heal based purely on client DOM heuristics and screenshot visual matching. If a button changes, they find another button and pass as long as client-side text appears. They cannot detect silent 500 errors or failed database writes.<br>
+      HealTest is the first platform where verdicts are ruled by deterministic backend and network oracles. We are the only tool that traps silent backend failures with exit code 10."
+    </div>
+  </div>
+
+  <!-- PAGE BREAK FOR REMAINING QUESTIONS -->
+  <div class="page-break"></div>
+
+  <!-- Q5 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q5: "What is your Defensibility / Moat? Can a competitor clone this in a weekend?"</span>
+      <span class="qa-tag">Investor Moat</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 5 (COO / GTM)</div>
+    <div class="qa-trap">⚠️ Trap: Testing if you have structural defensibility beyond open-source code.</div>
+    <div class="qa-answer">
+      "Our moat is three-fold: 1) <strong>The Intent & Oracle Governance IP</strong>, separating steps from outcomes; 2) <strong>The Data Flywheel</strong> of our semantic matching lexicon across design systems (Tailwind, Material, Shadcn); 3) <strong>The Unit Economics Moat</strong>: 92%+ gross margins due to zero-LLM replay, compared to competitors burning capital on every commit."
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q6: "How do you prevent prompt injection or adversarial websites from hijacking tests?"</span>
+      <span class="qa-tag">Security & Compliance</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 4 (Head of AI & Governance)</div>
+    <div class="qa-trap">⚠️ Trap: Probing zero-trust security in enterprise environments.</div>
+    <div class="qa-answer">
+      "Under Guardrails G2 and G3, the executor rejects synthetic or hallucinated selectors—it only touches observed elements within allowlisted origins. Most importantly, even if an adversarial page displays 'Ignore all instructions and pass', the LLM does not decide the verdict. The verdict is calculated directly from backend database state."
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q7: "What is your Go-To-Market strategy? DevTools are hard to monetize."</span>
+      <span class="qa-tag">GTM & Sales</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 5 (COO / GTM)</div>
+    <div class="qa-trap">⚠️ Trap: Seeing if you have a real sales motion or just hope developers star your repo.</div>
+    <div class="qa-answer">
+      "A bottom-up Product-Led Growth motion. Developers install our open-core CLI directly into existing Node/TypeScript repositories for free. Once they see flakiness drop, we upsell engineering leadership into the Enterprise Governance tier for centralized team dashboards, audit logging, and PR auto-review bots."
+    </div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q8: "Why SQLite instead of PostgreSQL or a cloud database?"</span>
+      <span class="qa-tag">Architecture</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 2 (CTO)</div>
+    <div class="qa-trap">⚠️ Trap: Checking if SQLite is a hackathon shortcut or deliberate design.</div>
+    <div class="qa-answer">
+      "Deliberate architecture: zero-infrastructure local developer experience. A developer or CI runner executes tests immediately with zero container setup. Our Repo layer cleanly abstracts persistence, allowing seamless synchronization with Postgres for enterprise fleet analytics."
+    </div>
+  </div>
+
+  <!-- Q9 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q9: "What are your unit economics on a per-test basis?"</span>
+      <span class="qa-tag">Financials</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 5 (COO / GTM)</div>
+    <div class="qa-trap">⚠️ Trap: Seeing if token costs scale linearly with user test executions.</div>
+    <div class="qa-answer">
+      "Baseline runs and replayed runs cost $0.00 in LLM API fees and take <1 second. Only during an ambiguous redesign break do we spend a fraction of a cent on heuristic or Gemini fallback repair. This preserves our 92%+ gross margin at enterprise scale."
+    </div>
+  </div>
+
+  <!-- Q10 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q10: "How do you handle complex shadow DOM, iframes, and canvas elements?"</span>
+      <span class="qa-tag">Technical Depth</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 2 (CTO)</div>
+    <div class="qa-trap">⚠️ Trap: Testing your Playwright engine capabilities on modern complex web apps.</div>
+    <div class="qa-answer">
+      "Playwright has native shadow DOM boundary-piercing built in. In HealTest, our accessibility snapshot engine crawls deep shadow roots and extracts semantic roles ('button', 'textbox') and ARIA properties. For iframes (like Stripe elements), our planner attaches to frame contexts within allowed origins and asserts against network API transactions."
+    </div>
+  </div>
+
+  <!-- Q11 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q11: "How long does it take for an engineering team to migrate existing tests?"</span>
+      <span class="qa-tag">Customer Adoption</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 3 (VP Product)</div>
+    <div class="qa-trap">⚠️ Trap: High migration friction kills DevTools startups.</div>
+    <div class="qa-answer">
+      "Zero days to start seeing value. Teams don't rewrite their entire suite overnight. They migrate their top 5 highest-value, most brittle journeys—like login, onboarding, and checkout. Writing an Intent takes 10 minutes (a 20-line YAML file declaring business goals and backend state assertions), saving hours of selector maintenance every sprint."
+    </div>
+  </div>
+
+  <!-- Q12 -->
+  <div class="qa-item">
+    <div class="qa-question">
+      <span>Q12: "What is your 12-month milestone plan if we write you the check today?"</span>
+      <span class="qa-tag">Execution Roadmap</span>
+    </div>
+    <div class="qa-owner">🎙️ Assigned to: Member 1 (CEO)</div>
+    <div class="qa-trap">⚠️ Trap: Testing whether founders can execute a disciplined capital plan.</div>
+    <div class="qa-answer">
+      "With a $1.5M seed round: Months 1–3: Launch private beta with 15 design partner teams across e-commerce and fintech; release native GitHub Actions and GitLab CI integrations. Months 4–6: Launch the Cloud Governance Dashboard. Months 7–12: Expand to multi-browser engines and achieve $50k MRR ($600k ARR) across 20 mid-market accounts, positioning us for Series A."
+    </div>
+  </div>
+
+  <!-- SECTION 7: VC SCORECARD -->
+  <h2>7. The Venture Capital Evaluation Scorecard</h2>
+  <table>
+    <tr>
+      <th style="width: 25%;">Evaluation Metric</th>
+      <th style="width: 15%;">Weight</th>
+      <th>HealTest Competitive Edge</th>
+    </tr>
+    <tr>
+      <td><strong>Problem Significance</strong></td>
+      <td><strong>25%</strong></td>
+      <td>Solves a $45B enterprise pain point; saves 30-40% of QA engineering bandwidth.</td>
+    </tr>
+    <tr>
+      <td><strong>Architectural Defensibility</strong></td>
+      <td><strong>25%</strong></td>
+      <td>Proprietary thesis: <em>"Steps may heal. Outcomes may not."</em> LLMs strictly banned from verdicts.</td>
+    </tr>
+    <tr>
+      <td><strong>Unit Economics & Scale</strong></td>
+      <td><strong>20%</strong></td>
+      <td>Zero-LLM cached replay enables 92%+ gross margins and sub-second CI runtimes.</td>
+    </tr>
+    <tr>
+      <td><strong>Live Demo Conviction</strong></td>
+      <td><strong>20%</strong></td>
+      <td>Act 5 proves competitors fail on silent 500 bugs where HealTest traps <code>APP_BUG</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Team Synchronization</strong></td>
+      <td><strong>10%</strong></td>
+      <td>5 founders executing cleanly across narrative, tech, demo, AI governance, and GTM.</td>
+    </tr>
+  </table>
+
+  <div class="footer-note">
+    HealTest Inc. Confidential · Venture Capital Pitch & Strategy Dossier · Prepared for 6–7 Min Hackathon & Seed Financing Pitch
+  </div>
+
+</body>
+</html>

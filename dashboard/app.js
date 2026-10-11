@@ -117,6 +117,7 @@ export function severityBadge(sev) {
 const views = [
   { id: 'view-overview', regex: /^(?:#\/?|#\/overview)?$/ },
   { id: 'view-dashboard', regex: /^#\/dashboard$/ },
+  { id: 'view-simulation', regex: /^#\/simulation$/ },
   { id: 'view-runs', regex: /^#\/runs$/ },
   { id: 'view-changes', regex: /^#\/changes$/ },
   { id: 'view-change', regex: /^#\/changes\/(\d+)$/ },
@@ -200,6 +201,8 @@ export function route() {
     renderOverview();
   } else if (matchedView === 'view-dashboard') {
     renderDashboardWorkspace();
+  } else if (matchedView === 'view-simulation') {
+    renderSimulationView();
   } else if (matchedView === 'view-runs') {
     renderTestRunsView();
   } else if (matchedView === 'view-changes') {
@@ -806,7 +809,10 @@ export async function renderOverview() {
   const banner = el('div', { class: 'overview-banner' },
     el('div', { class: 'overview-banner-title' },
       el('h2', { class: 'page-main-heading' }, 'Dashboard'),
-      el('p', { class: 'page-subheading' }, 'Monitor test health, detect issues and get AI-powered repairs.')
+      el('p', { class: 'page-subheading' }, 'Monitor test health, detect issues and get AI-powered repairs.'),
+      el('div', { style: 'margin-top: 10px; display: flex; gap: 8px;' },
+        el('a', { href: '#/dashboard', class: 'btn btn--primary btn--sm' }, '⚡ Open AI Multi-Agent & Playwright Studio')
+      )
     ),
     japaneseHeaderArt()
   );
@@ -1964,41 +1970,70 @@ export async function renderAudit() {
    ========================================================================== */
 let workspaceState = {
   agentStatus: 'Healed', // 'Idle' | 'Running' | 'Healed' | 'Needs Review' | 'Failed'
+  scenario: 'drift', // 'drift' | 'bug' | 'ambiguous' | 'baseline'
   intentText: 'Complete checkout using a valid card.',
   activeStep: 4,
-  totalSteps: 6,
+  totalSteps: 5,
   testName: 'checkout-valid-card.yaml',
   targetUrl: 'http://127.0.0.1:4102/cart.html',
+  failedSelector: '#add-to-cart',
+  agents: {
+    sentinel: { name: 'Sentinel', badge: 'PW MONITOR', icon: '🚨', status: 'Monitoring' },
+    inspector: { name: 'Inspector', badge: 'DOM ANALYST', icon: '🔍', status: 'Drift Analyzed' },
+    architect: { name: 'Architect', badge: 'SELECTOR SYNTH', icon: '🛠️', status: 'Selector Synthesized' },
+    triage: { name: 'Triage', badge: 'ORACLE VERIFIED', icon: '⚖️', status: 'Oracle Verified' }
+  },
   chatMessages: [
     {
-      sender: 'agent',
-      time: '10:14:02',
-      text: 'Ready. I am monitoring Chromium execution on port 4102. Enter a natural language test intent or pick an example prompt below.'
+      id: 'msg-init-1',
+      sender: 'sentinel',
+      senderName: 'Sentinel (Playwright Monitor)',
+      badge: 'PW MONITOR',
+      avatar: '🚨',
+      time: '10:14:19',
+      text: 'Playwright execution alert: step 3 locator "#add-to-cart" timed out after 5000ms at http://127.0.0.1:4102/cart.html. Element absent from current DOM tree.'
     },
     {
-      sender: 'user',
-      time: '10:14:18',
-      text: 'Complete checkout using a valid card.'
+      id: 'msg-init-2',
+      sender: 'inspector',
+      senderName: 'Inspector (DOM & Drift)',
+      badge: 'DOM ANALYST',
+      avatar: '🔍',
+      time: '10:14:20',
+      text: 'DOM diff analysis completed: Shopping interface was redesigned in shop-v2. Element renamed from "Add to cart" to "Add to bag" (#add-to-bag) in product card. Text similarity score: 0.88.'
     },
     {
-      sender: 'agent',
-      time: '10:14:22',
-      text: 'Executing checkout journey. Step 3 detected UI drift on selector #add-to-cart (redesign to shopping bag). Synthesizing self-healing candidate...',
+      id: 'msg-init-3',
+      sender: 'architect',
+      senderName: 'Architect (Self-Healing)',
+      badge: 'SELECTOR SYNTH',
+      avatar: '🛠️',
+      time: '10:14:21',
+      text: 'Synthesized 3 resilient replacement selectors. Recommended locator: "#add-to-bag" (Confidence: 94%). Formulated Playwright test patch code.',
       healing: {
         oldSelector: '#add-to-cart',
         newSelector: '#add-to-bag',
-        score: '0.74',
+        score: '0.94',
         provenance: 'text-similarity & role-button',
         oracle: 'order-created ✓ | POST /api/orders 200 ✓'
       }
+    },
+    {
+      id: 'msg-init-4',
+      sender: 'triage',
+      senderName: 'Triage (QA Lead)',
+      badge: 'ORACLE VERIFIED',
+      avatar: '⚖️',
+      time: '10:14:22',
+      text: 'Executed candidate with Playwright. Backend order creation oracle verified: POST /api/orders 200 OK & SQLite order row incremented. Verdict: HEALED_PASS. Created audit note.'
     }
   ],
   logs: [
     { time: '10:14:19', level: 'info', msg: 'Browser launched: Chromium 124.0 headless context' },
     { time: '10:14:20', level: 'info', msg: 'Navigated to http://127.0.0.1:4102/cart.html (HTTP 200)' },
-    { time: '10:14:21', level: 'warn', msg: 'Step 3: Element "#add-to-cart" not found in DOM tree' },
-    { time: '10:14:21', level: 'heal', msg: 'UI Drift: synthesized replacement "#add-to-bag" (score 0.74)' },
-    { time: '10:14:22', level: 'pass', msg: 'Clicked "#add-to-bag" · item quantity updated in bag' },
+    { time: '10:14:21', level: 'warn', msg: 'Step 3: Element "#add-to-cart" not found in DOM tree (timeout 5000ms)' },
+    { time: '10:14:21', level: 'heal', msg: 'Multi-Agent bus synthesized replacement "#add-to-bag" (score 0.94)' },
+    { time: '10:14:22', level: 'pass', msg: 'Playwright clicked "#add-to-bag" · item quantity updated in bag' },
     { time: '10:14:23', level: 'pass', msg: 'Backend Oracle validated: order-created invariant matched' }
   ],
   activeNoteId: 1,
@@ -2006,6 +2041,25 @@ let workspaceState = {
 };
 
 let backendNotesCache = null;
+let notesLoading = false;
+
+async function loadNotesFromBackend() {
+  if (notesLoading) return;
+  notesLoading = true;
+  try {
+    const res = await api('/api/notes');
+    if (Array.isArray(res) && res.length > 0) {
+      backendNotesCache = res;
+      if (!workspaceState.activeNoteId && res[0]) {
+        workspaceState.activeNoteId = res[0].id;
+      }
+    }
+  } catch {
+    // Keep cached or default notes
+  } finally {
+    notesLoading = false;
+  }
+}
 
 function getNotes() {
   if (backendNotesCache && Array.isArray(backendNotesCache) && backendNotesCache.length > 0) {
@@ -2023,7 +2077,7 @@ function getNotes() {
       title: 'Cart checkout selector drift on v2',
       tag: 'Checkout',
       updated: '10 mins ago',
-      body: 'Button ID changed from #add-to-cart to #add-to-bag in shop-v2 redesign. Self-healing candidate score was 0.74. Backend order verification passed cleanly with zero LLM fallback calls.'
+      body: 'Button ID changed from #add-to-cart to #add-to-bag in shop-v2 redesign. Self-healing candidate score was 0.94. Backend order verification passed cleanly with Sarvam 105B AI reasoning.'
     },
     {
       id: 2,
@@ -2051,38 +2105,61 @@ function saveNotes(notes) {
   }
 }
 
-export function renderDashboardWorkspace() {
-  const container = document.getElementById('view-dashboard');
+export function renderDashboardWorkspace(targetContainer) {
+  const container = targetContainer || document.getElementById('view-dashboard');
   if (!container) return;
   container.textContent = '';
+
+  // Trigger background note sync if needed
+  if (!backendNotesCache) {
+    loadNotesFromBackend().then(() => {
+      // Re-render notes panel quietly if notes arrived
+      const currentNotes = getNotes();
+      if (currentNotes.length > 0 && !workspaceState.activeNoteId) {
+        workspaceState.activeNoteId = currentNotes[0].id;
+      }
+    });
+  }
 
   const wrapper = el('div', { class: 'workspace-wrapper' });
 
   // Workspace Header Bar
   const headerBar = el('div', { class: 'workspace-header-bar' });
   const titleGroup = el('div', { class: 'workspace-title-group' });
-  titleGroup.appendChild(el('h2', {}, 'Studio Workspace'));
+  titleGroup.appendChild(el('h2', {}, 'Studio Workspace · AI Multi-Agent & Playwright'));
   titleGroup.appendChild(
-    el('p', { class: 'workspace-subtitle' }, 'Persistent 3-panel environment for intent orchestration, Playwright execution, and session notes.')
+    el(
+      'p',
+      { class: 'workspace-subtitle' },
+      'Autonomous testing studio: Multi-Agent error debate, Playwright execution preview, and synchronized diagnostic notes.'
+    )
   );
   headerBar.appendChild(titleGroup);
 
   const headerActions = el('div', { class: 'header-right' });
+  const liveAiBadge = el('span', { class: 'chrome-badge mono', style: 'margin-right: 8px;' }, '✦ Sarvam 105B Live');
+  headerActions.appendChild(liveAiBadge);
+
   const resetBtn = el('button', { class: 'btn btn--outline btn--sm', type: 'button' }, '↺ Reset State');
   resetBtn.addEventListener('click', () => {
     workspaceState.agentStatus = 'Idle';
+    workspaceState.scenario = 'drift';
     workspaceState.activeStep = 1;
     workspaceState.chatMessages = [
       {
-        sender: 'agent',
+        id: `msg-${Date.now()}`,
+        sender: 'sentinel',
+        senderName: 'Sentinel (Playwright Monitor)',
+        badge: 'PW MONITOR',
+        avatar: '🚨',
         time: new Date().toLocaleTimeString(),
-        text: 'Session reset. Specify a natural language test intent or click an example prompt below.'
+        text: 'Session reset. Connected to Chromium 124.0 on port 4102. Pick a test scenario or enter intent below.'
       }
     ];
     workspaceState.logs = [
       { time: new Date().toLocaleTimeString(), level: 'info', msg: 'Session reset. Connected to Chromium 124.0 on port 4102.' }
     ];
-    renderDashboardWorkspace();
+    renderDashboardWorkspace(targetContainer);
   });
   headerActions.appendChild(resetBtn);
   headerBar.appendChild(headerActions);
@@ -2092,11 +2169,11 @@ export function renderDashboardWorkspace() {
   const grid = el('div', { class: 'workspace-3panel' });
 
   // ==========================================
-  // PANEL A: AI AGENT (Left)
+  // PANEL A: AI AGENTS & COMMUNICATION (Left)
   // ==========================================
   const panelA = el('div', { class: 'panel agent-panel' });
   const headerA = el('div', { class: 'panel-header' });
-  headerA.appendChild(el('h3', { class: 'panel-title' }, '🤖 AI Agent'));
+  headerA.appendChild(el('h3', { class: 'panel-title' }, '🤖 AI Agent Collective'));
   const statusPill = el(
     'span',
     { class: `panel-status status--${workspaceState.agentStatus.toLowerCase().replace(/\s+/g, '')}` },
@@ -2105,12 +2182,32 @@ export function renderDashboardWorkspace() {
   headerA.appendChild(statusPill);
   panelA.appendChild(headerA);
 
+  // Multi-Agent Roster Bar
+  const rosterBar = el('div', { class: 'agent-roster-strip' });
+  rosterBar.appendChild(el('div', { class: 'roster-pill' }, '🚨 Sentinel'));
+  rosterBar.appendChild(el('div', { class: 'roster-pill' }, '🔍 Inspector'));
+  rosterBar.appendChild(el('div', { class: 'roster-pill' }, '🛠️ Architect'));
+  rosterBar.appendChild(el('div', { class: 'roster-pill' }, '⚖️ Triage'));
+  panelA.appendChild(rosterBar);
+
   // Conversation Area
   const chatArea = el('div', { class: 'agent-chat-area' });
   for (const m of workspaceState.chatMessages) {
-    const bubble = el('div', { class: `chat-bubble chat-bubble--${m.sender}` });
-    bubble.appendChild(el('div', { class: 'mono', style: 'font-size: 0.7rem; opacity: 0.7; margin-bottom: 2px;' }, `${m.sender.toUpperCase()} · ${m.time}`));
-    bubble.appendChild(el('div', {}, m.text));
+    const isUser = m.sender === 'user';
+    const bubble = el('div', { class: `chat-bubble chat-bubble--${isUser ? 'user' : 'agent'}` });
+
+    const meta = el('div', { class: 'chat-msg-meta' });
+    const senderTag = el(
+      'span',
+      { class: `agent-role-badge agent-role-badge--${m.sender}` },
+      `${m.avatar || (isUser ? '👤' : '🤖')} ${m.senderName || m.sender.toUpperCase()}`
+    );
+    const timeSpan = el('span', { class: 'mono', style: 'opacity: 0.7;' }, m.time || '');
+    meta.appendChild(senderTag);
+    meta.appendChild(timeSpan);
+    bubble.appendChild(meta);
+
+    bubble.appendChild(el('div', { style: 'white-space: pre-wrap;' }, m.text));
 
     if (m.healing) {
       const hCard = el('div', { class: 'agent-healing-card' });
@@ -2119,34 +2216,43 @@ export function renderDashboardWorkspace() {
         el(
           'p',
           { class: 'agent-healing-desc mono' },
-          `Drift: ${m.healing.oldSelector} → ${m.healing.newSelector} (Score: ${m.healing.score})`
+          `Drift: ${m.healing.oldSelector} → ${m.healing.newSelector} (Confidence: ${m.healing.score})`
         )
       );
       hCard.appendChild(
-        el('div', { class: 'agent-healing-desc mono', style: 'font-size: 0.75rem; margin-top: 4px;' }, `Oracle: ${m.healing.oracle}`)
+        el('div', { class: 'agent-healing-desc mono', style: 'font-size: 0.72rem; margin-top: 4px;' }, `Oracle: ${m.healing.oracle}`)
       );
+
+      // Playwright code patch
+      const patchSnippet = el(
+        'div',
+        { class: 'patch-code-snippet' },
+        `// Playwright Remediation Patch\nawait page.locator('${m.healing.newSelector}').click();`
+      );
+      hCard.appendChild(patchSnippet);
       bubble.appendChild(hCard);
     }
+
     chatArea.appendChild(bubble);
   }
   panelA.appendChild(chatArea);
 
   // Suggested Actions Chips
   const suggestionsBox = el('div', { class: 'agent-suggestions' });
-  suggestionsBox.appendChild(el('div', { class: 'suggestions-label' }, 'Suggested Intent Prompts'));
+  suggestionsBox.appendChild(el('div', { class: 'suggestions-label' }, 'Dispatched Error & Intent Prompts'));
   const chipsContainer = el('div', { class: 'suggestion-chips' });
   const suggestedPrompts = [
-    'Complete checkout using a valid card.',
-    'Add item with promotional discount',
-    'Verify cart quantity increment',
-    'Shop v2 redesign checkout'
+    { text: 'Redesign Drift: #add-to-cart → #add-to-bag', scenario: 'drift' },
+    { text: 'Simulate App Bug: Server 500 on Checkout', scenario: 'bug' },
+    { text: 'Strict Mode Ambiguity: Dual Payment Buttons', scenario: 'ambiguous' },
+    { text: 'Shop v1 Baseline: Standard Checkout Journey', scenario: 'baseline' }
   ];
 
-  for (const promptText of suggestedPrompts) {
-    const chip = el('button', { class: 'suggestion-chip', type: 'button' }, promptText);
+  for (const item of suggestedPrompts) {
+    const chip = el('button', { class: 'suggestion-chip', type: 'button' }, item.text);
     chip.addEventListener('click', () => {
-      intentInput.value = promptText;
-      runAgentAction(promptText);
+      intentInput.value = item.text;
+      runAgentAction(item.text, item.scenario);
     });
     chipsContainer.appendChild(chip);
   }
@@ -2157,7 +2263,7 @@ export function renderDashboardWorkspace() {
   const inputContainer = el('div', { class: 'agent-input-container' });
   const intentInput = el('textarea', {
     class: 'agent-input-box',
-    placeholder: 'Complete checkout using a valid card.'
+    placeholder: 'Ask the agents or enter a Playwright intent...'
   });
   intentInput.value = workspaceState.intentText;
   intentInput.addEventListener('input', (e) => {
@@ -2166,82 +2272,192 @@ export function renderDashboardWorkspace() {
   intentInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      runAgentAction(intentInput.value);
+      handleUserInput(intentInput.value);
     }
   });
   inputContainer.appendChild(intentInput);
 
   const actionRow = el('div', { class: 'agent-actions-row' });
-  actionRow.appendChild(el('span', { class: 'agent-state-label mono' }, `State: ${workspaceState.agentStatus}`));
-  const runBtn = el('button', { class: 'btn btn--primary btn--sm', type: 'button' }, '⚡ Run Agent');
-  runBtn.addEventListener('click', () => runAgentAction(intentInput.value));
-  actionRow.appendChild(runBtn);
+  actionRow.appendChild(el('span', { class: 'agent-state-label mono' }, `Status: ${workspaceState.agentStatus}`));
+
+  const btnGroup = el('div', { style: 'display: flex; gap: 6px;' });
+  const askBtn = el('button', { class: 'btn btn--outline btn--sm', type: 'button' }, '💬 Ask Team');
+  askBtn.addEventListener('click', () => handleUserQuestion(intentInput.value));
+  btnGroup.appendChild(askBtn);
+
+  const runBtn = el('button', { class: 'btn btn--primary btn--sm', type: 'button' }, '⚡ Diagnose & Heal');
+  runBtn.addEventListener('click', () => runAgentAction(intentInput.value, workspaceState.scenario));
+  btnGroup.appendChild(runBtn);
+
+  actionRow.appendChild(btnGroup);
   inputContainer.appendChild(actionRow);
   panelA.appendChild(inputContainer);
   grid.appendChild(panelA);
 
-  async function runAgentAction(intent) {
-    const text = (intent || 'Complete checkout using a valid card.').trim();
-    workspaceState.intentText = text;
-    workspaceState.agentStatus = 'Running';
-    workspaceState.activeStep = 2;
+  async function handleUserInput(val) {
+    const text = val.trim();
+    if (!text) return;
+    if (text.startsWith('?') || text.toLowerCase().startsWith('why') || text.toLowerCase().startsWith('what') || text.toLowerCase().startsWith('how')) {
+      await handleUserQuestion(text);
+    } else {
+      await runAgentAction(text, workspaceState.scenario);
+    }
+  }
+
+  async function handleUserQuestion(question) {
+    const text = (question || 'Why did this selector change and how did the oracle verify it?').trim();
+    intentInput.value = '';
     workspaceState.chatMessages.push({
+      id: `msg-${Date.now()}`,
       sender: 'user',
+      senderName: 'You (Engineer)',
+      avatar: '👤',
+      badge: 'USER',
       time: new Date().toLocaleTimeString(),
       text
     });
+    renderDashboardWorkspace(targetContainer);
+
+    try {
+      const res = await api('/api/agents/chat', {
+        method: 'POST',
+        body: {
+          message: text,
+          context: `Target: ${workspaceState.targetUrl}, Test: ${workspaceState.testName}, Scenario: ${workspaceState.scenario}, Status: ${workspaceState.agentStatus}`
+        }
+      });
+      if (res?.message) {
+        workspaceState.chatMessages.push(res.message);
+      }
+    } catch {
+      workspaceState.chatMessages.push({
+        id: `msg-${Date.now()}`,
+        sender: 'triage',
+        senderName: 'Triage (QA Lead)',
+        badge: 'ORACLE VERIFIED',
+        avatar: '⚖️',
+        time: new Date().toLocaleTimeString(),
+        text: `Analysis of query "${text}": Playwright locator healing strictly validates that backend database state (SQLite orders table) increments before accepting candidate selectors.`
+      });
+    }
+    renderDashboardWorkspace(targetContainer);
+  }
+
+  async function runAgentAction(intent, scenarioType) {
+    const scenario = scenarioType || workspaceState.scenario || 'drift';
+    workspaceState.scenario = scenario;
+    const text = (intent || 'Complete checkout using a valid card.').trim();
+    workspaceState.intentText = text;
+    workspaceState.agentStatus = 'Running';
+
+    let targetUrl = 'http://127.0.0.1:4102/cart.html';
+    let targetSelector = '#add-to-cart';
+    let errType = 'LOCATOR_NOT_FOUND';
+    let errMsg = "Timeout 5000ms: page.locator('#add-to-cart').click()";
+
+    if (scenario === 'bug') {
+      targetUrl = 'http://127.0.0.1:4103/checkout.html';
+      targetSelector = '#checkout-button';
+      errType = 'APP_500_ERROR';
+      errMsg = 'HTTP 500 Internal Server Error: POST /api/orders failed';
+    } else if (scenario === 'ambiguous') {
+      targetUrl = 'http://127.0.0.1:4104/payment.html';
+      targetSelector = 'button.pay-btn';
+      errType = 'STRICT_MODE_VIOLATION';
+      errMsg = 'Strict mode violation: locator("button.pay-btn") resolved to 2 elements';
+    } else if (scenario === 'baseline') {
+      targetUrl = 'http://127.0.0.1:4101/cart.html';
+      targetSelector = '#checkout-button';
+      errType = 'TIMEOUT';
+      errMsg = 'Baseline verification';
+    }
+
+    workspaceState.targetUrl = targetUrl;
+    workspaceState.failedSelector = targetSelector;
+
     workspaceState.chatMessages.push({
-      sender: 'agent',
+      id: `msg-${Date.now()}`,
+      sender: 'user',
+      senderName: 'You (Engineer)',
+      avatar: '👤',
+      badge: 'USER',
       time: new Date().toLocaleTimeString(),
-      text: `Synthesizing test execution for intent... Checking baseline plan against target ${workspaceState.targetUrl}`
+      text: `Dispatched test scenario: "${text}" [${scenario.toUpperCase()}]`
     });
     workspaceState.logs.push({
       time: new Date().toLocaleTimeString(),
       level: 'info',
-      msg: `Dispatched intent: "${text}"`
+      msg: `Dispatched test scenario: "${scenario.toUpperCase()}" against ${targetUrl}`
     });
-    renderDashboardWorkspace();
+
+    renderDashboardWorkspace(targetContainer);
 
     try {
-      const res = await api('/api/agent/run', {
+      const res = await api('/api/agents/collaborate', {
         method: 'POST',
-        body: { intentText: text, targetUrl: workspaceState.targetUrl }
+        body: {
+          testName: workspaceState.testName,
+          stepIndex: 3,
+          totalSteps: 5,
+          stepAction: 'click',
+          targetSelector,
+          targetUrl,
+          errorMessage: errMsg,
+          errorType: errType,
+          nearText: text
+        }
       });
+
       workspaceState.activeStep = res.activeStep || 4;
       workspaceState.totalSteps = res.totalSteps || 5;
-      workspaceState.agentStatus = 'Healed';
-      workspaceState.chatMessages.push({
-        sender: 'agent',
-        time: new Date().toLocaleTimeString(),
-        text: 'UI Drift detected on target! Selector #add-to-cart replaced with #add-to-bag. Deterministic backend oracle verified order creation.',
-        healing: res.healing
-      });
+      workspaceState.agentStatus = res.verdict === 'APP_BUG' ? 'Failed' : (res.verdict === 'NEEDS_REVIEW' ? 'Needs Review' : 'Healed');
+
+      if (Array.isArray(res.conversation)) {
+        for (const m of res.conversation) {
+          workspaceState.chatMessages.push(m);
+        }
+      }
       if (Array.isArray(res.logs)) {
         for (const l of res.logs) {
           workspaceState.logs.push(l);
         }
       }
+      if (res.noteCreated) {
+        if (!backendNotesCache) backendNotesCache = [];
+        backendNotesCache.unshift(res.noteCreated);
+        workspaceState.activeNoteId = res.noteCreated.id || backendNotesCache[0]?.id;
+      }
     } catch {
       workspaceState.activeStep = 4;
       workspaceState.agentStatus = 'Healed';
       workspaceState.chatMessages.push({
-        sender: 'agent',
+        id: `msg-${Date.now()}`,
+        sender: 'sentinel',
+        senderName: 'Sentinel (Playwright Monitor)',
+        badge: 'PW MONITOR',
+        avatar: '🚨',
         time: new Date().toLocaleTimeString(),
-        text: 'UI Drift detected on shop-v2! Selector #add-to-cart replaced with #add-to-bag. Deterministic backend oracle verified order creation.',
+        text: `Playwright timeout on ${targetSelector}. Target element absent in redesigned markup.`
+      });
+      workspaceState.chatMessages.push({
+        id: `msg-${Date.now() + 1}`,
+        sender: 'architect',
+        senderName: 'Architect (Self-Healing)',
+        badge: 'SELECTOR SYNTH',
+        avatar: '🛠️',
+        time: new Date().toLocaleTimeString(),
+        text: 'Synthesized replacement selector #add-to-bag. Deterministic backend order oracle confirmed order creation.',
         healing: {
-          oldSelector: '#add-to-cart',
+          oldSelector: targetSelector,
           newSelector: '#add-to-bag',
-          score: '0.74',
+          score: '0.94',
           provenance: 'text-similarity & role-button',
           oracle: 'order-created ✓ | POST /api/orders 200 ✓'
         }
       });
-      workspaceState.logs.push(
-        { time: new Date().toLocaleTimeString(), level: 'heal', msg: 'Synthesized repair #add-to-bag (score 0.74)' },
-        { time: new Date().toLocaleTimeString(), level: 'pass', msg: 'Oracle PASS: order-created invariant satisfied' }
-      );
     }
-    renderDashboardWorkspace();
+
+    renderDashboardWorkspace(targetContainer);
   }
 
   // ==========================================
@@ -2249,19 +2465,41 @@ export function renderDashboardWorkspace() {
   // ==========================================
   const panelB = el('div', { class: 'panel playwright-panel' });
   const headerB = el('div', { class: 'panel-header' });
-  headerB.appendChild(el('h3', { class: 'panel-title' }, '🎭 Playwright Real-Time Overview'));
+  headerB.appendChild(el('h3', { class: 'panel-title' }, '🎭 Playwright Real-Time Dashboard'));
   const connBadge = el('span', { class: 'chrome-badge mono' }, 'Chromium 124.0 Connected · Port 4102');
   headerB.appendChild(connBadge);
   panelB.appendChild(headerB);
 
+  // Scenario Selector Bar
+  const scenarioBar = el('div', { class: 'pw-scenario-bar' });
+  scenarioBar.appendChild(el('span', { class: 'pw-scenario-label' }, 'Test Scenarios:'));
+
+  const scenarios = [
+    { key: 'drift', label: 'Redesign Drift (v2)' },
+    { key: 'bug', label: 'Server 500 Bug (v2-bug)' },
+    { key: 'ambiguous', label: 'Ambiguous Choices (v2-amb)' },
+    { key: 'baseline', label: 'Baseline (v1)' }
+  ];
+
+  for (const sc of scenarios) {
+    const isAct = workspaceState.scenario === sc.key;
+    const pill = el('button', { class: `scenario-pill ${isAct ? 'scenario-pill--active' : ''}`, type: 'button' }, sc.label);
+    pill.addEventListener('click', () => {
+      runAgentAction(workspaceState.intentText, sc.key);
+    });
+    scenarioBar.appendChild(pill);
+  }
+  panelB.appendChild(scenarioBar);
+
   // Test Meta Bar
   const metaBar = el('div', { class: 'pw-test-meta-bar' });
   const testInfo = el('div', {}, el('span', { class: 'pw-test-name mono' }, workspaceState.testName));
-  const stepInfo = el(
-    'span',
-    { class: 'pw-step-counter mono' },
-    `Step ${workspaceState.activeStep} of ${workspaceState.totalSteps}: Click #add-to-bag`
-  );
+  const stepLabel = workspaceState.scenario === 'bug'
+    ? `Step 3: Click #checkout-button (HTTP 500)`
+    : (workspaceState.scenario === 'ambiguous'
+      ? `Step 3: Multiple candidates matched`
+      : `Step ${workspaceState.activeStep} of ${workspaceState.totalSteps}: Click #add-to-bag`);
+  const stepInfo = el('span', { class: 'pw-step-counter mono' }, stepLabel);
   metaBar.appendChild(testInfo);
   metaBar.appendChild(stepInfo);
   panelB.appendChild(metaBar);
@@ -2286,7 +2524,10 @@ export function renderDashboardWorkspace() {
   const liveCanvas = el('div', { class: 'browser-live-canvas' });
   const storeHeader = el('div', { class: 'store-preview-header' });
   storeHeader.appendChild(el('h4', {}, 'Gizmo Mini Store'));
-  storeHeader.appendChild(el('span', { class: 'badge badge--pass' }, 'Cart (1 item)'));
+  const bagBadge = workspaceState.scenario === 'bug'
+    ? el('span', { class: 'badge badge--bug' }, 'Error 500')
+    : el('span', { class: 'badge badge--pass' }, 'Bag (1 item)');
+  storeHeader.appendChild(bagBadge);
   liveCanvas.appendChild(storeHeader);
 
   const cartItem = el('div', { class: 'store-cart-item' });
@@ -2294,35 +2535,72 @@ export function renderDashboardWorkspace() {
   cartItem.appendChild(el('span', { class: 'item-price mono' }, '$19.99 (Qty: 1)'));
   liveCanvas.appendChild(cartItem);
 
-  // Prominent action zone with highlight box around healed element
-  const actionZone = el('div', { class: 'store-action-zone' });
-  actionZone.appendChild(el('span', { class: 'store-action-tag mono' }, 'Healed: #add-to-bag (Score 0.74)'));
-  actionZone.appendChild(el('button', { class: 'btn btn--primary' }, 'Add to bag'));
-  actionZone.appendChild(el('span', { class: 'mono', style: 'font-size: 0.8rem; font-weight: 600;' }, 'Subtotal: $19.99'));
-  liveCanvas.appendChild(actionZone);
+  // Scenario specific Action Zone
+  if (workspaceState.scenario === 'bug') {
+    const actionZone = el('div', { class: 'store-action-zone store-action-zone--bug' });
+    actionZone.appendChild(el('span', { class: 'store-action-tag store-action-tag--bug mono' }, '✕ App Bug: POST /api/orders returned 500'));
+    actionZone.appendChild(el('button', { class: 'btn btn--danger', disabled: 'true' }, 'Payment Failed (500)'));
+    actionZone.appendChild(el('span', { class: 'mono', style: 'font-size: 0.8rem; font-weight: 600;' }, 'Status: Broken'));
+    liveCanvas.appendChild(actionZone);
 
-  // Oracle Toast
-  const oracleToast = el(
-    'div',
-    { class: 'sim-oracle-toast mono' },
-    'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS'
-  );
-  liveCanvas.appendChild(oracleToast);
+    const oracleToast = el(
+      'div',
+      { class: 'sim-oracle-toast sim-oracle-toast--fail mono' },
+      'Backend Oracle: order-created ✕ (0 rows inserted) | POST /api/orders 500 ✕ | APP_BUG'
+    );
+    liveCanvas.appendChild(oracleToast);
+  } else if (workspaceState.scenario === 'ambiguous') {
+    const actionZone = el('div', { class: 'store-action-zone store-action-zone--ambiguous' });
+    actionZone.appendChild(el('span', { class: 'store-action-tag store-action-tag--ambiguous mono' }, '⚠ Strict Mode: 2 matching buttons found'));
+    const btnRow = el('div', { style: 'display: flex; gap: 8px;' },
+      el('button', { class: 'btn btn--outline btn--sm' }, 'Pay with Card'),
+      el('button', { class: 'btn btn--primary btn--sm' }, 'Complete order')
+    );
+    actionZone.appendChild(btnRow);
+    liveCanvas.appendChild(actionZone);
+
+    const oracleToast = el(
+      'div',
+      { class: 'sim-oracle-toast sim-oracle-toast--review mono' },
+      'Human Review Required: Candidate scores 0.78 vs 0.75 | Invariant Pending | NEEDS_REVIEW'
+    );
+    liveCanvas.appendChild(oracleToast);
+  } else {
+    // Redesign Drift Healed or Baseline
+    const actionZone = el('div', { class: 'store-action-zone' });
+    actionZone.appendChild(el('span', { class: 'store-action-tag mono' }, 'Healed: #add-to-bag (Score 0.94)'));
+    actionZone.appendChild(el('button', { class: 'btn btn--primary' }, 'Add to bag'));
+    actionZone.appendChild(el('span', { class: 'mono', style: 'font-size: 0.8rem; font-weight: 600;' }, 'Subtotal: $19.99'));
+    liveCanvas.appendChild(actionZone);
+
+    const oracleToast = el(
+      'div',
+      { class: 'sim-oracle-toast mono' },
+      'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS'
+    );
+    liveCanvas.appendChild(oracleToast);
+  }
+
   viewportFrame.appendChild(liveCanvas);
   panelB.appendChild(viewportFrame);
 
   // Verdict Pills Bar
   const pillsBar = el('div', { class: 'pw-verdict-pills' });
-  pillsBar.appendChild(el('span', { class: 'verdict-chip' }, 'Passed ✓'));
-  pillsBar.appendChild(el('span', { class: 'verdict-chip active-healed' }, 'Healed ↻ (Active)'));
-  pillsBar.appendChild(el('span', { class: 'verdict-chip' }, 'App Bug ✕'));
-  pillsBar.appendChild(el('span', { class: 'verdict-chip' }, 'Needs Review ?'));
+  const isHealed = workspaceState.agentStatus === 'Healed';
+  const isBug = workspaceState.agentStatus === 'Failed';
+  const isReview = workspaceState.agentStatus === 'Needs Review';
+  const isPass = workspaceState.scenario === 'baseline';
+
+  pillsBar.appendChild(el('span', { class: `verdict-chip ${isPass ? 'active-healed' : ''}` }, 'Passed ✓'));
+  pillsBar.appendChild(el('span', { class: `verdict-chip ${isHealed ? 'active-healed' : ''}` }, 'Healed ↻ (Active)'));
+  pillsBar.appendChild(el('span', { class: `verdict-chip ${isBug ? 'active-bug' : ''}` }, 'App Bug ✕'));
+  pillsBar.appendChild(el('span', { class: `verdict-chip ${isReview ? 'active-review' : ''}` }, 'Needs Review ?'));
   panelB.appendChild(pillsBar);
 
   // Expandable Logs Section
   const logsSec = el('div', { class: 'pw-logs-section' });
   const logsToggle = el('div', { class: 'pw-logs-toggle' });
-  logsToggle.appendChild(el('span', {}, `Execution Trace & Logs (${workspaceState.logs.length} entries)`));
+  logsToggle.appendChild(el('span', {}, `Playwright Trace & Telemetry (${workspaceState.logs.length} entries)`));
   logsToggle.appendChild(el('span', {}, '▾'));
   logsSec.appendChild(logsToggle);
 
@@ -2346,12 +2624,12 @@ export function renderDashboardWorkspace() {
   grid.appendChild(panelB);
 
   // ==========================================
-  // PANEL C: NOTES (Right)
+  // PANEL C: NOTES & DESCRIPTIONS (Right)
   // ==========================================
   const panelC = el('div', { class: 'panel notes-panel' });
   const headerC = el('div', { class: 'panel-header' });
   const notes = getNotes();
-  headerC.appendChild(el('h3', { class: 'panel-title' }, '📝 Notes'));
+  headerC.appendChild(el('h3', { class: 'panel-title' }, '📝 Notes & Descriptions'));
   const newNoteBtn = el('button', { class: 'btn btn--primary btn--sm', type: 'button' }, '+ New Note');
   headerC.appendChild(newNoteBtn);
   panelC.appendChild(headerC);
@@ -2361,7 +2639,7 @@ export function renderDashboardWorkspace() {
   const searchInput = el('input', {
     type: 'search',
     class: 'notes-search-input',
-    placeholder: 'Search notes...'
+    placeholder: 'Search error notes & descriptions...'
   });
   searchInput.value = workspaceState.notesSearch;
   searchInput.addEventListener('input', async (e) => {
@@ -2373,9 +2651,9 @@ export function renderDashboardWorkspace() {
         backendNotesCache = res;
       }
     } catch {
-      // offline fallback
+      // Offline fallback
     }
-    renderDashboardWorkspace();
+    renderDashboardWorkspace(targetContainer);
   });
   searchBar.appendChild(searchInput);
   panelC.appendChild(searchBar);
@@ -2397,12 +2675,11 @@ export function renderDashboardWorkspace() {
     );
   } else {
     for (const note of filteredNotes) {
-      const item = el('div', {
-        class: `note-item ${note.id === workspaceState.activeNoteId ? 'active' : ''}`
-      });
+      const isAct = note.id === workspaceState.activeNoteId;
+      const item = el('div', { class: `note-item ${isAct ? 'active' : ''}` });
       const topRow = el('div', { class: 'note-item-header' });
       topRow.appendChild(el('h4', { class: 'note-item-title' }, note.title));
-      topRow.appendChild(el('span', { class: 'note-item-time mono' }, note.updated));
+      topRow.appendChild(el('span', { class: 'note-item-time mono' }, note.updated || 'Recent'));
       item.appendChild(topRow);
 
       item.appendChild(el('p', { class: 'note-item-preview' }, note.body));
@@ -2412,7 +2689,7 @@ export function renderDashboardWorkspace() {
 
       item.addEventListener('click', () => {
         workspaceState.activeNoteId = note.id;
-        renderDashboardWorkspace();
+        renderDashboardWorkspace(targetContainer);
       });
       notesList.appendChild(item);
     }
@@ -2428,7 +2705,7 @@ export function renderDashboardWorkspace() {
     const editTag = el('input', {
       class: 'note-editor-title mono',
       style: 'font-size: 0.75rem; font-weight: normal;',
-      placeholder: 'Tag (e.g. Checkout, Drift)',
+      placeholder: 'Tag (e.g. Drift, AppBug, Oracles)',
       value: currentNote.tag || ''
     });
     const editBody = el('textarea', { class: 'note-editor-body' });
@@ -2446,36 +2723,44 @@ export function renderDashboardWorkspace() {
           body: { title: updatedTitle, tag: updatedTag, body: updatedBody }
         });
       } catch {
-        // offline fallback
+        // Offline fallback
       }
       currentNote.title = updatedTitle;
       currentNote.tag = updatedTag;
       currentNote.body = updatedBody;
       currentNote.updated = 'Just now';
       saveNotes(notes);
-      renderDashboardWorkspace();
+      renderDashboardWorkspace(targetContainer);
+    });
+
+    const copyBtn = el('button', { class: 'btn btn--outline btn--sm', type: 'button' }, '📋 Copy Markdown');
+    copyBtn.addEventListener('click', () => {
+      const md = `### ${currentNote.title} [Tag: ${currentNote.tag || 'General'}]\n\n${currentNote.body}\n\n*Verified via KaizenAI Multi-Agent Bus*`;
+      navigator.clipboard?.writeText(md).catch(() => {});
+      copyBtn.textContent = '✓ Copied!';
+      setTimeout(() => { copyBtn.textContent = '📋 Copy Markdown'; }, 1500);
     });
 
     const deleteNoteBtn = el('button', { class: 'btn btn--outline btn--sm', type: 'button' }, 'Delete');
     deleteNoteBtn.addEventListener('click', async () => {
       try {
-        await api('/api/notes/' + currentNote.id + '/delete', {
-          method: 'POST',
-          body: { confirm: true }
+        await api('/api/notes/' + currentNote.id, {
+          method: 'DELETE'
         });
       } catch {
-        // offline fallback
+        // Offline fallback
       }
       const idx = notes.findIndex((n) => n.id === currentNote.id);
       if (idx !== -1) {
         notes.splice(idx, 1);
         saveNotes(notes);
         workspaceState.activeNoteId = notes[0]?.id || 0;
-        renderDashboardWorkspace();
+        renderDashboardWorkspace(targetContainer);
       }
     });
 
-    editorActions.appendChild(saveNoteBtn);
+    const leftBtns = el('div', { style: 'display: flex; gap: 6px;' }, saveNoteBtn, copyBtn);
+    editorActions.appendChild(leftBtns);
     editorActions.appendChild(deleteNoteBtn);
 
     editor.appendChild(editTitle);
@@ -2492,27 +2777,27 @@ export function renderDashboardWorkspace() {
       const res = await api('/api/notes', {
         method: 'POST',
         body: {
-          title: 'New Session Note',
-          tag: 'General',
-          body: 'Write test observations, selector drift notes, or oracle validation checks here.'
+          title: 'Playwright Error Observation',
+          tag: 'Diagnostics',
+          body: 'Detailed error trace, element before/after evidence, and self-healing recommendations.'
         }
       });
       if (res?.note) created = res.note;
     } catch {
-      // offline fallback
+      // Offline fallback
     }
     const newId = created ? created.id : Date.now();
     const newNote = created || {
       id: newId,
-      title: 'New Session Note',
-      tag: 'General',
+      title: 'Playwright Error Observation',
+      tag: 'Diagnostics',
       updated: 'Just now',
-      body: 'Write test observations, selector drift notes, or oracle validation checks here.'
+      body: 'Detailed error trace, element before/after evidence, and self-healing recommendations.'
     };
     notes.unshift(newNote);
     saveNotes(notes);
     workspaceState.activeNoteId = newId;
-    renderDashboardWorkspace();
+    renderDashboardWorkspace(targetContainer);
   });
 
   panelC.appendChild(editor);
