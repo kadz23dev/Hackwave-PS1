@@ -16,15 +16,19 @@ export class SarvamClient implements LlmClient {
     model = LLM_MODEL || 'sarvam-105b-conversations',
     baseUrl = process.env.SARVAM_BASE_URL || 'https://api.sarvam.ai/v1'
   ) {
-    if (!apiKey) {
-      throw new Error('SARVAM_API_KEY is required for SarvamClient');
-    }
     this.apiKey = apiKey;
     this.model = model;
     this.baseUrl = baseUrl.replace(/\/$/, '');
   }
 
+  private assertApiKey(): void {
+    if (!this.apiKey) {
+      throw new Error('SARVAM_API_KEY is required for SarvamClient');
+    }
+  }
+
   async completeJson(system: string, user: string): Promise<unknown> {
+    this.assertApiKey();
     this.calls++;
 
     const messages = [
@@ -88,6 +92,7 @@ export class SarvamClient implements LlmClient {
   }
 
   async completeChat(system: string, user: string): Promise<string> {
+    this.assertApiKey();
     this.calls++;
 
     const messages = [
