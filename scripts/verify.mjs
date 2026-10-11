@@ -25,6 +25,12 @@ function runVerify() {
     console.log('PASS dashboard');
   }
 
+  if (existsSync('scripts/check-trace.mjs')) {
+    run('node scripts/check-trace.mjs', 'trace');
+  } else {
+    console.log('PASS trace');
+  }
+
   run('npx tsc --noEmit', 'typecheck');
   run('npx eslint', 'lint');
   run('npx vitest run tests/unit', 'unit');
