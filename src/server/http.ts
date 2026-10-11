@@ -12,7 +12,7 @@ export interface RouteContext {
 }
 
 export interface Route {
-  method: 'GET' | 'POST';
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | string;
   pattern: RegExp;
   handler: (ctx: RouteContext) => Promise<void>;
 }
@@ -96,7 +96,7 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
           const match = pathname.match(route.pattern);
           if (match) {
             let body: unknown = {};
-            if (req.method === 'POST') {
+            if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH' || req.method === 'DELETE') {
               const bodyResult = await parseBody(req, res);
               if (!bodyResult.ok) {
                 return;

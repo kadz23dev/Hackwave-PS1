@@ -4,3 +4,6 @@ dist
 .healtest
 demo-home
 .tmp-oracle
+.env
+.env.*
+!.env.example
