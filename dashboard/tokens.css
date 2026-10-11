@@ -5,7 +5,8 @@
   --jade:#1F6B57; --jade-wash:#DDEEE6; --amber:#8A5A00; --gold-wash:#F4E7C2;
   --slate:#3B4A6B; --slate-wash:#E3E8F2;
   --line:#E4D9C3; --line-strong:#8C7B62; --focus:#B3202A; --gold-leaf:#C9A227;
-  --radius:4px; --gap:8px;
+  --sidebar-bg:#350B0B; --sidebar-sub:#541212; --sidebar-text:#F8F3E8; --sidebar-muted:#C4B2A7;
+  --radius:8px; --gap:8px;
   --font-serif:"Songti SC","Noto Serif SC","Source Han Serif SC","STSong","SimSun",Georgia,serif;
   --font-sans:system-ui,-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",sans-serif;
   --font-mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;
@@ -19,6 +20,7 @@
     --jade:#5FBFA3; --jade-wash:#17302A; --amber:#E3A33B; --gold-wash:#3A2E14;
     --slate:#8FA6D6; --slate-wash:#1E2638;
     --line:#3A2F28; --line-strong:#7A6B5A; --focus:#E5646C; --gold-leaf:#E0B84A;
+    --sidebar-bg:#260606; --sidebar-sub:#3A0C0C; --sidebar-text:#F2E9D8; --sidebar-muted:#9E8B83;
   }
 }
 :root[data-theme="dark"] {
@@ -28,4 +30,5 @@
   --jade:#5FBFA3; --jade-wash:#17302A; --amber:#E3A33B; --gold-wash:#3A2E14;
   --slate:#8FA6D6; --slate-wash:#1E2638;
   --line:#3A2F28; --line-strong:#7A6B5A; --focus:#E5646C; --gold-leaf:#E0B84A;
+  --sidebar-bg:#260606; --sidebar-sub:#3A0C0C; --sidebar-text:#F2E9D8; --sidebar-muted:#9E8B83;
 }

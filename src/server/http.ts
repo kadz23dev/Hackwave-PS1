@@ -159,6 +159,7 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
       res.writeHead(200, {
         'Content-Type': MIME_MAP[ext],
         'X-Content-Type-Options': 'nosniff',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
       });
       createReadStream(resolved).pipe(res);
     } catch (err) {
