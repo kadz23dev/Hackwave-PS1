@@ -19,6 +19,7 @@ describe('Dashboard D2, D3, D4 Integration — T18', { timeout: 90000 }, () => {
   let repo: Repo;
   let healedChangeId: number;
   let lowChangeId: number;
+  let mediumChangeId: number;
 
   beforeAll(async () => {
     // 1. Start fixtures for shop-v1 and shop-v2
@@ -77,6 +78,38 @@ describe('Dashboard D2, D3, D4 Integration — T18', { timeout: 90000 }, () => {
       ],
       affectedSteps: ['step_low_1'],
       explanation: 'Harmless theme attribute adjustment on secondary button.',
+    });
+
+    // Seed a MEDIUM severity change so unchecking LOW still leaves visible results
+    mediumChangeId = repo.insertChange({
+      baseSnapshotId: firstChange.base_snapshot_id,
+      headSnapshotId: firstChange.head_snapshot_id,
+      kind: 'TEXT_CHANGED',
+      severity: 'MEDIUM',
+      classification: 'BREAKING_UI',
+      confidence: 0.95,
+      evidence: [
+        {
+          kind: 'TEXT_CHANGED',
+          before: {
+            role: 'heading',
+            name: 'Checkout',
+            selector: 'h1',
+            pagePath: '/',
+            attrs: {},
+          },
+          after: {
+            role: 'heading',
+            name: 'Payment',
+            selector: 'h1',
+            pagePath: '/',
+            attrs: {},
+          },
+          evidence: 'Heading text changed from Checkout to Payment',
+        },
+      ],
+      affectedSteps: ['step_medium_1'],
+      explanation: 'Checkout heading changed text to Payment.',
     });
 
     // 3. Start local dashboard server
@@ -216,17 +249,21 @@ describe('Dashboard D2, D3, D4 Integration — T18', { timeout: 90000 }, () => {
     const lowCheckbox = session.page.locator('input[type="checkbox"][name="severity"][value="LOW"]');
     await lowCheckbox.uncheck();
 
-    // Wait for list to update: LOW card should disappear
-    await session.page.waitForFunction(() => {
-      return document.querySelectorAll('.change-card[data-severity="LOW"]').length === 0;
-    });
+    // Wait for list to update: LOW cards disappear and seeded MEDIUM card remains
+    await session.page.waitForFunction((seededMediumChangeId) => {
+      const lowCount = document.querySelectorAll('.change-card[data-severity="LOW"]').length;
+      const mediumCount = document.querySelectorAll(
+        `.change-card[data-id="${seededMediumChangeId}"]`
+      ).length;
+      return lowCount === 0 && mediumCount > 0;
+    }, mediumChangeId);
 
     const lowCardsAfter = session.page.locator('.change-card[data-severity="LOW"]');
     expect(await lowCardsAfter.count()).toBe(0);
 
-    // Other changes (e.g. HIGH or MEDIUM) should still be visible
-    const remainingCards = session.page.locator('.change-card');
-    expect(await remainingCards.count()).toBeGreaterThan(0);
+    // A non-LOW seeded change should still be visible
+    const mediumCard = session.page.locator(`.change-card[data-id="${mediumChangeId}"]`);
+    expect(await mediumCard.count()).toBeGreaterThan(0);
 
     // Re-check LOW checkbox
     await lowCheckbox.check();
