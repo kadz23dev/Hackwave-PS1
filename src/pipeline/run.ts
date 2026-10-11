@@ -11,22 +11,23 @@ import { findPlanForRun } from '../governance/reuse.js';
 import { planAndExecute } from '../planner/plan.js';
 import { runOracles } from '../oracle/runner.js';
 import { decideVerdict, type VerdictDecision } from '../classify/verdict.js';
-import { makeLlm } from '../llm/client.js';
+import { makeLlm, type LlmClient } from '../llm/client.js';
 import { replayWithRepair } from '../repair/engine.js';
 import { loadPolicy, canAutoAccept } from '../governance/policy.js';
 import { approve } from '../governance/approvals.js';
 import { runValidation, type ValidationOutcome } from '../validate/validation.js';
 import { explainVerdict, explainAmbiguous, maskSecrets } from '../explain/templates.js';
 import type { OracleResult, RunOutcome, Step } from '../types.js';
+import { telemetry } from '../repair/telemetry.js';
 
 export async function runIntent(
   intentPath: string,
   target: string,
-  opts?: { db?: string; llm?: string; headless?: boolean }
+  opts?: { db?: string; llm?: string; headless?: boolean; llmClient?: LlmClient }
 ): Promise<RunOutcome> {
   const db = openDb(opts?.db);
   const repo = new Repo(db);
-  const llm = makeLlm(opts?.llm ?? 'off');
+  const llm = opts?.llmClient ?? makeLlm(opts?.llm ?? 'off');
 
   // 1. Load intent & validate target origin
   const { intent, sha256, raw } = loadIntent(intentPath);
@@ -123,7 +124,7 @@ export async function runIntent(
         policy: loadPolicy(),
         pageIdFor,
         llm,
-        llmMode: opts?.llm ?? 'off',
+        llmMode: opts?.llm ?? (opts?.llmClient ? 'live' : 'off'),
       });
 
       changeIds = replayResult.changeIds;
@@ -156,6 +157,12 @@ export async function runIntent(
           { id: repairId, status: 'needs_review', explanation: ambExplanation },
           intent
         );
+        telemetry.recordRun({
+          totalTestRuns: 1,
+          unresolvedAmbiguousCases: 1,
+          finalAssertionFailures: 1,
+        });
+
         repo.finishRun(runId, {
           verdict: 'NEEDS_REVIEW',
           explanation,
@@ -279,6 +286,12 @@ export async function runIntent(
           { id: repairId, status: 'needs_review', explanation: ambExplanation },
           intent
         );
+        telemetry.recordRun({
+          totalTestRuns: 1,
+          unresolvedAmbiguousCases: 1,
+          finalAssertionFailures: 1,
+        });
+
         repo.finishRun(runId, {
           verdict: 'NEEDS_REVIEW',
           explanation,
@@ -407,11 +420,27 @@ export async function runIntent(
       intent
     );
 
+    telemetry.recordRun({
+      totalTestRuns: 1,
+      genuineApplicationFailures: verdictDecision.verdict === 'APP_BUG' ? 1 : 0,
+      finalAssertionPasses: (verdictDecision.verdict === 'PASS' || verdictDecision.verdict === 'HEALED_PASS') ? 1 : 0,
+      finalAssertionFailures: (verdictDecision.verdict !== 'PASS' && verdictDecision.verdict !== 'HEALED_PASS') ? 1 : 0,
+    });
+
+    const traces = telemetry.getTraces();
+    const failedStepTraces = traces.filter(t => t.selectorFailed);
+    for (const tr of failedStepTraces) {
+      console.log(`[trace] Step '${tr.stepId}' execution trace:`);
+      for (const logItem of tr.traceLog) {
+        console.log(`  → ${logItem}`);
+      }
+    }
+
     repo.finishRun(runId, {
       verdict: verdictDecision.verdict,
       explanation,
       llmCalls: llm.calls,
-      evidence: { changeIds },
+      evidence: { changeIds, traces: failedStepTraces },
       reusedRepairId: plan?.reusedRepairId ?? null,
     });
 

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KaizenAI | Autonomous Intent-Aware Testing & Governance for Product Companies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Poppins:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/morphism.css?v=2">
+  <link rel="stylesheet" href="css/landing.css?v=2">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Ambient Floating Liquid Glow Orbs (Dynamic Refraction Layer) -->
+  <div class="ambient-glow-container">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+    <div class="ambient-orb ambient-orb-4"></div>
+  </div>
+
+  <!-- Subtle Cyber Grid Background -->
+  <div class="cyber-grid"></div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar container">
+    <nav class="nav-container morphism-card">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4C5 3.45 5.45 3 6 3C6.55 3 7 3.45 7 4V20C7 20.55 6.55 21 6 21C5.45 21 5 20.55 5 20V4Z" fill="white"/>
+            <path d="M19 4.2C19.6 3.6 20.5 3.6 21.1 4.2C21.7 4.8 21.7 5.7 21.1 6.3L12.5 14.8C11.9 15.4 11 15.4 10.4 14.8C9.8 14.2 9.8 13.3 10.4 12.7L19 4.2Z" fill="white"/>
+            <path d="M11.6 11.4C11 10.8 11 9.9 11.6 9.3C12.2 8.7 13.1 8.7 13.7 9.3L21.1 16.7C21.7 17.3 21.7 18.2 21.1 18.8C20.5 19.4 19.6 19.4 19 18.8L11.6 11.4Z" fill="#ffccd2"/>
+          </svg>
+        </div>
+        <span>Kaizen<span style="color: #b91c1c;">AI</span></span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#features" class="nav-link">Features</a></li>
+        <li><a href="#simulator" class="nav-link">Live Simulator</a></li>
+        <li><a href="#roi" class="nav-link">ROI Calculator</a></li>
+        <li><a href="#pricing" class="nav-link">Pricing</a></li>
+      </ul>
+
+      <div class="nav-actions" style="display: flex; gap: 10px; align-items: center;">
+        <a href="signup.html?mode=signin" class="nav-link" style="font-weight: 600; padding: 6px 12px;">Sign In</a>
+        <a href="signup.html?mode=signup" class="btn btn-glass btn-sm">
+          <span>Sign Up</span>
+        </a>
+        <a href="/dashboard/" class="btn btn-primary btn-sm">
+          <span>⚡ Launch Dashboard</span>
+          <span style="font-size: 0.85rem;">→</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="container">
+    <section class="hero-section">
+      <div class="hero-pill">
+        <span class="dot dot-live"></span>
+        <span>AUTONOMOUS E2E TEST GOVERNANCE FOR FAST-MOVING B2B SAAS</span>
+      </div>
+
+      <h1 class="hero-title">
+        Stop Fixing Broken Selectors.<br>
+        <span class="gradient-text">Heal Tests Deterministically.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Intent-aware test automation and enterprise governance for product companies and startups. 
+        Detect UI shifts, repair step plans with 0-LLM fuzzy heuristics, and verify backend ground-truth. 
+        Isolated tenant workspaces built exclusively for your company.
+      </p>
+
+      <div class="tagline-banner">
+        <span>“<strong>Steps may heal.</strong> Outcomes may not.”</span>
+      </div>
+
+      <div class="hero-cta-group" style="display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;">
+        <a href="/dashboard/" class="btn btn-primary btn-lg" style="box-shadow: 0 4px 20px rgba(185, 28, 28, 0.4);">
+          <span>⚡ Enter Live Dashboard</span>
+        </a>
+        <a href="signup.html" class="btn btn-glass btn-lg">
+          <span>🚀 Get Started Free</span>
+        </a>
+        <a href="#simulator" class="btn btn-glass btn-lg">
+          <span>🎯 Live Simulator</span>
+        </a>
+      </div>
+
+      <!-- 3D Specular Morphism Hero Card -->
+      <div class="hero-widget-container" data-tilt data-tilt-max="5">
+        <div class="morphism-card hero-widget">
+          <div class="widget-top-bar">
+            <div class="widget-title-area">
+              <span class="live-pulse-dot"></span>
+              <span style="font-weight: 800; font-size: 0.95rem; color: #0c0a09;">Intent: checkout-valid-card.yaml</span>
+              <span class="badge badge-tenant">Tenant: Acme-SaaS-Prod</span>
+            </div>
+            <div>
+              <span class="badge badge-healed">HEALED_PASS (HARMLESS_UI)</span>
+            </div>
+          </div>
+
+          <div class="widget-grid">
+            <!-- Left Column: Diff Preview -->
+            <div class="diff-preview-box">
+              <div class="diff-header">
+                <span>Perception & Fuzzy Matcher</span>
+                <span style="color: #047857; font-weight: 800;">Confidence: 0.88</span>
+              </div>
+              <div class="diff-line diff-old">
+                <span>- s1: click "#add-GZ-MINI"</span>
+                <span style="font-size: 0.75rem; font-weight: 700;">REMOVED ID</span>
+              </div>
+              <div class="diff-line diff-new">
+                <span>+ s1: click button[data-action="add"] "Add to bag"</span>
+                <span style="font-size: 0.75rem; font-weight: 700;">REPAIRED</span>
+              </div>
+              <div class="diff-explanation">
+                <strong>Explanation:</strong> Step s1 renamed from 'Add to cart' to 'Add to bag'. 
+                Replaced via TokenSet Levenshtein score (0.88). Replayed strictly with <strong style="color: #b91c1c;">0 LLM API calls</strong>.
+              </div>
+            </div>
+
+            <!-- Right Column: Oracles -->
+            <div class="diff-preview-box">
+              <div class="diff-header">
+                <span>Deterministic Backend Oracles</span>
+                <span style="color: #b91c1c; font-weight: 800;">Strict Replay</span>
+              </div>
+              <ul class="oracle-checklist">
+                <li class="oracle-item ok">
+                  <span style="color: #047857; font-weight: 900;">✓</span>
+                  <div>
+                    <span class="oracle-name">order-created:</span>
+                    <span class="oracle-desc">GET /__state (1 PAID order in DB)</span>
+                  </div>
+                </li>
+                <li class="oracle-item ok">
+                  <span style="color: #047857; font-weight: 900;">✓</span>
+                  <div>
+                    <span class="oracle-name">no-server-errors:</span>
+                    <span class="oracle-desc">0 HTTP 5xx intercepted</span>
+                  </div>
+                </li>
+                <li class="oracle-item ok">
+                  <span style="color: #047857; font-weight: 900;">✓</span>
+                  <div>
+                    <span class="oracle-name">order-api-ok:</span>
+                    <span class="oracle-desc">POST /api/orders = 201 Created</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust Strip -->
+    <section class="trust-strip">
+      <div class="trust-title">Built for Engineering Leaders at Fast-Growing Product Companies & Startups</div>
+      <div class="trust-logos">
+        <div class="trust-logo-item"><span>🚀</span> HyperScale B2B</div>
+        <div class="trust-logo-item"><span>💳</span> Stripe Partner Apps</div>
+        <div class="trust-logo-item"><span>⚡</span> CloudNative SaaS</div>
+        <div class="trust-logo-item"><span>🛡️</span> CyberTrust Health</div>
+        <div class="trust-logo-item"><span>📦</span> E-Commerce Scale</div>
+      </div>
+    </section>
+
+    <!-- Interactive Simulator Section -->
+    <section id="simulator" class="simulator-section">
+      <div class="section-header">
+        <div class="section-pill">Interactive Playground</div>
+        <h2 class="section-title">The KaizenAI Decision Engine</h2>
+        <p class="section-desc">
+          Test how our autonomous engine handles real-world scenarios: harmless redesigns, 
+          dangerous silent backend errors, and ambiguous button duplicates.
+        </p>
+      </div>
+
+      <div class="scenario-tabs">
+        <button class="scenario-tab active" data-scenario="a">Scenario A: Harmless Redesign</button>
+        <button class="scenario-tab" data-scenario="b">Scenario B: Silent App Bug Trap</button>
+        <button class="scenario-tab" data-scenario="c">Scenario C: Ambiguous UI Buttons</button>
+      </div>
+
+      <div class="morphism-card" style="padding: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 id="sim-title" class="sim-card-title">Scenario A: Harmless Redesign</h3>
+            <p id="sim-desc" class="sim-card-desc">
+              Loading scenario description...
+            </p>
+          </div>
+          <div>
+            <span id="sim-badge" class="badge badge-healed">HEALED_PASS</span>
+          </div>
+        </div>
+
+        <div class="widget-grid" style="margin-bottom: 28px;">
+          <div class="diff-preview-box">
+            <div class="diff-header">
+              <span>Target Matcher & Fingerprint</span>
+              <span id="sim-score" style="color: #047857; font-weight: 800;">0.88</span>
+            </div>
+            <div style="font-size: 0.86rem; color: #0c0a09; font-weight: 650; margin-bottom: 8px;">
+              <strong>Old Target:</strong> <code id="sim-old-sel" style="color: #b91c1c; font-weight: 700;">#add-GZ-MINI</code>
+            </div>
+            <div style="font-size: 0.86rem; color: #0c0a09; font-weight: 650; margin-bottom: 14px;">
+              <strong>New Target:</strong> <code id="sim-new-sel" style="color: #047857; font-weight: 700;">button[data-action="add"]</code>
+            </div>
+            <div style="font-size: 0.86rem; color: #0c0a09; font-weight: 650;">
+              <span>LLM Token Cost: </span><strong id="sim-llm" style="color: #b91c1c; font-weight: 850;">0 (Heuristic Only)</strong>
+            </div>
+          </div>
+
+          <div class="diff-preview-box">
+            <div class="diff-header">
+              <span>Oracle Verification Status</span>
+              <span style="color: #b91c1c; font-weight: 800;">Deterministic State</span>
+            </div>
+            <ul id="sim-oracles" class="oracle-checklist">
+              <!-- Dynamically populated -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Terminal Execution Trace -->
+        <div class="glass-terminal">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <div class="terminal-title">kaizen test run intents/checkout.intent.yaml --target http://127.0.0.1:4102</div>
+            <div style="font-size: 0.8rem; color: #4ade80; font-weight: 800; background: rgba(74, 222, 128, 0.15); padding: 2px 10px; border-radius: 9999px; border: 1px solid rgba(74, 222, 128, 0.3);">Exit Code: 0</div>
+          </div>
+          <div id="sim-terminal-body" class="terminal-body">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- B2B Enterprise Features Grid -->
+    <section id="features" style="padding: 80px 0;">
+      <div class="section-header">
+        <div class="section-pill">Enterprise Ready</div>
+        <h2 class="section-title">Designed for Your Company Workspace</h2>
+        <p class="section-desc">
+          Your company gets its own isolated testing platform. No shared database, no data leakage, and complete governance.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="morphism-card feature-card" data-tilt>
+          <div class="feature-icon-wrapper">🏢</div>
+          <h3 class="feature-title">Isolated Company Tenancy</h3>
+          <p class="feature-body">
+            Every customer company receives a segregated workspace with dedicated SQLite storage, 
+            private intent files, team role gates, and custom policy rules.
+          </p>
+          <ul class="feature-list">
+            <li>Single-tenant DB & screenshot sandbox</li>
+            <li>Role-based reviewer access (QA, Dev, Lead)</li>
+            <li>Custom auto-accept policy thresholds</li>
+          </ul>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="morphism-card feature-card" data-tilt>
+          <div class="feature-icon-wrapper">🛡️</div>
+          <h3 class="feature-title">Deterministic Backend Oracles</h3>
+          <p class="feature-body">
+            Never let an AI hallucinate a test pass. Verdicts are derived strictly from database state queries, 
+            network 5xx error intercepts, and strict replay.
+          </p>
+          <ul class="feature-list">
+            <li>Backend state inspection (SQL & REST)</li>
+            <li>Network request/response status enforcement</li>
+            <li>DOM text treated as supporting evidence only</li>
+          </ul>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="morphism-card feature-card" data-tilt>
+          <div class="feature-icon-wrapper">⚡</div>
+          <h3 class="feature-title">Zero-LLM Step Replay Cache</h3>
+          <p class="feature-body">
+            Once a repair is validated and approved, KaizenAI stores the optimized step plan. 
+            Subsequent CI/CD runs replay at blazing Playwright speeds with ₹0 API token costs.
+          </p>
+          <ul class="feature-list">
+            <li>Sub-15 second baseline execution</li>
+            <li>Zero ongoing token spend during regular runs</li>
+            <li>Instant rollback to known-good step plans</li>
+          </ul>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="morphism-card feature-card" data-tilt>
+          <div class="feature-icon-wrapper">📜</div>
+          <h3 class="feature-title">Append-Only Audit Ledger</h3>
+          <p class="feature-body">
+            Enterprise compliance baked in. Database triggers prevent any deletion or modification of audit logs, 
+            approvals, or test execution history.
+          </p>
+          <ul class="feature-list">
+            <li>SQLite BEFORE UPDATE/DELETE triggers</li>
+            <li>SOC2-ready tamper-proof log trail</li>
+            <li>Clear actor tracking (human, policy, baseline)</li>
+          </ul>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="morphism-card feature-card" data-tilt>
+          <div class="feature-icon-wrapper">🎯</div>
+          <h3 class="feature-title">Intent-First Architecture</h3>
+          <p class="feature-body">
+            Tests are written as business intents (goals, approved data keys, expected backend outcomes), 
+            not brittle DOM selectors. Loaded intents are cryptographically hashed and immutable.
+          </p>
+          <ul class="feature-list">
+            <li>Strict YAML schema with Zod validation</li>
+            <li>Sha256 checksum recorded on every run</li>
+            <li>URL allowlist and action budgets</li>
+          </ul>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="morphism-card feature-card" data-tilt>
+          <div class="feature-icon-wrapper">🤖</div>
+          <h3 class="feature-title">MCP & Coding Agent Ready</h3>
+          <p class="feature-body">
+            Equipped with Model Context Protocol (MCP) servers. AI coding agents like Antigravity, Claude, 
+            or Cursor can trigger runs, inspect visual diffs, and review changes safely.
+          </p>
+          <ul class="feature-list">
+            <li>Read-only inspection MCP server</li>
+            <li>Operator MCP server for approvals</li>
+            <li>Standard exit codes (0, 10, 11, 12, 1) for CI/CD</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive ROI Calculator -->
+    <section id="roi" style="padding: 80px 0;">
+      <div class="section-header">
+        <div class="section-pill">Quantifiable Impact</div>
+        <h2 class="section-title">Calculate Your Engineering ROI</h2>
+        <p class="section-desc">
+          See how many engineering hours and PR waiting delays your team eliminates by switching to KaizenAI.
+        </p>
+      </div>
+
+      <div class="morphism-card calculator-box">
+        <div>
+          <h3 style="font-size: 1.3rem; margin-bottom: 24px; color: #0c0a09; font-weight: 850;">Your Engineering Parameters</h3>
+
+          <div class="calc-slider-group">
+            <div class="calc-slider-header">
+              <span>Software Engineers & QA in Team</span>
+              <span id="val-engineers" style="color: #b91c1c; font-weight: 850; font-size: 1.05rem;">18</span>
+            </div>
+            <input type="range" id="calc-engineers" class="calc-slider" min="3" max="150" value="18">
+          </div>
+
+          <div class="calc-slider-group">
+            <div class="calc-slider-header">
+              <span>Pull Requests Merged Per Week</span>
+              <span id="val-prs" style="color: #b91c1c; font-weight: 850; font-size: 1.05rem;">45</span>
+            </div>
+            <input type="range" id="calc-prs" class="calc-slider" min="5" max="300" value="45">
+          </div>
+
+          <div style="font-size: 0.88rem; color: #0c0a09; font-weight: 650; line-height: 1.65; margin-top: 24px;">
+            Based on industry averages of 3.5 hours per engineer per week spent diagnosing selector churn 
+            and re-running false-negative test suites across staging environments.
+          </div>
+        </div>
+
+        <div class="calc-result-panel">
+          <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: #0c0a09; font-weight: 850; margin-bottom: 10px;">
+            Estimated Time Reclaimed
+          </div>
+          <div id="calc-hours-saved" class="calc-stat-big">333 hrs</div>
+          <div id="calc-dollars-saved" class="calc-stat-sub">₹28,10,000 / yr Saved</div>
+          <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(4, 120, 87, 0.12); padding: 8px 18px; border-radius: var(--radius-pill); border: 1px solid rgba(4, 120, 87, 0.35);">
+            <span style="color: #065f46; font-weight: 800;" id="calc-cycle-time">-61% PR Wait Time</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" style="padding: 80px 0;">
+      <div class="section-header">
+        <div class="section-pill">Transparent Pricing</div>
+        <h2 class="section-title">Built for Seed Startups to Enterprise Giants</h2>
+        <p class="section-desc">
+          Every plan includes complete tenant separation, deterministic oracles, and zero-LLM replay caching.
+        </p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Seed Tier -->
+        <div class="morphism-card pricing-card" data-tilt>
+          <div class="price-title">Seed Startup</div>
+          <div class="price-desc">For early-stage product teams</div>
+          <div class="price-val">₹0 <span class="price-period">/ month</span></div>
+          <ul class="pricing-features">
+            <li><span>✓</span> 1 Company Workspace</li>
+            <li><span>✓</span> Up to 500 Test Runs / month</li>
+            <li><span>✓</span> Deterministic Backend Oracles</li>
+            <li><span>✓</span> Heuristic Matcher & Replay Cache</li>
+            <li><span>✓</span> Local SQLite Storage</li>
+          </ul>
+          <a href="signup.html" class="btn btn-glass">Get Started Free</a>
+        </div>
+
+        <!-- Growth Tier (Popular) -->
+        <div class="morphism-card pricing-card popular" data-tilt>
+          <div class="popular-badge">Most Popular for Scaleups</div>
+          <div class="price-title">Growth Pro</div>
+          <div class="price-desc">For high-velocity B2B engineering squads</div>
+          <div class="price-val">₹249 <span class="price-period">/ company / mo</span></div>
+          <ul class="pricing-features">
+            <li><span>✓</span> Dedicated Company Tenant Workspace</li>
+            <li><span>✓</span> Unlimited Parallel Test Runs</li>
+            <li><span>✓</span> D1–D7 Interactive Governance Console</li>
+            <li><span>✓</span> One-Click Approvals & Rollback Seals</li>
+            <li><span>✓</span> Playwright Chromium Cloud Workers</li>
+            <li><span>✓</span> GitHub Actions & CI/CD Webhooks</li>
+          </ul>
+          <a href="signup.html" class="btn btn-primary">Start 14-Day Free Trial</a>
+        </div>
+
+        <!-- Enterprise Sovereign Tier -->
+        <div class="morphism-card pricing-card" data-tilt>
+          <div class="price-title">Enterprise Sovereign</div>
+          <div class="price-desc">For mission-critical product organizations</div>
+          <div class="price-val">₹990 <span class="price-period">/ company / mo</span></div>
+          <ul class="pricing-features">
+            <li><span>✓</span> Dedicated Single-Tenant Cluster / VPC</li>
+            <li><span>✓</span> Append-Only Tamper-Proof Audit Database</li>
+            <li><span>✓</span> MCP Server Operator for AI Coding Agents</li>
+            <li><span>✓</span> SOC2 Compliance & Data Residency SLA</li>
+            <li><span>✓</span> 24/7 Dedicated SDET Support Architect</li>
+          </ul>
+          <a href="signup.html" class="btn btn-glass">Contact Enterprise Sales</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section style="padding: 80px 0;">
+      <div class="section-header">
+        <div class="section-pill">Got Questions?</div>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+      </div>
+
+      <div class="faq-accordion">
+        <div class="morphism-card faq-item active">
+          <div class="faq-question">
+            <span>How does KaizenAI differ from naive AI testing tools?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            Naive AI testers take screenshots or read DOM text and ask an LLM if the test passed. When a checkout 500 error shows "Order confirmed" on screen, naive AI passes the test! KaizenAI enforces Guardrail G5: no LLM ever produces a verdict. Verdicts come strictly from backend state queries (e.g. database orders count) and network status intercepts. Steps may heal; outcomes may not.
+          </div>
+        </div>
+
+        <div class="morphism-card faq-item">
+          <div class="faq-question">
+            <span>Does KaizenAI write code directly to our web application source repository?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            No. Per decision settled in PRD §4 and §9, KaizenAI only repairs the test automation step plans. It never modifies your target application files. Your developers have full control over their code.
+          </div>
+        </div>
+
+        <div class="morphism-card faq-item">
+          <div class="faq-question">
+            <span>How does the Zero-LLM Step Replay Cache work?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            When a repair is proposed, validated in a fresh browser context, and approved, its step plan is stored with the start page content hash. On subsequent runs with the same page hash, KaizenAI reuses the plan with 0 LLM calls, executing at native Chromium Playwright speed.
+          </div>
+        </div>
+
+        <div class="morphism-card faq-item">
+          <div class="faq-question">
+            <span>Can our company manage multiple applications and environments?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            Yes! Your company portal supports unlimited sites, environments (staging, production, preview PRs), and test suites, completely isolated to your organization.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Morphism Footer -->
+  <footer class="footer">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="brand-icon" style="width: 32px; height: 32px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4C5 3.45 5.45 3 6 3C6.55 3 7 3.45 7 4V20C7 20.55 6.55 21 6 21C5.45 21 5 20.55 5 20V4Z" fill="white"/>
+            <path d="M19 4.2C19.6 3.6 20.5 3.6 21.1 4.2C21.7 4.8 21.7 5.7 21.1 6.3L12.5 14.8C11.9 15.4 11 15.4 10.4 14.8C9.8 14.2 9.8 13.3 10.4 12.7L19 4.2Z" fill="white"/>
+            <path d="M11.6 11.4C11 10.8 11 9.9 11.6 9.3C12.2 8.7 13.1 8.7 13.7 9.3L21.1 16.7C21.7 17.3 21.7 18.2 21.1 18.8C20.5 19.4 19.6 19.4 19 18.8L11.6 11.4Z" fill="#ffccd2"/>
+          </svg>
+        </div>
+        <span style="font-weight: 850; color: #0c0a09; font-size: 1.15rem; font-family: 'Faculty Glyphic', sans-serif;">Kaizen<span style="color: #b91c1c;">AI</span></span>
+        <span style="font-size: 0.84rem; color: #0c0a09; font-weight: 750;">© 2026 KaizenAI Platform Inc.</span>
+      </div>
+
+      <div style="display: flex; gap: 24px; font-size: 0.9rem;">
+        <a href="index.html" style="color: #0c0a09; text-decoration: none; font-weight: 750;">Home</a>
+        <a href="#features" style="color: #0c0a09; text-decoration: none; font-weight: 750;">Features</a>
+        <a href="#pricing" style="color: #0c0a09; text-decoration: none; font-weight: 750;">Pricing</a>
+        <a href="signup.html" style="color: #b91c1c; text-decoration: none; font-weight: 800;">Sign Up →</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/morphism.js"></script>
+  <script src="js/landing.js"></script>
+</body>
+</html>

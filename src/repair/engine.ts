@@ -6,6 +6,7 @@ import type { Session } from '../browser/session.js';
 import type { Candidate, ElementRecord, Intent, PageSnapshot, Step } from '../types.js';
 import type { Repo } from '../db/repo.js';
 import type { LlmClient } from '../llm/client.js';
+import { NullClient } from '../llm/client.js';
 import { type Policy, loadPolicy } from '../governance/policy.js';
 import { captureSnapshot } from '../snapshot/capture.js';
 import { diffSnapshots } from '../diff/differ.js';
@@ -15,6 +16,8 @@ import { executeStep } from '../executor/executor.js';
 import { buildChangeReport } from '../diff/report.js';
 import { explainChange, explainReplan, explainAmbiguous } from '../explain/templates.js';
 import { planAndExecute } from '../planner/plan.js';
+import { attemptAiRecovery } from './ai-fallback.js';
+import { telemetry } from './telemetry.js';
 
 export async function replayWithRepair(
   session: Session,
@@ -55,6 +58,24 @@ export async function replayWithRepair(
 
     const el = await resolveBySelector(session.page, snap, step.target, policy);
     if (el) {
+      telemetry.addTrace({
+        stepId: step.stepId,
+        originalSelector: step.target.selector,
+        originalAction: step.action,
+        selectorFailed: false,
+        semanticCandidatesFound: 0,
+        contextAnchored: true,
+        rankedCandidates: [],
+        deterministicOutcome: 'original_pass',
+        aiInvoked: false,
+        actionExecuted: step.action,
+        finalStatus: 'pass',
+        traceLog: [
+          `Original selector '${step.target.selector}' located target element directly`,
+          `Action '${step.action}' executed successfully`,
+        ],
+      });
+
       await executeStep(session.page, step, el, intent, snap);
       newSteps.push({
         ...step,
@@ -69,6 +90,11 @@ export async function replayWithRepair(
       }
     } else {
       // DETECT
+      telemetry.recordRun({
+        originalSelectorFailures: 1,
+        deterministicRecoveryAttempts: 1,
+      });
+
       const baseRow = repo.getSnapshot(step.target.snapshotId);
       const base: PageSnapshot = {
         id: baseRow?.id ?? step.target.snapshotId,
@@ -92,6 +118,7 @@ export async function replayWithRepair(
           break;
         }
 
+        telemetry.recordRun({ deterministicRecoveries: 1 });
         repaired = true;
         const newTarget = elementToTarget(replacementEl, snap.id);
         const newStep: Step = {
@@ -122,6 +149,28 @@ export async function replayWithRepair(
         const changeId = repo.insertChange(report);
         changeIds.push(changeId);
 
+        telemetry.addTrace({
+          stepId: step.stepId,
+          originalSelector: step.target.selector,
+          originalAction: step.action,
+          selectorFailed: true,
+          semanticCandidatesFound: m.candidates.length,
+          contextAnchored: !!step.target.nearText,
+          rankedCandidates: m.candidates.map(c => ({ ref: c.ref, name: c.name, score: c.score })),
+          deterministicOutcome: 'single',
+          aiInvoked: false,
+          actionExecuted: newStep.action,
+          finalStatus: 'healed_deterministic',
+          traceLog: [
+            `Original selector '${step.target.selector}' failed`,
+            `Semantic matching searched for candidates: found ${m.candidates.length} candidate(s)`,
+            `Context-aware matching evaluated surrounding context (nearText="${step.target.nearText || 'none'}")`,
+            `Confidence scoring ranked top candidate '${m.best?.name}' (score: ${m.best?.score.toFixed(3)} >= threshold ${policy.match.strong})`,
+            `Deterministic recovery accepted candidate '${m.best?.name}' without AI`,
+            `Recovered action executed`,
+          ],
+        });
+
         await executeStep(session.page, newStep, replacementEl, intent, snap);
         newSteps.push(newStep);
 
@@ -135,35 +184,249 @@ export async function replayWithRepair(
       }
 
       if (m.kind === 'ambiguous') {
-        const explanation = explainAmbiguous(step.stepId, m.candidates, intent);
-        const report = buildChangeReport({
-          base: base.id ?? step.target.snapshotId,
-          head: snap.id,
-          items,
-          affectedSteps: [step.stepId],
-          classification: 'AMBIGUOUS',
-          confidence: 0.5,
-          explanation,
-        });
-        const changeId = repo.insertChange(report);
-        changeIds.push(changeId);
+        let aiResolved = false;
+        let aiInvoked = false;
+        let aiReason: string | undefined;
+        let aiProposal: string | null = null;
+        let aiValidated = false;
 
-        ambiguity = { stepId: step.stepId, candidates: m.candidates };
-        plannerStatus = 'ambiguous';
-        // DO NOT click or fill anything
-        return {
-          newSteps,
-          changeIds,
-          repaired,
-          replanned,
-          ambiguity,
-          appError,
-          plannerStatus,
-          llmCalls: ctx.llm.calls,
-        };
+        if (ctx.llmMode && ctx.llmMode !== 'off' && !(ctx.llm instanceof NullClient)) {
+          aiInvoked = true;
+          telemetry.recordRun({ aiFallbackInvocations: 1 });
+          const aiRes = await attemptAiRecovery(
+            {
+              step,
+              target: step.target,
+              snap,
+              candidatesExamined: m.candidates,
+              deterministicReason: `Ambiguous: multiple candidates scored within margin: ${m.candidates.map(c => `${c.name} (${c.score.toFixed(3)})`).join(', ')}`,
+              intent,
+            },
+            ctx.llm,
+            ctx.llmMode
+          );
+
+          aiReason = aiRes.reason;
+          aiProposal = aiRes.candidate?.name ?? null;
+
+          if (aiRes.kind === 'recovered' && aiRes.candidate) {
+            aiValidated = true;
+            aiResolved = true;
+            telemetry.recordRun({ aiAssistedRecoveries: 1 });
+            repaired = true;
+            const replacementEl = aiRes.candidate;
+            const newTarget = elementToTarget(replacementEl, snap.id);
+            const newStep: Step = {
+              ...step,
+              target: newTarget,
+              provenance: 'llm',
+            };
+            const explanation = `Recovered via AI fallback: ${aiRes.reason} (selected ${replacementEl.name} over competing candidates)`;
+            const report = buildChangeReport({
+              base: base.id ?? step.target.snapshotId,
+              head: snap.id,
+              items,
+              affectedSteps: [step.stepId],
+              classification: 'HARMLESS_UI',
+              confidence: aiRes.confidence,
+              explanation,
+            });
+            const changeId = repo.insertChange(report);
+            changeIds.push(changeId);
+
+            telemetry.addTrace({
+              stepId: step.stepId,
+              originalSelector: step.target.selector,
+              originalAction: step.action,
+              selectorFailed: true,
+              semanticCandidatesFound: m.candidates.length,
+              contextAnchored: !!step.target.nearText,
+              rankedCandidates: m.candidates.map(c => ({ ref: c.ref, name: c.name, score: c.score })),
+              deterministicOutcome: 'ambiguous',
+              aiInvoked: true,
+              aiReason: aiRes.reason,
+              aiProposal: replacementEl.name,
+              aiValidated: true,
+              actionExecuted: newStep.action,
+              finalStatus: 'healed_ai',
+              traceLog: [
+                `Original selector '${step.target.selector}' failed`,
+                `Semantic matching found ${m.candidates.length} candidates`,
+                `Context-aware matching could not distinguish candidates`,
+                `Confidence scoring ranked multiple candidates within margin ${policy.match.margin}`,
+                `Deterministic recovery rejected candidates as ambiguous`,
+                `AI fallback invoked for disambiguation`,
+                `AI recommendation validated: selected '${replacementEl.name}' (ref: ${replacementEl.ref})`,
+                `Recovered action executed`,
+              ],
+            });
+
+            await executeStep(session.page, newStep, replacementEl, intent, snap);
+            newSteps.push(newStep);
+
+            if (session.network.some(n => /^\/api\//.test(n.path) && n.status >= 500)) {
+              appError = true;
+              plannerStatus = 'app_error';
+              break;
+            }
+            continue;
+          } else {
+            telemetry.recordRun({ aiFallbackFailures: 1 });
+          }
+        }
+
+        if (!aiResolved) {
+          telemetry.recordRun({ unresolvedAmbiguousCases: 1 });
+          const explanation = explainAmbiguous(step.stepId, m.candidates, intent);
+          const report = buildChangeReport({
+            base: base.id ?? step.target.snapshotId,
+            head: snap.id,
+            items,
+            affectedSteps: [step.stepId],
+            classification: 'AMBIGUOUS',
+            confidence: 0.5,
+            explanation,
+          });
+          const changeId = repo.insertChange(report);
+          changeIds.push(changeId);
+
+          telemetry.addTrace({
+            stepId: step.stepId,
+            originalSelector: step.target.selector,
+            originalAction: step.action,
+            selectorFailed: true,
+            semanticCandidatesFound: m.candidates.length,
+            contextAnchored: !!step.target.nearText,
+            rankedCandidates: m.candidates.map(c => ({ ref: c.ref, name: c.name, score: c.score })),
+            deterministicOutcome: 'ambiguous',
+            aiInvoked,
+            aiReason,
+            aiProposal,
+            aiValidated,
+            finalStatus: 'unresolved_ambiguous',
+            traceLog: [
+              `Original selector '${step.target.selector}' failed`,
+              `Semantic matching found candidates: ${m.candidates.map(c => `'${c.name}'`).join(', ')}`,
+              `Context-aware matching could not distinguish candidates`,
+              `Confidence scoring confirmed multiple plausible candidates within margin`,
+              ...(aiInvoked
+                ? [
+                    `AI fallback invoked`,
+                    `AI fallback could not resolve ambiguity safely: ${aiReason || 'Ambiguity confirmed'}`,
+                  ]
+                : [`AI fallback not invoked (deterministic ambiguity guarded)`]),
+              `Recovery aborted safely: Unresolved: Ambiguous Choices (no action executed to avoid false clicks)`,
+            ],
+          });
+
+          ambiguity = { stepId: step.stepId, candidates: m.candidates };
+          plannerStatus = 'ambiguous';
+          // DO NOT click or fill anything
+          return {
+            newSteps,
+            changeIds,
+            repaired,
+            replanned,
+            ambiguity,
+            appError,
+            plannerStatus,
+            llmCalls: ctx.llm.calls,
+          };
+        }
       }
 
       if (m.kind === 'none') {
+        let aiResolved = false;
+        let aiInvoked = false;
+        let aiReason: string | undefined;
+        let aiProposal: string | null = null;
+        let aiValidated = false;
+
+        if (ctx.llmMode && ctx.llmMode !== 'off' && !(ctx.llm instanceof NullClient)) {
+          aiInvoked = true;
+          telemetry.recordRun({ aiFallbackInvocations: 1 });
+          const aiRes = await attemptAiRecovery(
+            {
+              step,
+              target: step.target,
+              snap,
+              candidatesExamined: m.candidates,
+              deterministicReason: `No candidate met strong threshold (${policy.match.strong}): best score was ${m.candidates[0]?.score?.toFixed(3) ?? '0.000'}`,
+              intent,
+            },
+            ctx.llm,
+            ctx.llmMode
+          );
+
+          aiReason = aiRes.reason;
+          aiProposal = aiRes.candidate?.name ?? null;
+
+          if (aiRes.kind === 'recovered' && aiRes.candidate) {
+            aiValidated = true;
+            aiResolved = true;
+            telemetry.recordRun({ aiAssistedRecoveries: 1 });
+            repaired = true;
+            const replacementEl = aiRes.candidate;
+            const newTarget = elementToTarget(replacementEl, snap.id);
+            const newStep: Step = {
+              ...step,
+              target: newTarget,
+              provenance: 'llm',
+            };
+            const explanation = `Recovered via AI fallback: ${aiRes.reason} (selected ${replacementEl.name})`;
+            const report = buildChangeReport({
+              base: base.id ?? step.target.snapshotId,
+              head: snap.id,
+              items,
+              affectedSteps: [step.stepId],
+              classification: 'HARMLESS_UI',
+              confidence: aiRes.confidence,
+              explanation,
+            });
+            const changeId = repo.insertChange(report);
+            changeIds.push(changeId);
+
+            telemetry.addTrace({
+              stepId: step.stepId,
+              originalSelector: step.target.selector,
+              originalAction: step.action,
+              selectorFailed: true,
+              semanticCandidatesFound: m.candidates.length,
+              contextAnchored: !!step.target.nearText,
+              rankedCandidates: m.candidates.map(c => ({ ref: c.ref, name: c.name, score: c.score })),
+              deterministicOutcome: 'none',
+              aiInvoked: true,
+              aiReason: aiRes.reason,
+              aiProposal: replacementEl.name,
+              aiValidated: true,
+              actionExecuted: newStep.action,
+              finalStatus: 'healed_ai',
+              traceLog: [
+                `Original selector '${step.target.selector}' failed`,
+                `Semantic matching searched for candidates: none met threshold ${policy.match.strong}`,
+                `Context-aware matching did not find strong anchor`,
+                `Deterministic recovery rejected candidates as insufficiently reliable`,
+                `AI fallback invoked`,
+                `AI recommendation validated: selected '${replacementEl.name}' (ref: ${replacementEl.ref})`,
+                `Recovered action executed`,
+              ],
+            });
+
+            await executeStep(session.page, newStep, replacementEl, intent, snap);
+            newSteps.push(newStep);
+
+            if (session.network.some(n => /^\/api\//.test(n.path) && n.status >= 500)) {
+              appError = true;
+              plannerStatus = 'app_error';
+              break;
+            }
+            continue;
+          } else {
+            telemetry.recordRun({ aiFallbackFailures: 1 });
+          }
+        }
+
+        // If AI could not resolve or was off, attempt flow replanning
         items.unshift({
           kind: 'FLOW_CHANGED',
           before: { name: step.target.name, pagePath: step.pagePath },
@@ -201,6 +464,29 @@ export async function replayWithRepair(
 
         const changeId = repo.insertChange(report);
         changeIds.push(changeId);
+
+        telemetry.addTrace({
+          stepId: step.stepId,
+          originalSelector: step.target.selector,
+          originalAction: step.action,
+          selectorFailed: true,
+          semanticCandidatesFound: m.candidates.length,
+          contextAnchored: !!step.target.nearText,
+          rankedCandidates: m.candidates.map(c => ({ ref: c.ref, name: c.name, score: c.score })),
+          deterministicOutcome: 'none',
+          aiInvoked,
+          aiReason,
+          aiProposal,
+          aiValidated,
+          finalStatus: 'replan_flow',
+          traceLog: [
+            `Original selector '${step.target.selector}' failed`,
+            `Semantic matching found no acceptable candidates`,
+            `Deterministic recovery rejected candidates`,
+            ...(aiInvoked ? [`AI fallback invoked and could not recover: ${aiReason || 'stuck'}`] : []),
+            `Triggered multi-step flow replan`,
+          ],
+        });
 
         const r = await planAndExecute(session, intent, repo, {
           repair: true,

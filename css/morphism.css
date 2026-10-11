@@ -1,107 +1,87 @@
 /* ==========================================================================
    DYNAMIC MORPHISM DESIGN SYSTEM
-   Palette: Crimson Red Medium & Linen Beige
-   KaizenAI - Autonomous E2E Testing for Product Companies & Startups
+   Palette: Light Maroon (#9B4A57), Deep Maroon (#7A3441), Blood Orange (#D2410D)
+   Surfaces: White (#FFFFFF) & Warm Off-White (#FBF7F6), Ink (#2A1418), Muted (#7C6A6D)
+   Typography: Montserrat (Headings) & Poppins (Body)
    ========================================================================== */
 
-/* New Age Fonts Integration */
-@font-face {
-  font-family: 'Faculty Glyphic';
-  src: url('../fonts/FacultyGlyphic-Regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Elagern';
-  src: url('../fonts/Elagern-nRPoO.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Elagern';
-  src: url('../fonts/elagernitalic-lgmxw.ttf') format('truetype');
-  font-weight: normal;
-  font-style: italic;
-  font-display: swap;
-}
-
 :root {
-  /* Font Family Stacks - New Age Stack */
-  --font-heading: 'Faculty Glyphic', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, sans-serif;
-  --font-semiheading: 'Elagern', 'Faculty Glyphic', Georgia, serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', 'Inter', Roboto, Helvetica, Arial, sans-serif;
+  /* Typography Tokens: Montserrat & Poppins */
+  --font-heading: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-semiheading: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
 
-  /* Color Palette - Linen Beige Warm Foundation */
-  --bg-deep: #f5f0e8;           /* Warm, organic Linen Beige base */
-  --bg-space: #ece4d6;          /* Tactile Linen Sand */
-  --bg-surface: #f0e8dc;        /* Soft Linen Stone */
-  
-  /* Glass Surfaces (Dynamic Linen Glassmorphism) */
-  --glass-bg: rgba(255, 253, 249, 0.76);
-  --glass-bg-subtle: rgba(247, 242, 234, 0.58);
-  --glass-bg-hover: rgba(255, 255, 255, 0.94);
-  --glass-bg-active: rgba(244, 238, 228, 0.95);
-  
-  /* Specular Borders & Crimson Red Accents */
-  --glass-border: rgba(185, 28, 28, 0.14);
-  --glass-border-subtle: rgba(168, 148, 134, 0.25);
-  --glass-border-hover: rgba(185, 28, 28, 0.45);
-  --glass-border-accent: rgba(197, 34, 51, 0.6);
-  
-  /* Depth, Shadows & Specular Bevels */
-  --glass-blur: blur(18px);
-  --glass-blur-heavy: blur(28px);
-  --glass-shadow: 0 20px 48px -12px rgba(120, 53, 53, 0.1), 0 4px 16px rgba(0, 0, 0, 0.04);
-  --glass-shadow-sm: 0 10px 24px -6px rgba(120, 53, 53, 0.08);
-  --glass-shadow-lg: 0 30px 70px -15px rgba(120, 53, 53, 0.18), 0 8px 24px rgba(0, 0, 0, 0.06);
-  --glass-bevel: inset 1px 1px 1.5px rgba(255, 255, 255, 0.95), inset -1px -1px 2px rgba(185, 28, 28, 0.08);
-  --glass-bevel-subtle: inset 0.5px 0.5px 1px rgba(255, 255, 255, 0.85);
-  
-  /* Crimson Red Medium & Complementary Accents */
-  --accent-primary: #b91c1c;    /* Crimson Red Medium */
-  --accent-crimson-rich: #c52233; /* Vibrant Medium Crimson */
-  --accent-secondary: #991b1b;  /* Deep Crimson Ruby */
-  --accent-crimson-deep: #881337; /* Velvet Wine */
-  --accent-linen: #ede4d6;      /* Linen Cream */
-  --accent-linen-gold: #b45309; /* Warm Ochre Amber */
-  --accent-emerald: #047857;    /* Forest Emerald for PASS */
-  --accent-amber: #c2410c;      /* Rust Amber */
-  --accent-crimson: #dc2626;    /* Alert Crimson */
-  
+  /* Color Palette - Minimal Formal Morphism */
+  /* White & Off-White (~70%), Light Maroon Structural (~20%), Blood Orange Accent (~10%) */
+  --color-primary: #9B4A57;      /* Light Maroon */
+  --color-primary-deep: #7A3441; /* Deep Maroon (hover/active) */
+  --color-accent: #D2410D;       /* Blood Orange (CTAs, highlights) */
+  --color-accent-hover: #BA380A;
+  --color-bg-page: #FBF7F6;      /* Warm Off-White */
+  --color-surface: #FFFFFF;      /* Pure White */
+  --color-text-ink: #2A1418;     /* Ink */
+  --color-text-muted: #7C6A6D;   /* Muted text */
+
+  /* Surface tokens */
+  --bg-deep: #FBF7F6;
+  --bg-space: #F5EFEB;
+  --bg-surface: #FFFFFF;
+  --card-solid: #FFFFFF;
+
+  /* Soft Glass Surfaces (Subtle blur, translucent white cards, hairline borders) */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.70);
+  --glass-bg-hover: rgba(255, 255, 255, 0.96);
+  --glass-bg-active: rgba(251, 247, 246, 0.98);
+
+  /* Hairline Borders */
+  --glass-border: rgba(155, 74, 87, 0.12);
+  --glass-border-subtle: rgba(155, 74, 87, 0.08);
+  --glass-border-hover: rgba(155, 74, 87, 0.28);
+  --glass-border-accent: rgba(210, 65, 13, 0.35);
+
+  /* Gentle Neumorphic Depth & Layered Shadows */
+  --glass-blur: blur(14px);
+  --glass-blur-heavy: blur(20px);
+  --glass-shadow-sm: 0 2px 8px -1px rgba(42, 20, 24, 0.04), 0 1px 3px rgba(42, 20, 24, 0.02);
+  --glass-shadow: 0 8px 24px -4px rgba(42, 20, 24, 0.06), 0 2px 6px -1px rgba(42, 20, 24, 0.03);
+  --glass-shadow-lg: 0 16px 36px -6px rgba(42, 20, 24, 0.08), 0 4px 12px -2px rgba(42, 20, 24, 0.04);
+  --glass-bevel: inset 0.5px 0.5px 1px rgba(255, 255, 255, 0.9), inset -0.5px -0.5px 1px rgba(155, 74, 87, 0.05);
+
+  /* Brand Accents */
+  --accent-primary: #9B4A57;       /* Light Maroon */
+  --accent-crimson-rich: #7A3441;  /* Deep Maroon */
+  --accent-secondary: #7A3441;
+  --accent-crimson-deep: #612833;
+  --accent-orange: #D2410D;        /* Blood Orange */
+  --accent-emerald: #1B6D55;       /* Jade/Green */
+  --accent-amber: #D2410D;
+
   /* Gradients */
-  --grad-primary: linear-gradient(135deg, #c52233 0%, #b91c1c 45%, #991b1b 100%);
-  --grad-crimson: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-  --grad-linen: linear-gradient(135deg, #faf7f2 0%, #ede5d8 100%);
-  --grad-crimson-soft: linear-gradient(135deg, rgba(185, 28, 28, 0.12) 0%, rgba(197, 34, 51, 0.05) 100%);
-  --grad-linen-mesh: radial-gradient(at 0% 0%, rgba(185, 28, 28, 0.1) 0px, transparent 50%),
-                     radial-gradient(at 100% 0%, rgba(220, 38, 38, 0.08) 0px, transparent 50%),
-                     radial-gradient(at 100% 100%, rgba(210, 185, 150, 0.2) 0px, transparent 50%),
-                     radial-gradient(at 0% 100%, rgba(185, 28, 28, 0.06) 0px, transparent 50%);
-  
-  /* Text & Typography - High Contrast on Linen Beige (50% Darker for Crisp Legibility) */
-  --text-primary: #0c0a09;      /* Warm Deepest Charcoal / Obsidian */
-  --text-secondary: #1c1917;    /* 50% darker: Deep Charcoal Espresso */
-  --text-muted: #292524;        /* 50% darker: Rich Warm Charcoal */
-  --text-highlight: #000000;    /* Pure Obsidian Black */
-  --text-crimson: #991b1b;      /* Deeper High-Contrast Crimson */
-  
-  /* Layout & Radii */
+  --grad-primary: linear-gradient(135deg, #9B4A57 0%, #7A3441 100%);
+  --grad-cta: linear-gradient(135deg, #D2410D 0%, #BA380A 100%);
+  --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(251, 247, 246, 0.85) 100%);
+
+  /* Text & Typography */
+  --text-primary: #2A1418;
+  --text-secondary: #7C6A6D;
+  --text-muted: #7C6A6D;
+  --text-highlight: #2A1418;
+  --text-crimson: #9B4A57;
+
+  /* Spacing & Radii (8px grid, 14-20px cards, 10-12px buttons/inputs) */
   --radius-xs: 6px;
   --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 20px;
   --radius-pill: 9999px;
-  
-  /* Transitions */
-  --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Motion (150-250ms ease-out) */
+  --transition-fast: 0.15s ease-out;
+  --transition-smooth: 0.22s ease-out;
+  --transition-spring: 0.25s ease-out;
 }
 
 /* Base Reset & Typography */

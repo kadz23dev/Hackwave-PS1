@@ -1,6 +1,6 @@
 import http from 'node:http';
 import { createReadStream, existsSync, statSync } from 'node:fs';
-import { extname, join, resolve, sep } from 'node:path';
+import { extname, resolve } from 'node:path';
 
 export interface RouteContext {
   req: http.IncomingMessage;
@@ -141,13 +141,16 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
       }
 
       const rootDir = process.cwd();
-      const dashboardDir = resolve(rootDir, 'dashboard');
+      const dashboardDir = staticDir ? resolve(rootDir, staticDir) : resolve(rootDir, 'dashboard');
       let resolvedFile: string | null = null;
 
       if (pathname === '/' || pathname === '/index.html') {
+        // HealTest Dashboard Shell
+        resolvedFile = resolve(dashboardDir, 'index.html');
+      } else if (pathname === '/landing' || pathname === '/landing.html') {
         // Landing Page
-        const candidate = resolve(rootDir, 'index.html');
-        resolvedFile = existsSync(candidate) ? candidate : resolve(dashboardDir, 'index.html');
+        const candidate = resolve(rootDir, 'landing.html');
+        resolvedFile = existsSync(candidate) ? candidate : resolve(rootDir, 'index.html');
       } else if (pathname === '/signup.html' || pathname === '/signup' || pathname === '/login') {
         // Sign In / Sign Up Page
         const candidate = resolve(rootDir, 'signup.html');
@@ -168,13 +171,20 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
           resolvedFile = candidate;
         }
       } else {
-        // General asset lookup: check root first, then dashboard directory
-        const candRoot = resolve(rootDir, '.' + pathname);
+        // General asset lookup: check dashboard first, then allowed static asset directories
         const candDash = resolve(dashboardDir, '.' + pathname);
-        if (existsSync(candRoot) && statSync(candRoot).isFile()) {
-          resolvedFile = candRoot;
-        } else if (existsSync(candDash) && statSync(candDash).isFile()) {
+        if (existsSync(candDash) && statSync(candDash).isFile() && candDash.startsWith(dashboardDir)) {
           resolvedFile = candDash;
+        } else if (
+          pathname.startsWith('/css/') ||
+          pathname.startsWith('/fonts/') ||
+          pathname.startsWith('/images/') ||
+          pathname === '/favicon.ico'
+        ) {
+          const candRoot = resolve(rootDir, '.' + pathname);
+          if (existsSync(candRoot) && statSync(candRoot).isFile() && candRoot.startsWith(rootDir)) {
+            resolvedFile = candRoot;
+          }
         }
       }
 
@@ -189,6 +199,7 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
       res.writeHead(200, {
         'Content-Type': contentType,
         'X-Content-Type-Options': 'nosniff',
+        'Access-Control-Allow-Origin': '*',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       });
       createReadStream(resolvedFile).pipe(res);

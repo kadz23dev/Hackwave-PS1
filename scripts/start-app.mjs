@@ -114,6 +114,12 @@ async function main() {
   console.log('  ➜ Ambiguous (v2-amb):  http://127.0.0.1:4104/payment.html');
   console.log('═'.repeat(64));
   console.log('Press Ctrl+C at any time to stop all services.\n');
+
+  // Keep parent launcher running until server exits or user presses Ctrl+C
+  await new Promise((resolve) => {
+    serverProc.on('exit', resolve);
+    serverProc.on('close', resolve);
+  });
 }
 
 main().catch((err) => {

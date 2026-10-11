@@ -1,106 +1,98 @@
 /* ==========================================================================
-   LANDING PAGE STYLING (B2B SaaS & Dynamics Morphism)
-   Palette: Crimson Red Medium & Linen Beige
-   NEW AGE TYPOGRAPHY INTEGRATION:
-     - Headings & Big Display: FacultyGlyphic-Regular.ttf
-     - Semi-Headings & Subheads: Elagern-nRPoO.ttf
-   Applied EXCLUSIVELY to Landing Page (index.html)
+   LANDING PAGE STYLING (Minimal Formal Morphism)
+   Palette: Light Maroon (#9B4A57), Deep Maroon (#7A3441), Blood Orange (#D2410D)
+   Surfaces: White (#FFFFFF) & Warm Off-White (#FBF7F6), Ink (#2A1418), Muted (#7C6A6D)
+   Typography: Montserrat (Headings) & Poppins (Body)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. Font Face Declarations (Local TTF Web Fonts)
-   -------------------------------------------------------------------------- */
-@font-face {
-  font-family: 'Faculty Glyphic';
-  src: url('../fonts/FacultyGlyphic-Regular.ttf') format('truetype');
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Elagern';
-  src: url('../fonts/Elagern-nRPoO.ttf') format('truetype');
-  font-weight: 400 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Elagern';
-  src: url('../fonts/elagernitalic-lgmxw.ttf') format('truetype');
-  font-weight: 400 800;
-  font-style: italic;
-  font-display: swap;
-}
-
-/* --------------------------------------------------------------------------
-   2. Typography Foundations & Font Mapping
+   1. Typography Foundations & Font Mapping
    -------------------------------------------------------------------------- */
 body {
-  color: #0c0a09;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', 'Inter', Roboto, sans-serif;
+  color: #2A1418;
+  background-color: #FBF7F6;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  line-height: 1.6;
 }
 
-/* Primary Headings: Faculty Glyphic */
+/* Primary Headings: Montserrat (tight tracking -0.02em, semibold 600) */
 h1, h2,
 .hero-title,
 .section-title,
-.gradient-text,
 .brand-logo,
 .calc-stat-big {
-  font-family: 'Faculty Glyphic', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, sans-serif !important;
-  color: #0c0a09;
-  letter-spacing: -0.025em;
-  font-weight: 700;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  color: #2A1418;
+  letter-spacing: -0.02em;
+  font-weight: 600;
 }
 
-/* Semi-Headings, Subheadings & Card Headers: Elagern */
+/* Subheadings & Component Titles */
 h3, h4, h5, h6,
-.hero-pill,
-.section-pill,
-.tagline-banner,
 .sim-card-title,
 .feature-title,
 .price-title,
 .price-val,
-.faq-question,
 .diff-header,
 .trust-title,
 .calc-slider-header,
 .calc-stat-sub,
-.popular-badge,
-.scenario-tab,
-.badge {
-  font-family: 'Elagern', 'Faculty Glyphic', Georgia, serif !important;
-  letter-spacing: 0.01em;
+.faq-question {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  color: #2A1418;
 }
 
-p {
-  color: #0c0a09;
+/* Eyebrows: Montserrat 600, uppercase, 0.12em tracking, 12px */
+.hero-pill,
+.section-pill,
+.tagline-banner,
+.popular-badge,
+.scenario-tab,
+.badge,
+.eyebrow-label {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+p, .hero-subtitle, .feature-desc, .body-text {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #2A1418;
+}
+
+.hero-subtitle, .section-subtitle, .text-muted {
+  color: #7C6A6D !important;
 }
 
 /* --------------------------------------------------------------------------
-   3. Navigation Bar
+   2. Navigation Bar
    -------------------------------------------------------------------------- */
 .navbar .brand-logo {
-  color: #0c0a09;
-  font-weight: 850;
-  font-size: 1.35rem;
+  color: #2A1418;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
 }
 
 .navbar .nav-link {
-  color: #0c0a09;
-  font-weight: 750;
-  font-size: 0.95rem;
+  color: #2A1418;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 0.92rem;
   transition: color var(--transition-fast);
 }
 
 .navbar .nav-link:hover {
-  color: #b91c1c;
+  color: #9B4A57;
 }
 
 /* --------------------------------------------------------------------------
@@ -116,92 +108,117 @@ p {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 22px;
+  padding: 6px 18px;
   border-radius: var(--radius-pill);
-  background: rgba(185, 28, 28, 0.12);
-  border: 1px solid rgba(185, 28, 28, 0.45);
-  color: #7f1d1d;
-  font-size: 0.88rem;
-  font-weight: 850;
-  letter-spacing: 0.06em;
+  background: rgba(155, 74, 87, 0.08);
+  border: 1px solid rgba(155, 74, 87, 0.22);
+  color: #7A3441;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   margin-bottom: 24px;
-  box-shadow: 0 4px 15px rgba(185, 28, 28, 0.08);
+  box-shadow: 0 2px 8px rgba(155, 74, 87, 0.06);
   text-transform: uppercase;
 }
 
 .hero-title {
-  font-size: clamp(2.4rem, 5.5vw, 4.4rem);
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: clamp(2.4rem, 4.5vw, 3.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   line-height: 1.15;
-  margin-bottom: 24px;
-  color: #0c0a09;
+  margin-bottom: 20px;
+  color: #2A1418;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #0c0a09 15%, #b91c1c 65%, #c52233 100%);
+  background: linear-gradient(135deg, #2A1418 25%, #9B4A57 70%, #7A3441 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .hero-subtitle {
-  font-size: clamp(1.05rem, 2vw, 1.25rem);
-  color: #0c0a09;
-  font-weight: 550;
-  max-width: 820px;
-  margin: 0 auto 36px;
-  line-height: 1.7;
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  color: #7C6A6D !important;
+  font-weight: 400;
+  max-width: 780px;
+  margin: 0 auto 32px;
+  line-height: 1.6;
 }
 
 .tagline-banner {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background: #ffffff;
-  border: 1px dashed rgba(185, 28, 28, 0.38);
-  padding: 11px 26px;
+  background: #FFFFFF;
+  border: 1px dashed rgba(155, 74, 87, 0.25);
+  padding: 10px 24px;
   border-radius: var(--radius-pill);
   margin-bottom: 36px;
-  font-size: 1.05rem;
-  font-style: italic;
-  color: #0c0a09;
-  box-shadow: 0 4px 16px rgba(120, 53, 53, 0.06);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2A1418;
+  box-shadow: 0 2px 8px rgba(42, 20, 24, 0.04);
 }
 
 .tagline-banner strong {
-  color: #b91c1c;
-  font-style: normal;
-  font-weight: 850;
+  color: #9B4A57;
+  font-weight: 600;
 }
 
 .hero-cta-group {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 50px;
+  margin-bottom: 48px;
 }
 
-/* Tactile Buttons on Landing Page */
+/* Formal Morphism Buttons on Landing Page */
 .btn-primary {
+  background: #D2410D !important;
   color: #ffffff !important;
-  font-weight: 750;
-  letter-spacing: 0.02em;
+  border: 1px solid #C23805 !important;
+  border-radius: 10px !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.01em;
+  padding: 12px 24px !important;
+  box-shadow: 0 4px 14px rgba(210, 65, 13, 0.32) !important;
+  transition: all 0.2s ease-out !important;
+}
+
+.btn-primary:hover {
+  background: #BA380A !important;
+  border-color: #A32F06 !important;
+  box-shadow: 0 6px 20px rgba(210, 65, 13, 0.42) !important;
+  transform: translateY(-1px);
 }
 
 .btn-glass {
-  background: rgba(255, 253, 249, 0.94);
-  color: #0c0a09 !important;
-  font-weight: 750;
-  border: 1px solid rgba(185, 28, 28, 0.22);
-  box-shadow: 0 4px 15px rgba(120, 53, 53, 0.06), var(--glass-bevel);
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #2A1418 !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  border: 1px solid rgba(155, 74, 87, 0.18) !important;
+  border-radius: 10px !important;
+  padding: 12px 24px !important;
+  box-shadow: 0 2px 8px rgba(42, 20, 24, 0.04) !important;
+  transition: all 0.2s ease-out !important;
 }
 
 .btn-glass:hover {
-  background: #ffffff;
-  color: #b91c1c !important;
-  border-color: #b91c1c;
-  box-shadow: 0 8px 24px rgba(185, 28, 28, 0.16);
+  background: #ffffff !important;
+  color: #7A3441 !important;
+  border-color: #9B4A57 !important;
+  box-shadow: 0 4px 14px rgba(155, 74, 87, 0.12) !important;
+  transform: translateY(-1px);
 }
 
 /* --------------------------------------------------------------------------
@@ -216,9 +233,12 @@ p {
 .hero-widget {
   padding: 28px;
   text-align: left;
-  background: rgba(255, 253, 249, 0.92);
-  border: 1px solid rgba(185, 28, 28, 0.2);
-  box-shadow: 0 20px 48px -10px rgba(120, 53, 53, 0.12), var(--glass-bevel);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(155, 74, 87, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 16px 36px -6px rgba(42, 20, 24, 0.08), 0 4px 12px -2px rgba(42, 20, 24, 0.04);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .widget-top-bar {

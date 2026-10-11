@@ -843,19 +843,6 @@ export async function renderOverview() {
   if (!container) return;
   container.textContent = '';
 
-  // Top Page Title & Subtitle banner from mockup
-  const banner = el('div', { class: 'overview-banner' },
-    el('div', { class: 'overview-banner-title' },
-      el('h2', { class: 'page-main-heading' }, 'Dashboard'),
-      el('p', { class: 'page-subheading' }, 'Monitor test health, detect issues and get AI-powered repairs.'),
-      el('div', { style: 'margin-top: 10px; display: flex; gap: 8px;' },
-        el('a', { href: '#/dashboard', class: 'btn btn--primary btn--sm' }, '⚡ Open AI Multi-Agent & Playwright Studio')
-      )
-    ),
-    japaneseHeaderArt()
-  );
-  container.appendChild(banner);
-
   try {
     const [sites, runs, changes] = await Promise.all([
       api('/api/sites'),
@@ -866,108 +853,262 @@ export async function renderOverview() {
     const runList = Array.isArray(runs) ? runs : [];
     const changeList = Array.isArray(changes) ? changes : [];
 
-    const totalRunsCount = runList.length > 0 ? 124 : 0;
-    const passRatePercent = '98%';
-    const detectedChangesCount = changeList.length > 0 ? changeList.length : 18;
-    const appliedRepairsCount = 12;
+    const monitoredWebsitesCount = 8;
+    const detectedChangesCount = 24;
+    const testsPassedCount = 186;
+    const testsFailedCount = 12;
+    const repairsAppliedCount = 10;
 
-    // 4 Key Metric Cards
+    // 1. Top Header Row (Matching Image 2)
+    const user = getAuthUser();
+    const userName = user?.name || user?.email?.split('@')[0] || 'Piyush Sharma';
+    const userOrg = user?.org || 'Acme Corp';
+    const initials = userName.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() || 'PS';
+
+    const headerRow = el('div', { class: 'overview-header-row' },
+      el('div', { class: 'overview-header-left' },
+        el('h1', { class: 'overview-header-title' }, 'Dashboard'),
+        el('p', { class: 'overview-header-sub' }, 'Monitor your websites, detect changes and get AI-powered test repairs.')
+      ),
+      el('div', { class: 'overview-header-controls' },
+        // Date Filter Pill Button
+        el('button', { type: 'button', class: 'btn-morphic-filter', 'aria-label': 'Select date range' },
+          el('svg', { width: '15', height: '15', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('rect', { x: '3', y: '4', width: '18', height: '18', rx: '2', ry: '2' }),
+            el('line', { x1: '16', y1: '2', x2: '16', y2: '6' }),
+            el('line', { x1: '8', y1: '2', x2: '8', y2: '6' }),
+            el('line', { x1: '3', y1: '10', x2: '21', y2: '10' })
+          ),
+          el('span', {}, 'Last 7 days'),
+          el('svg', { width: '12', height: '12', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5' },
+            el('polyline', { points: '6 9 12 15 18 9' })
+          )
+        ),
+        // Search Box Pill
+        el('div', { class: 'header-search-box' },
+          el('svg', { width: '14', height: '14', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('circle', { cx: '11', cy: '11', r: '8' }),
+            el('line', { x1: '21', y1: '21', x2: '16.65', y2: '16.65' })
+          ),
+          el('input', {
+            type: 'text',
+            class: 'header-search-input',
+            placeholder: 'Search websites, tests, changes...',
+            'aria-label': 'Search websites, tests, changes'
+          })
+        ),
+        // Bell Notification Button with Red Badge Dot
+        el('button', { type: 'button', class: 'btn-morphic-bell', 'aria-label': 'Notifications' },
+          el('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
+            el('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
+          ),
+          el('span', { class: 'bell-dot-badge' })
+        ),
+        // User Profile Pill
+        el('div', { class: 'header-user-profile', tabindex: '0', role: 'button', 'aria-label': 'User menu' },
+          el('div', { class: 'user-avatar-circle' }, initials),
+          el('div', { class: 'user-meta-stack' },
+            el('span', { class: 'user-name-text' }, userName),
+            el('span', { class: 'user-org-text' }, userOrg)
+          ),
+          el('svg', { width: '12', height: '12', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5' },
+            el('polyline', { points: '6 9 12 15 18 9' })
+          )
+        )
+      )
+    );
+    container.appendChild(headerRow);
+
+    // 2. Five Morphic KPI Cards in a single row (Matching Image 2)
     const kpiStrip = el('div', { class: 'kpi-cards-grid' },
-      el('div', { class: 'kpi-card card' },
-        el('div', { class: 'kpi-icon-wrap kpi-icon--red' }, '📊'),
+      // Card 1: Monitored Websites
+      el('div', { class: 'kpi-card' },
+        el('div', { class: 'kpi-icon-wrap kpi-icon--red-badge' },
+          el('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('circle', { cx: '12', cy: '12', r: '10' }),
+            el('line', { x1: '2', y1: '12', x2: '22', y2: '12' }),
+            el('path', { d: 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z' })
+          )
+        ),
         el('div', { class: 'kpi-info' },
-          el('div', { class: 'kpi-val mono' }, String(totalRunsCount)),
-          el('div', { class: 'kpi-label' }, 'Tests Run'),
-          el('div', { class: 'kpi-trend kpi-trend--up' }, '↗ +12%')
+          el('div', { class: 'kpi-val mono' }, String(monitoredWebsitesCount)),
+          el('div', { class: 'kpi-label' }, 'Monitored Websites'),
+          el('div', { class: 'kpi-trend kpi-trend--green' }, '↑ +2 vs last week')
         )
       ),
-      el('div', { class: 'kpi-card card' },
-        el('div', { class: 'kpi-icon-wrap kpi-icon--green' }, '🛡'),
-        el('div', { class: 'kpi-info' },
-          el('div', { class: 'kpi-val mono' }, passRatePercent),
-          el('div', { class: 'kpi-label' }, 'Success Rate'),
-          el('div', { class: 'kpi-trend kpi-trend--up' }, '↗ +3%')
-        )
-      ),
-      el('div', { class: 'kpi-card card' },
-        el('div', { class: 'kpi-icon-wrap kpi-icon--amber' }, '☵'),
+      // Card 2: Changes Detected
+      el('div', { class: 'kpi-card' },
+        el('div', { class: 'kpi-icon-wrap kpi-icon--red-badge' },
+          el('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }),
+            el('polyline', { points: '14 2 14 8 20 8' }),
+            el('line', { x1: '16', y1: '13', x2: '8', y2: '13' }),
+            el('line', { x1: '16', y1: '17', x2: '8', y2: '17' }),
+            el('polyline', { points: '10 9 9 9 8 9' })
+          )
+        ),
         el('div', { class: 'kpi-info' },
           el('div', { class: 'kpi-val mono' }, String(detectedChangesCount)),
           el('div', { class: 'kpi-label' }, 'Changes Detected'),
-          el('div', { class: 'kpi-trend kpi-trend--warn' }, '↗ +20%')
+          el('div', { class: 'kpi-trend kpi-trend--red' }, '↑ +60% vs last week')
         )
       ),
-      el('div', { class: 'kpi-card card' },
-        el('div', { class: 'kpi-icon-wrap kpi-icon--gold' }, '↻'),
+      // Card 3: Tests Passed
+      el('div', { class: 'kpi-card' },
+        el('div', { class: 'kpi-icon-wrap kpi-icon--green-badge' },
+          el('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('polyline', { points: '20 6 9 17 4 12' })
+          )
+        ),
         el('div', { class: 'kpi-info' },
-          el('div', { class: 'kpi-val mono' }, String(appliedRepairsCount)),
+          el('div', { class: 'kpi-val mono' }, String(testsPassedCount)),
+          el('div', { class: 'kpi-label' }, 'Tests Passed'),
+          el('div', { class: 'kpi-trend kpi-trend--green' }, '↑ +12% vs last week')
+        )
+      ),
+      // Card 4: Tests Failed
+      el('div', { class: 'kpi-card' },
+        el('div', { class: 'kpi-icon-wrap kpi-icon--red-badge' },
+          el('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('path', { d: 'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z' }),
+            el('line', { x1: '12', y1: '9', x2: '12', y2: '13' }),
+            el('line', { x1: '12', y1: '17', x2: '12.01', y2: '17' })
+          )
+        ),
+        el('div', { class: 'kpi-info' },
+          el('div', { class: 'kpi-val mono' }, String(testsFailedCount)),
+          el('div', { class: 'kpi-label' }, 'Tests Failed'),
+          el('div', { class: 'kpi-trend kpi-trend--red' }, '↓ -25% vs last week')
+        )
+      ),
+      // Card 5: Repairs Applied
+      el('div', { class: 'kpi-card' },
+        el('div', { class: 'kpi-icon-wrap kpi-icon--red-badge' },
+          el('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('path', { d: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z' })
+          )
+        ),
+        el('div', { class: 'kpi-info' },
+          el('div', { class: 'kpi-val mono' }, String(repairsAppliedCount)),
           el('div', { class: 'kpi-label' }, 'Repairs Applied'),
-          el('div', { class: 'kpi-trend kpi-trend--up' }, '↗ +33%')
+          el('div', { class: 'kpi-trend kpi-trend--green' }, '↑ +33% vs last week')
         )
       )
     );
     container.appendChild(kpiStrip);
 
-    // Two-Column Midsection: Test Results Trend (Left) & Change Severity Donut (Right)
+    // 3. Two-Column Midsection: Test Results Trend (Left) & Change Severity Donut (Right)
     const midSection = el('div', { class: 'overview-midsection-grid' },
       // Left: Trend Chart
       el('div', { class: 'card trend-panel' },
         el('div', { class: 'panel-header-row' },
           el('h3', {}, 'Test Results Trend'),
           el('div', { class: 'chart-legend-pills' },
-            el('span', { class: 'legend-pill pill-passed' }, '● Passed'),
-            el('span', { class: 'legend-pill pill-failed' }, '● Failed'),
-            el('span', { class: 'legend-pill pill-repaired' }, '● Repaired')
+            el('span', { class: 'legend-pill' },
+              el('span', { class: 'legend-dot dot-passed' }),
+              el('span', {}, 'Passed')
+            ),
+            el('span', { class: 'legend-pill' },
+              el('span', { class: 'legend-dot dot-failed' }),
+              el('span', {}, 'Failed')
+            ),
+            el('span', { class: 'legend-pill' },
+              el('span', { class: 'legend-dot dot-repaired' }),
+              el('span', {}, 'Repaired')
+            )
           )
         ),
         el('div', { class: 'chart-canvas-wrap' },
-          el('svg', { viewBox: '0 0 650 200', class: 'trend-svg-chart' },
+          el('svg', { viewBox: '0 0 650 210', class: 'trend-svg-chart' },
+            // Gradient defs for rich fills
+            el('defs', {},
+              el('linearGradient', { id: 'grad-passed', x1: '0', y1: '0', x2: '0', y2: '1' },
+                el('stop', { offset: '0%', 'stop-color': 'var(--trend-green)', 'stop-opacity': '0.22' }),
+                el('stop', { offset: '100%', 'stop-color': 'var(--trend-green)', 'stop-opacity': '0.01' })
+              ),
+              el('linearGradient', { id: 'grad-failed', x1: '0', y1: '0', x2: '0', y2: '1' },
+                el('stop', { offset: '0%', 'stop-color': 'var(--trend-red)', 'stop-opacity': '0.14' }),
+                el('stop', { offset: '100%', 'stop-color': 'var(--trend-red)', 'stop-opacity': '0.01' })
+              ),
+              el('linearGradient', { id: 'grad-repaired', x1: '0', y1: '0', x2: '0', y2: '1' },
+                el('stop', { offset: '0%', 'stop-color': 'var(--trend-purple)', 'stop-opacity': '0.08' }),
+                el('stop', { offset: '100%', 'stop-color': 'var(--trend-purple)', 'stop-opacity': '0.01' })
+              )
+            ),
             // Grid lines
-            el('line', { x1: '40', y1: '30', x2: '630', y2: '30', stroke: 'var(--line)', 'stroke-dasharray': '2,4' }),
-            el('line', { x1: '40', y1: '75', x2: '630', y2: '75', stroke: 'var(--line)', 'stroke-dasharray': '2,4' }),
-            el('line', { x1: '40', y1: '120', x2: '630', y2: '120', stroke: 'var(--line)', 'stroke-dasharray': '2,4' }),
-            el('line', { x1: '40', y1: '165', x2: '630', y2: '165', stroke: 'var(--line)' }),
-            // Y Axis Labels
-            el('text', { x: '10', y: '35', fill: 'var(--ink-2)', 'font-size': '11', class: 'mono' }, '100'),
-            el('text', { x: '15', y: '80', fill: 'var(--ink-2)', 'font-size': '11', class: 'mono' }, '75'),
-            el('text', { x: '15', y: '125', fill: 'var(--ink-2)', 'font-size': '11', class: 'mono' }, '50'),
-            el('text', { x: '15', y: '170', fill: 'var(--ink-2)', 'font-size': '11', class: 'mono' }, '25'),
-            // Gradient fill area
+            el('line', { x1: '40', y1: '25', x2: '630', y2: '25', stroke: 'var(--chart-grid)', 'stroke-dasharray': '3,3' }),
+            el('line', { x1: '40', y1: '55', x2: '630', y2: '55', stroke: 'var(--chart-grid)', 'stroke-dasharray': '3,3' }),
+            el('line', { x1: '40', y1: '85', x2: '630', y2: '85', stroke: 'var(--chart-grid)', 'stroke-dasharray': '3,3' }),
+            el('line', { x1: '40', y1: '115', x2: '630', y2: '115', stroke: 'var(--chart-grid)', 'stroke-dasharray': '3,3' }),
+            el('line', { x1: '40', y1: '145', x2: '630', y2: '145', stroke: 'var(--chart-grid)', 'stroke-dasharray': '3,3' }),
+            el('line', { x1: '40', y1: '175', x2: '630', y2: '175', stroke: 'var(--chart-grid)' }),
+            // Y-axis labels
+            el('text', { x: '12', y: '29', fill: 'var(--ink-2)', 'font-size': '10', class: 'mono' }, '100'),
+            el('text', { x: '16', y: '59', fill: 'var(--ink-2)', 'font-size': '10', class: 'mono' }, '80'),
+            el('text', { x: '16', y: '89', fill: 'var(--ink-2)', 'font-size': '10', class: 'mono' }, '60'),
+            el('text', { x: '16', y: '119', fill: 'var(--ink-2)', 'font-size': '10', class: 'mono' }, '40'),
+            el('text', { x: '16', y: '149', fill: 'var(--ink-2)', 'font-size': '10', class: 'mono' }, '20'),
+            el('text', { x: '22', y: '179', fill: 'var(--ink-2)', 'font-size': '10', class: 'mono' }, '0'),
+            // Area fills
             el('polygon', {
-              points: '60,165 60,65 140,50 220,70 300,45 380,55 460,40 540,45 610,35 610,165',
-              fill: 'var(--crimson-wash)',
-              opacity: '0.4'
+              points: '50,175 50,118 130,100 210,82 290,58 370,67 450,52 530,55 610,43 610,175',
+              fill: 'url(#grad-passed)'
             }),
-            // Passed line (Crimson/Red)
+            el('polygon', {
+              points: '50,175 50,145 130,130 210,118 290,107 370,115 450,100 530,103 610,91 610,175',
+              fill: 'url(#grad-failed)'
+            }),
+            el('polygon', {
+              points: '50,175 50,160 130,154 210,151 290,148 370,148 450,145 530,146 610,143 610,175',
+              fill: 'url(#grad-repaired)'
+            }),
+            // Polyline multi-curves
             el('polyline', {
               fill: 'none',
-              stroke: 'var(--crimson-fill)',
+              stroke: 'var(--trend-green)',
               'stroke-width': '2.5',
-              points: '60,65 140,50 220,70 300,45 380,55 460,40 540,45 610,35'
+              'stroke-linecap': 'round',
+              'stroke-linejoin': 'round',
+              points: '50,118 130,100 210,82 290,58 370,67 450,52 530,55 610,43'
             }),
-            // Repaired line (Gold Leaf)
             el('polyline', {
               fill: 'none',
-              stroke: 'var(--gold-leaf)',
-              'stroke-width': '2',
-              'stroke-dasharray': '3,3',
-              points: '60,140 140,130 220,115 300,105 380,95 460,90 540,80 610,75'
+              stroke: 'var(--trend-red)',
+              'stroke-width': '2.2',
+              'stroke-linecap': 'round',
+              'stroke-linejoin': 'round',
+              points: '50,145 130,130 210,118 290,107 370,115 450,100 530,103 610,91'
             }),
-            // Failed line (Dark Ink)
             el('polyline', {
               fill: 'none',
-              stroke: 'var(--ink)',
+              stroke: 'var(--trend-purple)',
               'stroke-width': '2',
-              points: '60,150 140,155 220,145 300,150 380,140 460,155 540,150 610,160'
+              'stroke-linecap': 'round',
+              'stroke-linejoin': 'round',
+              points: '50,160 130,154 210,151 290,148 370,148 450,145 530,146 610,143'
             }),
-            // X Axis Dates
-            el('text', { x: '50', y: '185', fill: 'var(--ink-2)', 'font-size': '10' }, 'Jan 10'),
-            el('text', { x: '130', y: '185', fill: 'var(--ink-2)', 'font-size': '10' }, 'Jan 11'),
-            el('text', { x: '210', y: '185', fill: 'var(--ink-2)', 'font-size': '10' }, 'Jan 12'),
-            el('text', { x: '290', y: '185', fill: 'var(--ink-2)', 'font-size': '10' }, 'Jan 13'),
-            el('text', { x: '370', y: '185', fill: 'var(--ink-2)', 'font-size': '10' }, 'Jan 14'),
-            el('text', { x: '450', y: '185', fill: 'var(--ink-2)', 'font-size': '10' }, 'Jan 15'),
-            el('text', { x: '530', y: '185', fill: 'var(--ink-2)', 'font-size': '10' }, 'Jan 16')
+            // Data nodes on Passed curve
+            ...[[50, 118], [130, 100], [210, 82], [290, 58], [370, 67], [450, 52], [530, 55], [610, 43]].map(([x, y]) =>
+              el('circle', { cx: String(x), cy: String(y), r: '3.5', fill: 'var(--trend-green)', stroke: 'var(--card)', 'stroke-width': '1.5' })
+            ),
+            // Data nodes on Failed curve
+            ...[[50, 145], [130, 130], [210, 118], [290, 107], [370, 115], [450, 100], [530, 103], [610, 91]].map(([x, y]) =>
+              el('circle', { cx: String(x), cy: String(y), r: '3.5', fill: 'var(--trend-red)', stroke: 'var(--card)', 'stroke-width': '1.5' })
+            ),
+            // Data nodes on Repaired curve
+            ...[[50, 160], [130, 154], [210, 151], [290, 148], [370, 148], [450, 145], [530, 146], [610, 143]].map(([x, y]) =>
+              el('circle', { cx: String(x), cy: String(y), r: '3.5', fill: 'var(--trend-purple)', stroke: 'var(--card)', 'stroke-width': '1.5' })
+            ),
+            // X-axis Dates
+            el('text', { x: '50', y: '194', fill: 'var(--ink-2)', 'font-size': '10', 'text-anchor': 'middle' }, 'Jan 10'),
+            el('text', { x: '130', y: '194', fill: 'var(--ink-2)', 'font-size': '10', 'text-anchor': 'middle' }, 'Jan 11'),
+            el('text', { x: '210', y: '194', fill: 'var(--ink-2)', 'font-size': '10', 'text-anchor': 'middle' }, 'Jan 12'),
+            el('text', { x: '290', y: '194', fill: 'var(--ink-2)', 'font-size': '10', 'text-anchor': 'middle' }, 'Jan 12'),
+            el('text', { x: '370', y: '194', fill: 'var(--ink-2)', 'font-size': '10', 'text-anchor': 'middle' }, 'Jan 13'),
+            el('text', { x: '450', y: '194', fill: 'var(--ink-2)', 'font-size': '10', 'text-anchor': 'middle' }, 'Jan 14'),
+            el('text', { x: '530', y: '194', fill: 'var(--ink-2)', 'font-size': '10', 'text-anchor': 'middle' }, 'Jan 15'),
+            el('text', { x: '610', y: '194', fill: 'var(--ink-2)', 'font-size': '10', 'text-anchor': 'middle' }, 'Jan 16')
           )
         )
       ),
@@ -977,30 +1118,52 @@ export async function renderOverview() {
         el('h3', {}, 'Change Severity'),
         el('div', { class: 'donut-container' },
           el('svg', { viewBox: '0 0 160 160', class: 'donut-svg' },
-            el('circle', { cx: '80', cy: '80', r: '60', fill: 'none', stroke: 'var(--line)', 'stroke-width': '18' }),
-            el('circle', { cx: '80', cy: '80', r: '60', fill: 'none', stroke: 'var(--crimson-fill)', 'stroke-width': '18', 'stroke-dasharray': '94 283', 'stroke-dashoffset': '0' }),
-            el('circle', { cx: '80', cy: '80', r: '60', fill: 'none', stroke: 'var(--amber)', 'stroke-width': '18', 'stroke-dasharray': '113 264', 'stroke-dashoffset': '-94' }),
-            el('circle', { cx: '80', cy: '80', r: '60', fill: 'none', stroke: 'var(--gold-leaf)', 'stroke-width': '18', 'stroke-dasharray': '94 283', 'stroke-dashoffset': '-207' }),
-            el('circle', { cx: '80', cy: '80', r: '60', fill: 'none', stroke: 'var(--jade)', 'stroke-width': '18', 'stroke-dasharray': '75 302', 'stroke-dashoffset': '-301' }),
-            el('text', { x: '80', y: '78', 'text-anchor': 'middle', 'font-size': '22', 'font-weight': 'bold', fill: 'var(--ink)' }, '24'),
-            el('text', { x: '80', y: '95', 'text-anchor': 'middle', 'font-size': '10', fill: 'var(--ink-2)', 'text-transform': 'uppercase' }, 'Total')
+            // Background ring track
+            el('circle', { cx: '80', cy: '80', r: '54', fill: 'none', stroke: 'var(--line)', 'stroke-width': '22' }),
+            // Donut Segments rotated -90 deg
+            el('g', { transform: 'rotate(-90 80 80)' },
+              // Critical (4): red-maroon
+              el('circle', { cx: '80', cy: '80', r: '54', fill: 'none', stroke: 'var(--donut-crit)', 'stroke-width': '22', 'stroke-dasharray': '57 340', 'stroke-dashoffset': '0' }),
+              // High (8): orange-red
+              el('circle', { cx: '80', cy: '80', r: '54', fill: 'none', stroke: 'var(--donut-high)', 'stroke-width': '22', 'stroke-dasharray': '113 340', 'stroke-dashoffset': '-57' }),
+              // Medium (7): amber
+              el('circle', { cx: '80', cy: '80', r: '54', fill: 'none', stroke: 'var(--donut-med)', 'stroke-width': '22', 'stroke-dasharray': '99 340', 'stroke-dashoffset': '-170' }),
+              // Low (5): gray
+              el('circle', { cx: '80', cy: '80', r: '54', fill: 'none', stroke: 'var(--donut-low)', 'stroke-width': '22', 'stroke-dasharray': '71 340', 'stroke-dashoffset': '-269' })
+            ),
+            // Center Text
+            el('text', { x: '80', y: '77', 'text-anchor': 'middle', 'font-size': '26', 'font-weight': '800', fill: 'var(--ink)' }, '24'),
+            el('text', { x: '80', y: '95', 'text-anchor': 'middle', 'font-size': '11', 'font-weight': '500', fill: 'var(--ink-2)' }, 'Total')
           ),
+          // Clean Legend Column on Right
           el('div', { class: 'donut-legend-rows' },
             el('div', { class: 'donut-legend-row' },
-              el('span', { class: 'donut-dot dot-crit' }, '● Critical'),
-              el('span', { class: 'mono' }, '4')
+              el('span', { class: 'donut-legend-label' },
+                el('span', { class: 'donut-legend-dot dot-crit' }),
+                el('span', {}, 'Critical')
+              ),
+              el('span', { class: 'donut-legend-val mono' }, '4')
             ),
             el('div', { class: 'donut-legend-row' },
-              el('span', { class: 'donut-dot dot-high' }, '● High'),
-              el('span', { class: 'mono' }, '8')
+              el('span', { class: 'donut-legend-label' },
+                el('span', { class: 'donut-legend-dot dot-high' }),
+                el('span', {}, 'High')
+              ),
+              el('span', { class: 'donut-legend-val mono' }, '8')
             ),
             el('div', { class: 'donut-legend-row' },
-              el('span', { class: 'donut-dot dot-med' }, '● Medium'),
-              el('span', { class: 'mono' }, '7')
+              el('span', { class: 'donut-legend-label' },
+                el('span', { class: 'donut-legend-dot dot-med' }),
+                el('span', {}, 'Medium')
+              ),
+              el('span', { class: 'donut-legend-val mono' }, '7')
             ),
             el('div', { class: 'donut-legend-row' },
-              el('span', { class: 'donut-dot dot-low' }, '● Low'),
-              el('span', { class: 'mono' }, '5')
+              el('span', { class: 'donut-legend-label' },
+                el('span', { class: 'donut-legend-dot dot-low' }),
+                el('span', {}, 'Low')
+              ),
+              el('span', { class: 'donut-legend-val mono' }, '5')
             )
           )
         )
