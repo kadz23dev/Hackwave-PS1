@@ -1,7 +1,28 @@
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
+import http from 'node:http';
 
 export async function startFixture(variant: string, port = '0'): Promise<{ url: string; stop(): Promise<void> }> {
+  if (port !== '0') {
+    const isAlreadyRunning = await new Promise<boolean>((res) => {
+      const req = http.get(`http://127.0.0.1:${port}`, (r) => {
+        res(r.statusCode !== undefined);
+      });
+      req.on('error', () => res(false));
+      req.setTimeout(600, () => {
+        req.destroy();
+        res(false);
+      });
+    });
+
+    if (isAlreadyRunning) {
+      return {
+        url: `http://127.0.0.1:${port}`,
+        stop: async () => {},
+      };
+    }
+  }
+
   return new Promise((resolvePromise, rejectPromise) => {
     const fixturePath = resolve('fixtures/server.mjs');
     const child = spawn(process.execPath, [fixturePath, '--variant', variant, '--port', port]);

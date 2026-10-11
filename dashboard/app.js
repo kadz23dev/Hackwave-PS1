@@ -5290,19 +5290,40 @@ export async function renderStorageView() {
 }
 
 export function initTheme() {
-  document.documentElement.dataset.theme = 'light';
   try {
-    localStorage.setItem('healtest-theme', 'light');
+    const saved = localStorage.getItem('healtest-theme');
+    if (saved) {
+      document.documentElement.dataset.theme = saved;
+    }
   } catch {
-    // Ignore
+    // Ignore localStorage failures
   }
 
   const toggle = document.getElementById('theme-toggle');
   if (toggle) {
     toggle.addEventListener('click', () => {
-      document.documentElement.dataset.theme = 'light';
+      const cur = document.documentElement.dataset.theme;
+      let next = '';
+      if (!cur) {
+        next = 'light';
+      } else if (cur === 'light') {
+        next = 'dark';
+      } else {
+        next = '';
+      }
+
+      if (next) {
+        document.documentElement.dataset.theme = next;
+      } else {
+        delete document.documentElement.dataset.theme;
+      }
+
       try {
-        localStorage.setItem('healtest-theme', 'light');
+        if (next) {
+          localStorage.setItem('healtest-theme', next);
+        } else {
+          localStorage.removeItem('healtest-theme');
+        }
       } catch {
         // Ignore
       }

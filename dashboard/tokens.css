@@ -39,116 +39,104 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
 
   /* Color Palette - Linen Beige Warm Foundation */
-  --paper: #f5f0e8;
+  --paper: #F8F3E8;
+  --card: #FFFDF7;
+  --ink: #1F1A17;
+  --ink-2: #5A4A42;
+  --crimson: #B3202A;
+  --crimson-fill: #B3202A;
+  --on-fill: #F8F3E8;
+  --crimson-deep: #8E1B22;
+  --crimson-wash: #F6E1DF;
+  --jade: #1F6B57;
+  --jade-wash: #DDEEE6;
+  --amber: #8A5A00;
+  --gold-wash: #F4E7C2;
+  --slate: #3B4A6B;
+  --slate-wash: #E3E8F2;
+  --line: #E4D9C3;
+  --line-strong: #8C7B62;
+  --focus: #B3202A;
+  --gold-leaf: #C9A227;
+
+  /* Supplemental UI Variables */
   --bg-deep: #f5f0e8;
   --bg-space: #ece4d6;
   --bg-surface: #f0e8dc;
   --bg-warm: #f5f0e8;
-  --card: rgba(255, 253, 249, 0.88);
   --card-solid: #fffdfa;
   --light-surface: #fffdfa;
-
-  /* Text & Ink */
-  --ink: #0c0a09;
-  --ink-2: #44403c;
   --primary-charcoal: #0c0a09;
   --secondary-charcoal: #1c1917;
   --tertiary-gray: #44403c;
   --text-primary: #0c0a09;
   --text-secondary: #44403c;
   --text-muted: #57534e;
-
-  /* Crimson Red Medium Accents */
-  --crimson: #b91c1c;
-  --crimson-fill: #b91c1c;
-  --on-fill: #ffffff;
-  --crimson-deep: #991b1b;
   --crimson-rich: #c52233;
-  --crimson-wash: rgba(185, 28, 28, 0.08);
-
-  /* Status Colors */
-  --jade: #047857;
-  --jade-wash: #ecfdf5;
-  --amber: #c2410c;
-  --gold-wash: #fff7ed;
-  --slate: #475569;
-  --slate-wash: #f1f5f9;
-
-  /* Specular Borders */
-  --line: rgba(185, 28, 28, 0.12);
-  --line-strong: rgba(185, 28, 28, 0.28);
-  --border: rgba(185, 28, 28, 0.12);
-  --focus: #b91c1c;
-  --gold-leaf: #b45309;
 
   /* Frosted Linen Glass Sidebar */
-  --sidebar-bg: rgba(255, 253, 249, 0.94);
-  --sidebar-sub: rgba(185, 28, 28, 0.12);
-  --sidebar-text: #0c0a09;
+  --sidebar-bg: #FFFDF7;
+  --sidebar-sub: #E4D9C3;
+  --sidebar-text: #1F1A17;
   --sidebar-muted: #57534e;
 
   /* Buttons & Hover States */
-  --btn-hover-primary-bg: #991b1b;
+  --btn-hover-primary-bg: #8E1B22;
   --btn-hover-primary-deep: #881337;
-  --btn-hover-success-bg: #047857;
+  --btn-hover-success-bg: #1F6B57;
   --btn-hover-danger-bg: #dc2626;
-  --btn-hover-outline-bg: rgba(185, 28, 28, 0.06);
-  --btn-hover-outline-border: #b91c1c;
-  --btn-hover-icon-bg: rgba(185, 28, 28, 0.06);
-  --btn-hover-chip-bg: rgba(185, 28, 28, 0.08);
+  --btn-hover-outline-bg: #F6E1DF;
+  --btn-hover-outline-border: #B3202A;
+  --btn-hover-icon-bg: #F6E1DF;
+  --btn-hover-chip-bg: #F6E1DF;
 
   /* Glass Specular Highlights */
   --glass-specular: #ffffff;
   --glass-specular-soft: #fbf7f2;
-  --glass-surface: rgba(255, 253, 249, 0.82);
-  --glass-border-light: rgba(185, 28, 28, 0.14);
-  --aurora-glow: #b91c1c;
-  --emerald-glow: #047857;
+  --glass-surface: #FFFDF7;
+  --glass-border-light: #E4D9C3;
+  --aurora-glow: #B3202A;
+  --emerald-glow: #1F6B57;
 
   /* Layout & Radii */
   --radius: 12px;
   --gap: 8px;
   --shadow-sm: 0 4px 14px rgba(120, 53, 53, 0.05);
   --shadow-md: 0 12px 28px -6px rgba(120, 53, 53, 0.08);
-  --color-maroon-primary: #b91c1c;
-  --color-maroon-deep: #991b1b;
-  --color-ink: #0c0a09;
+  --color-maroon-primary: #B3202A;
+  --color-maroon-deep: #8E1B22;
+  --color-ink: #1F1A17;
   --color-ink-muted: #57534e;
 }
 
-/* Enforced Light Mode (Linen Beige & Crimson Accents) */
-:root,
-:root[data-theme="light"],
+/* @dark */
 :root[data-theme="dark"] {
-  --paper: #f5f0e8;
-  --bg-deep: #f5f0e8;
-  --bg-space: #ece4d6;
-  --bg-surface: #f0e8dc;
-  --bg-warm: #f5f0e8;
-  --card: rgba(255, 253, 249, 0.88);
-  --card-solid: #fffdfa;
-  --light-surface: #fffdfa;
-  --ink: #0c0a09;
-  --ink-2: #44403c;
-  --primary-charcoal: #0c0a09;
-  --secondary-charcoal: #1c1917;
-  --tertiary-gray: #44403c;
-  --text-primary: #0c0a09;
-  --text-secondary: #44403c;
-  --text-muted: #57534e;
-  --crimson: #b91c1c;
-  --crimson-fill: #b91c1c;
-  --on-fill: #ffffff;
-  --crimson-deep: #991b1b;
-  --crimson-rich: #c52233;
-  --crimson-wash: rgba(185, 28, 28, 0.08);
-  --sidebar-bg: rgba(255, 253, 249, 0.94);
-  --sidebar-sub: rgba(185, 28, 28, 0.12);
-  --sidebar-text: #0c0a09;
-  --sidebar-muted: #57534e;
-  --color-ink: #0c0a09;
-  --color-ink-muted: #57534e;
-  --color-maroon-primary: #b91c1c;
+  --paper: #1A1412;
+  --card: #241B18;
+  --ink: #F2E9D8;
+  --ink-2: #BFB1A0;
+  --crimson: #E5646C;
+  --crimson-fill: #B3202A;
+  --on-fill: #F2E9D8;
+  --crimson-deep: #F2A3A8;
+  --crimson-wash: #3A1D1F;
+  --jade: #5FBFA3;
+  --jade-wash: #17302A;
+  --amber: #E3A33B;
+  --gold-wash: #3A2E14;
+  --slate: #8FA6D6;
+  --slate-wash: #1E2638;
+  --line: #3A2F28;
+  --line-strong: #7A6B5A;
+  --focus: #E5646C;
+  --gold-leaf: #E0B84A;
+  --sidebar-bg: #241B18;
+  --sidebar-sub: #3A2F28;
+  --sidebar-text: #F2E9D8;
+  --sidebar-muted: #BFB1A0;
+  --color-ink: #F2E9D8;
+  --color-ink-muted: #BFB1A0;
+  --color-maroon-primary: #E5646C;
 }
 
 

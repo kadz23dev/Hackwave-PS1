@@ -11,6 +11,7 @@ export default tseslint.config(
       'scripts/**',
       'scripts-dev/**',
       'dashboard/tokens.css',
+      'client/**',
       'node_modules/**',
     ],
   },

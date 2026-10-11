@@ -127,15 +127,15 @@ body {
 
 .nav-item:hover {
   color: var(--ink);
-  background: rgba(185, 28, 28, 0.05);
+  background: var(--crimson-wash);
   border-color: transparent;
 }
 
 .nav-item.nav-item--active,
 .nav-item.nav-link--active {
-  background: rgba(185, 28, 28, 0.08) !important;
+  background: var(--crimson-wash) !important;
   color: var(--crimson) !important;
-  border-color: rgba(185, 28, 28, 0.15) !important;
+  border-color: var(--line) !important;
   font-weight: 600;
 }
 
