@@ -1,6 +1,6 @@
 import http from 'node:http';
 import { createReadStream, existsSync, statSync } from 'node:fs';
-import { extname, join, resolve, sep } from 'node:path';
+import { extname, resolve } from 'node:path';
 
 export interface RouteContext {
   req: http.IncomingMessage;
@@ -141,7 +141,7 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
       }
 
       const rootDir = process.cwd();
-      const dashboardDir = resolve(rootDir, 'dashboard');
+      const dashboardDir = staticDir ? resolve(rootDir, staticDir) : resolve(rootDir, 'dashboard');
       let resolvedFile: string | null = null;
 
       if (pathname === '/' || pathname === '/index.html') {

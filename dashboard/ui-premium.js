@@ -80,7 +80,7 @@
 /* ─── 3. RIPPLE EFFECT ON BUTTONS ─── */
 (function initRipple() {
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn, .nav-item, .tab-pill, .suggestion-chip');
+    const btn = e.target.closest('.btn, .tab-pill, .suggestion-chip');
     if (!btn) return;
 
     const rect = btn.getBoundingClientRect();
