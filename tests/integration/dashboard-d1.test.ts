@@ -92,7 +92,7 @@ describe('Dashboard D1 Overview Integration — T17', { timeout: 60000 }, () => 
 
     // Header & Brand
     const brand = await session.page.textContent('.brand');
-    expect(brand?.trim()).toBe('HealTest');
+    expect(brand?.trim()).toBe('Kaizen AI');
 
     // Nav links
     const navText = await session.page.textContent('nav');

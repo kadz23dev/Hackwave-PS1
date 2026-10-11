@@ -367,7 +367,7 @@ export async function runActs(
 
           await new Promise<void>((res) => {
             dashboardServer!.listen(4300, '127.0.0.1', () => {
-              console.log('\nHealTest dashboard: http://127.0.0.1:4300\n');
+              console.log('\nKaizen AI dashboard: http://127.0.0.1:4300\n');
               res();
             });
           });
