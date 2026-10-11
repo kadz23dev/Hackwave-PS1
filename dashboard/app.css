@@ -204,6 +204,176 @@ dialog {
   color: var(--crimson);
 }
 
+/* D4 Changes Timeline & Filters */
+.changes-layout {
+  display: flex;
+  gap: calc(var(--gap) * 3);
+  align-items: flex-start;
+}
+
+.rail {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+}
+
+.filter-group {
+  margin-bottom: calc(var(--gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.filter-label {
+  font-weight: 600;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.select-input {
+  padding: var(--gap);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.change-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.change-card-header {
+  display: flex;
+  gap: calc(var(--gap) * 2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.change-id {
+  color: var(--crimson);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.change-id:hover {
+  text-decoration: underline;
+}
+
+.change-kind {
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+
+.change-time {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  margin-left: auto;
+}
+
+.change-explanation {
+  margin: 0;
+  color: var(--ink);
+}
+
+.change-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(var(--gap) * 2);
+  flex-wrap: wrap;
+  gap: var(--gap);
+}
+
+.change-view-meta {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+}
+
+/* D2 Before/After Screenshots */
+.screenshots-container {
+  display: flex;
+  gap: calc(var(--gap) * 2);
+  margin-bottom: calc(var(--gap) * 2);
+}
+
+.screenshot-figure {
+  flex: 1;
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--gap);
+}
+
+.screenshot-figure figcaption {
+  font-weight: 600;
+  margin-bottom: var(--gap);
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+
+.screenshot-figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+}
+
+.no-screenshot {
+  padding: calc(var(--gap) * 4);
+  text-align: center;
+  background: var(--paper);
+  border-radius: var(--radius);
+}
+
+/* D3 DOM / Selector Diff */
+.diff-container {
+  margin-bottom: calc(var(--gap) * 2);
+}
+
+.evidence-title {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  margin-top: calc(var(--gap) * 2);
+  margin-bottom: var(--gap);
+  color: var(--ink);
+}
+
+.diff-changed {
+  background: var(--crimson-wash);
+  color: var(--ink);
+}
+
+/* Responsive under 900px */
+@media (max-width: 900px) {
+  .changes-layout {
+    flex-direction: column;
+  }
+  .rail {
+    width: 100%;
+  }
+  .screenshots-container {
+    flex-direction: column;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;

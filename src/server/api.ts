@@ -229,10 +229,14 @@ export function buildRoutes(repo: Repo): Route[] {
         let sql = 'SELECT * FROM changes WHERE 1=1';
         const queryParams: unknown[] = [];
         if (query.get('severity')) {
-          sql += ' AND severity = ?';
-          queryParams.push(query.get('severity'));
+          const severities = query.get('severity')!.split(',').map((s) => s.trim()).filter(Boolean);
+          if (severities.length > 0) {
+            const placeholders = severities.map(() => '?').join(',');
+            sql += ` AND severity IN (${placeholders})`;
+            queryParams.push(...severities);
+          }
         }
-        if (query.get('classification')) {
+        if (query.get('classification') && query.get('classification') !== 'All') {
           sql += ' AND classification = ?';
           queryParams.push(query.get('classification'));
         }
