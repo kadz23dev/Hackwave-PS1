@@ -3691,3 +3691,386 @@ dialog::backdrop {
   background: var(--crimson-fill);
   color: var(--on-fill);
 }
+
+/* ==========================================================================
+   Morphing Sliding Dual-Card Authentication Styles
+   ========================================================================== */
+.auth-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 140px);
+  padding: calc(var(--gap) * 2);
+  width: 100%;
+}
+
+.auth-sliding-card {
+  position: relative;
+  width: min(780px, 95vw);
+  min-height: 500px;
+  background: var(--card);
+  border-radius: calc(var(--radius) * 3);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 60px var(--line-strong), 0 4px 16px var(--border);
+  overflow: hidden;
+  display: flex;
+  transition: all 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.auth-sliding-card .form-container {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--gap) * 4) calc(var(--gap) * 4.5);
+  transition: all 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.auth-sliding-card .sign-in-container {
+  left: 0;
+  z-index: 2;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.auth-sliding-card .sign-up-container {
+  left: 0;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  transform: translateX(0);
+}
+
+.auth-sliding-card.right-panel-active .sign-in-container {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.auth-sliding-card.right-panel-active .sign-up-container {
+  transform: translateX(100%);
+  opacity: 1;
+  z-index: 5;
+  pointer-events: auto;
+  animation: showFormSlide 0.65s ease;
+}
+
+@keyframes showFormSlide {
+  0%, 49.9% {
+    opacity: 0;
+    z-index: 1;
+  }
+  50%, 100% {
+    opacity: 1;
+    z-index: 5;
+  }
+}
+
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.auth-form-title {
+  margin: 0 0 calc(var(--gap) * 2);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.auth-social-row {
+  display: flex;
+  gap: calc(var(--gap) * 1.5);
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+.auth-social-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-warm);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.auth-social-btn:hover {
+  border-color: var(--crimson);
+  color: var(--crimson);
+  background: var(--card);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--crimson-wash);
+}
+
+.auth-social-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.auth-form-subtitle {
+  margin: 0 0 calc(var(--gap) * 2);
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.auth-input-pill {
+  width: 100%;
+  margin-bottom: calc(var(--gap) * 1.5);
+  position: relative;
+}
+
+.auth-input-pill input {
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--bg-warm);
+  color: var(--ink);
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.auth-input-pill input:focus {
+  border-color: var(--crimson);
+  background: var(--card);
+  box-shadow: 0 0 0 3px var(--crimson-wash);
+}
+
+.auth-input-pill.auth-input-password {
+  display: flex;
+  align-items: center;
+}
+
+.auth-input-pill .pwd-toggle-btn {
+  position: absolute;
+  right: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.auth-input-pill .pwd-toggle-btn:hover {
+  opacity: 1;
+}
+
+.auth-forgot-link {
+  margin: 2px 0 calc(var(--gap) * 2);
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.auth-forgot-link:hover {
+  color: var(--crimson);
+  text-decoration: underline;
+}
+
+.auth-pill-btn {
+  width: 150px;
+  padding: 12px 0;
+  border-radius: 9999px;
+  border: none;
+  background: var(--primary-charcoal);
+  color: var(--on-fill);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 6px 18px var(--line-strong);
+  transition: all 0.25s ease;
+  margin-top: var(--gap);
+}
+
+.auth-pill-btn:hover {
+  background: var(--crimson-fill);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px var(--crimson-wash);
+}
+
+.auth-pill-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-feedback-box {
+  width: 100%;
+  margin-bottom: var(--gap);
+}
+
+/* Sliding Overlay Panel */
+.auth-sliding-card .overlay-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+  z-index: 100;
+  border-radius: 0 calc(var(--radius) * 3) calc(var(--radius) * 3) 0;
+}
+
+.auth-sliding-card.right-panel-active .overlay-container {
+  transform: translateX(-100%);
+  border-radius: calc(var(--radius) * 3) 0 0 calc(var(--radius) * 3);
+}
+
+.auth-sliding-card .overlay {
+  position: relative;
+  left: -100%;
+  height: 100%;
+  width: 200%;
+  transform: translateX(0);
+  transition: transform 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+  overflow: hidden;
+}
+
+.auth-sliding-card.right-panel-active .overlay {
+  transform: translateX(50%);
+}
+
+.overlay-hero-bg {
+  position: absolute;
+  inset: -10px;
+  background-image: url('hero.jpg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: brightness(0.68) contrast(1.15);
+  transform: scale(1.05);
+  transition: transform 0.8s ease;
+}
+
+.auth-sliding-card.right-panel-active .overlay-hero-bg {
+  transform: scale(1.1) translateX(-12px);
+}
+
+.overlay-hero-shade {
+  position: absolute;
+  inset: 0;
+  background: var(--sidebar-bg);
+  opacity: 0.55;
+}
+
+.auth-sliding-card .overlay-panel {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 calc(var(--gap) * 4.5);
+  text-align: center;
+  color: var(--sidebar-text);
+  z-index: 2;
+  transition: transform 0.65s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease;
+}
+
+.overlay-title {
+  margin: 0 0 calc(var(--gap) * 1.5);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--sidebar-text);
+}
+
+.overlay-desc {
+  margin: 0 0 calc(var(--gap) * 3);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--sidebar-muted);
+  max-width: 280px;
+}
+
+.overlay-ghost-btn {
+  background: transparent;
+  border: 1.5px solid var(--glass-specular);
+  color: var(--glass-specular);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 11px 32px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.overlay-ghost-btn:hover {
+  background: var(--glass-specular);
+  color: var(--primary-charcoal);
+  border-color: var(--glass-specular);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px var(--sidebar-bg);
+}
+
+.overlay-left {
+  transform: translateX(-20%);
+  opacity: 0;
+}
+
+.auth-sliding-card.right-panel-active .overlay-left {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.overlay-right {
+  right: 0;
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.auth-sliding-card.right-panel-active .overlay-right {
+  transform: translateX(20%);
+  opacity: 0;
+}
+
+@media (max-width: 680px) {
+  .auth-sliding-card {
+    min-height: 600px;
+    flex-direction: column;
+  }
+
+  .auth-sliding-card .form-container {
+    width: 100%;
+    height: 60%;
+    padding: calc(var(--gap) * 3) calc(var(--gap) * 2.5);
+  }
+
+  .auth-sliding-card .overlay-container {
+    top: 60%;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    border-radius: 0 0 calc(var(--radius) * 3) calc(var(--radius) * 3);
+  }
+
+  .auth-sliding-card.right-panel-active .overlay-container {
+    transform: translateY(-150%);
+    border-radius: calc(var(--radius) * 3) calc(var(--radius) * 3) 0 0;
+  }
+}

@@ -1,0 +1,428 @@
+/* ==========================================================================
+   Kaizen AI — Morphing Sliding Dual-Card Authentication Stylesheet
+   Matches Project Design Tokens & Screenshot Dual Panel Layout
+   ========================================================================== */
+
+:root {
+  --auth-paper: #F8F3E8;
+  --auth-card: #FFFFFF;
+  --auth-ink: #1F1A17;
+  --auth-ink-2: #6E6259;
+  --auth-charcoal: #1E1B18;
+  --auth-charcoal-hover: #332E2A;
+  --auth-crimson: #B3202A;
+  --auth-crimson-wash: #F6E1DF;
+  --auth-pill-bg: #F4F0E8;
+  --auth-pill-border: #E6DFD3;
+  --auth-border: #E8E1D5;
+  --auth-shadow: rgba(40, 30, 20, 0.14);
+}
+
+.login-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--auth-paper);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--auth-ink);
+  padding: 24px 16px;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Outer Sliding Card Container
+   ========================================================================== */
+.auth-card {
+  position: relative;
+  width: min(760px, 95vw);
+  min-height: 490px;
+  background: var(--auth-card);
+  border-radius: 24px;
+  box-shadow: 0 24px 60px var(--auth-shadow), 0 4px 16px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  display: flex;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Form Panels (Sign In & Sign Up)
+   ========================================================================== */
+.form-container {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 38px;
+  box-sizing: border-box;
+  transition: all 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.sign-in-container {
+  left: 0;
+  z-index: 2;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.sign-up-container {
+  left: 0;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  transform: translateX(0);
+}
+
+/* Active Right Panel (Sign Up Mode) */
+.auth-card.right-panel-active .sign-in-container {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.auth-card.right-panel-active .sign-up-container {
+  transform: translateX(100%);
+  opacity: 1;
+  z-index: 5;
+  pointer-events: auto;
+  animation: showFormSlide 0.65s ease;
+}
+
+@keyframes showFormSlide {
+  0%, 49.9% {
+    opacity: 0;
+    z-index: 1;
+  }
+  50%, 100% {
+    opacity: 1;
+    z-index: 5;
+  }
+}
+
+/* Form Inner Layout */
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.auth-title {
+  margin: 0 0 16px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--auth-ink);
+  letter-spacing: -0.3px;
+}
+
+/* Social Icon Buttons Row */
+.social-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.social-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--auth-border);
+  background: var(--auth-card);
+  color: var(--auth-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.social-btn:hover {
+  border-color: var(--auth-crimson);
+  color: var(--auth-crimson);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(179, 32, 42, 0.12);
+}
+
+.social-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.auth-subtitle {
+  margin: 0 0 18px;
+  font-size: 12px;
+  color: var(--auth-ink-2);
+}
+
+/* Pill Input Wrappers */
+.input-pill {
+  width: 100%;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.input-pill input {
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 9999px;
+  border: 1px solid var(--auth-pill-border);
+  background: var(--auth-pill-bg);
+  color: var(--auth-ink);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.input-pill input:focus {
+  border-color: var(--auth-crimson);
+  background: var(--auth-card);
+  box-shadow: 0 0 0 3px rgba(179, 32, 42, 0.12);
+}
+
+.input-pill--password {
+  display: flex;
+  align-items: center;
+}
+
+.pwd-toggle {
+  position: absolute;
+  right: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.65;
+  transition: opacity 0.2s ease;
+}
+
+.pwd-toggle:hover {
+  opacity: 1;
+}
+
+.forgot-link {
+  margin: 4px 0 16px;
+  font-size: 12px;
+  color: var(--auth-ink-2);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+  color: var(--auth-crimson);
+  text-decoration: underline;
+}
+
+/* Submit Pill Button */
+.submit-pill-btn {
+  width: 150px;
+  padding: 12px 0;
+  border-radius: 9999px;
+  border: none;
+  background: var(--auth-charcoal);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  transition: all 0.25s ease;
+  margin-top: 6px;
+}
+
+.submit-pill-btn:hover {
+  background: var(--auth-crimson);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(179, 32, 42, 0.28);
+}
+
+/* Alerts */
+.auth-msg {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-msg--error {
+  background: var(--auth-crimson-wash);
+  color: var(--auth-crimson);
+  border: 1px solid var(--auth-crimson);
+}
+
+.auth-msg--success {
+  background: #E8F5E9;
+  color: #2E7D32;
+  border: 1px solid #A5D6A7;
+}
+
+/* ==========================================================================
+   Sliding Overlay / Hero Panel
+   ========================================================================== */
+.overlay-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+  z-index: 100;
+  border-radius: 0 24px 24px 0;
+}
+
+.auth-card.right-panel-active .overlay-container {
+  transform: translateX(-100%);
+  border-radius: 24px 0 0 24px;
+}
+
+.overlay {
+  position: relative;
+  left: -100%;
+  height: 100%;
+  width: 200%;
+  transform: translateX(0);
+  transition: transform 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+  overflow: hidden;
+}
+
+.auth-card.right-panel-active .overlay {
+  transform: translateX(50%);
+}
+
+/* Scenic Hero Image Background & Overlay Gradient */
+.overlay-hero-bg {
+  position: absolute;
+  inset: -10px;
+  background-image: url("hero.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: brightness(0.65) contrast(1.15);
+  transform: scale(1.05);
+  transition: transform 0.8s ease;
+}
+
+.auth-card.right-panel-active .overlay-hero-bg {
+  transform: scale(1.1) translateX(-12px);
+}
+
+.overlay-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(30, 20, 18, 0.55), rgba(15, 10, 8, 0.72));
+}
+
+/* Overlay Panels (Left & Right) */
+.overlay-panel {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 36px;
+  text-align: center;
+  color: #FFFFFF;
+  box-sizing: border-box;
+  z-index: 2;
+  transition: transform 0.65s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease;
+}
+
+.overlay-title {
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: #FFFFFF;
+}
+
+.overlay-desc {
+  margin: 0 0 24px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 260px;
+}
+
+.overlay-ghost-btn {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 11px 32px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.overlay-ghost-btn:hover {
+  background: #FFFFFF;
+  color: var(--auth-charcoal);
+  border-color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.overlay-left {
+  transform: translateX(-20%);
+  opacity: 0;
+}
+
+.auth-card.right-panel-active .overlay-left {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.overlay-right {
+  right: 0;
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.auth-card.right-panel-active .overlay-right {
+  transform: translateX(20%);
+  opacity: 0;
+}
+
+/* ==========================================================================
+   Responsive Viewport Adaptability
+   ========================================================================== */
+@media (max-width: 680px) {
+  .auth-card {
+    min-height: 600px;
+    flex-direction: column;
+  }
+
+  .form-container {
+    width: 100%;
+    height: 60%;
+    padding: 24px 20px;
+  }
+
+  .overlay-container {
+    top: 60%;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    border-radius: 0 0 24px 24px;
+  }
+
+  .auth-card.right-panel-active .overlay-container {
+    transform: translateY(-150%);
+    border-radius: 24px 24px 0 0;
+  }
+}
