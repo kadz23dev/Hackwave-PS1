@@ -215,8 +215,122 @@ HealTest enforces strict security and integrity invariants:
 
 ---
 
+## KaizenAI MCP Server (Milestone 1)
+
+KaizenAI exposes a Model Context Protocol (MCP) server so that AI coding agents—including **Google Antigravity**, **Claude Code**, and **OpenAI Codex**—can connect to KaizenAI and utilize its website monitoring, regression detection, and self-healing test governance directly from their development environments.
+
+### What It Does
+
+In Milestone 1, the MCP server provides a read-only bridge to the HealTest database:
+- **Server Name:** `kaizenai`
+- **Transport:** Standard input/output (`StdioServerTransport`)
+- **Protocol:** Official `@modelcontextprotocol/sdk` (2024-11-05 spec)
+- **Tool `list_monitored_sites`:** Discovers websites registered and governed by KaizenAI, returning site IDs, names, base URLs, and allowlists with full credential sanitization (passwords, tokens, and query secrets are automatically stripped/redacted).
+- **Diagnostics:** Reserved stdout for MCP JSON-RPC protocol framing; all human-readable diagnostic messages are directed to stderr.
+- **Audit Compliance:** Read operations record audit log entries (`site.list`) in compliance with HealTest's append-only governance triggers.
+
+### Prerequisites
+
+- Node.js v20+
+- Dependencies installed: `npm ci`
+- Project compiled: `npm run build`
+
+### Build and Run
+
+To compile and launch the MCP server locally:
+
+```bash
+# 1. Build the TypeScript codebase
+npm run build
+
+# 2. Run the MCP server
+npm run mcp
+```
+
+Or invoke the compiled binary directly with Node:
+
+```bash
+node dist/mcp/server.js
+```
+
+### Database Path Configuration
+
+The MCP server ensures AI clients launching the server from outside the repository root still connect to the intended HealTest database, preventing accidental creation of orphaned empty databases.
+
+Path resolution precedence:
+1. **Command line argument:** `node dist/mcp/server.js --db <path-to-db>`
+2. **Environment variable:** `HEALTEST_DB_PATH=/path/to/healtest.sqlite`
+3. **Home directory override:** `HEALTEST_HOME=/path/to/data-dir` (uses `healtest.sqlite` inside)
+4. **Repository default:** `.healtest/healtest.sqlite` anchored directly to the KaizenAI installation root.
+
+> **Safety Guarantee:** If the database does not exist or has not been initialized yet, the MCP server completes the protocol handshake and safely returns an informative error upon tool execution without silently creating or migrating an uninitialized database.
+
+### Configuring in AI Coding Assistants
+
+#### Google Antigravity
+
+Add the following to your Antigravity MCP configuration (e.g. in your Antigravity project or workspace configuration):
+
+```json
+{
+  "mcpServers": {
+    "kaizenai": {
+      "command": "node",
+      "args": [
+        "c:/Users/Piyush--23/Downloads/kaizen Ai/dist/mcp/server.js"
+      ],
+      "env": {
+        "HEALTEST_DB_PATH": "c:/Users/Piyush--23/Downloads/kaizen Ai/.healtest/healtest.sqlite"
+      }
+    }
+  }
+}
+```
+
+*(On macOS/Linux, adjust the absolute path to `<path-to-kaizen-ai>/dist/mcp/server.js`.)*
+
+#### Claude Code
+
+In Claude Code / Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "kaizenai": {
+      "command": "node",
+      "args": [
+        "c:/Users/Piyush--23/Downloads/kaizen Ai/dist/mcp/server.js"
+      ],
+      "env": {
+        "HEALTEST_DB_PATH": "c:/Users/Piyush--23/Downloads/kaizen Ai/.healtest/healtest.sqlite"
+      }
+    }
+  }
+}
+```
+
+#### OpenAI Codex & Other MCP Clients
+
+Configure as a local stdio MCP server pointing to the `node` executable, passing the absolute path to `dist/mcp/server.js` and setting `HEALTEST_DB_PATH` to your intended database.
+
+### Testing Handshake & Tools
+
+Run the dedicated test suites:
+
+```bash
+# Unit tests (in-memory protocol handshake, tool advertisement, error safety, sanitization)
+npx vitest run tests/unit/mcp.test.ts
+
+# Integration tests (stdio process spawning, client transport, CLI --db, HEALTEST_DB_PATH)
+npx vitest run tests/integration/mcp.test.ts
+```
+
+---
+
 ## Limitations
 
-1. **Heuristic Lexicon Domain:** The built-in semantic lexicon and field matching are optimized for e-commerce checkout and lead form workflows. Custom domains require registering vocabulary terms in `src/planner/lexicon.ts`.
-2. **Browser Engine:** Playwright browser automation is configured specifically for Chromium; other rendering engines (Firefox, WebKit) are not targeted in the current build.
-3. **Optional LLM Fallback:** The primary self-healing engine is fully deterministic and heuristic-first. LLM integration (`@google/genai` Gemini 2.5 Flash) serves strictly as an optional fallback when heuristics find zero candidate matches.
+1. **Milestone 1 Scope (Read-Only):** The MCP server currently implements Milestone 1 (`list_monitored_sites`). Mutation operations, repairs, scans, approvals, and shell operations are intentionally disabled until subsequent milestones.
+2. **Heuristic Lexicon Domain:** The built-in semantic lexicon and field matching are optimized for e-commerce checkout and lead form workflows. Custom domains require registering vocabulary terms in `src/planner/lexicon.ts`.
+3. **Browser Engine:** Playwright browser automation is configured specifically for Chromium; other rendering engines (Firefox, WebKit) are not targeted in the current build.
+4. **Optional LLM Fallback:** The primary self-healing engine is fully deterministic and heuristic-first. LLM integration (`@google/genai` Gemini 2.5 Flash) serves strictly as an optional fallback when heuristics find zero candidate matches.
+

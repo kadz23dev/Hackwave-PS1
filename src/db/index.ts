@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { HOME } from '../config.js';
 
 export function openDb(path?: string): Database.Database {
-  const dbPath = path ?? join(HOME, 'healtest.sqlite');
+  const dbPath = path ?? process.env.HEALTEST_DB_PATH ?? join(HOME, 'healtest.sqlite');
   mkdirSync(dirname(dbPath), { recursive: true });
 
   const db = new Database(dbPath);

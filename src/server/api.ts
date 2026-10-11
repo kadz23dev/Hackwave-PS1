@@ -17,6 +17,75 @@ export function fmtId(prefix: string, n: number | string): string {
   return isNaN(num) ? `${prefix}_${n}` : `${prefix}_${String(num).padStart(4, '0')}`;
 }
 
+export interface SimulationExperiment {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  assignedTo: string;
+  environment: string;
+  createdAt: string;
+  baseUrl: string;
+  buttonColor: string;
+  buttonText: string;
+  typography: string;
+  spacing: string;
+  changeType: string;
+  tests: Array<{ id: string; name: string; status: 'passed' | 'failed' | 'skipped'; duration: string }>;
+  aiSuggestions: Array<{
+    id: string;
+    title: string;
+    description: string;
+    confidence: number;
+    recommended: boolean;
+    buttonColor?: string;
+    buttonText?: string;
+  }>;
+}
+
+export let activeSimulationExperiment: SimulationExperiment = {
+  id: 'exp_01',
+  name: 'Homepage CTA Experiment',
+  description: 'Testing a new hero section with improved call to action button and updated styling.',
+  tags: ['Homepage', 'UI Change', 'CTA'],
+  assignedTo: 'Piyush Sharma',
+  environment: 'Isolated Simulation',
+  createdAt: 'Jan 15, 2024, 10:24 AM',
+  baseUrl: 'example.com',
+  buttonColor: '#B91C1C',
+  buttonText: 'Get started →',
+  typography: 'Inter (Default)',
+  spacing: 'Comfortable',
+  changeType: 'Visual',
+  tests: [
+    { id: 't1', name: 'Homepage loads correctly', status: 'passed', duration: '1.2s' },
+    { id: 't2', name: 'Hero section is visible', status: 'passed', duration: '0.8s' },
+    { id: 't3', name: 'CTA button is clickable', status: 'failed', duration: '1.4s' },
+    { id: 't4', name: 'Navigation menu works', status: 'passed', duration: '2.1s' },
+    { id: 't5', name: 'Responsive layout (mobile)', status: 'passed', duration: '1.9s' },
+  ],
+  aiSuggestions: [
+    {
+      id: 'sug_1',
+      title: 'Increase CTA Visibility',
+      description: 'Use a more prominent red button with an arrow icon to improve click-through rate.',
+      confidence: 92,
+      recommended: true,
+      buttonColor: '#B91C1C',
+      buttonText: 'Get started →',
+    },
+    {
+      id: 'sug_2',
+      title: 'Improve Contrast',
+      description: 'Increase text contrast for better accessibility and WCAG AAA compliance.',
+      confidence: 78,
+      recommended: false,
+      buttonColor: '#8E1B22',
+      buttonText: 'Explore Platform →',
+    },
+  ],
+};
+
 export function buildRoutes(repo: Repo): Route[] {
   return [
     // 1. GET /api/session
@@ -613,6 +682,104 @@ export function buildRoutes(repo: Repo): Route[] {
             fail(res, 500, 'INTERNAL_ERROR', err instanceof Error ? err.message : String(err));
           }
         }
+      },
+    },
+
+    // 13. GET /api/simulation/experiment
+    {
+      method: 'GET',
+      pattern: /^\/api\/simulation\/experiment$/,
+      handler: async ({ res }) => {
+        json(res, 200, activeSimulationExperiment);
+      },
+    },
+
+    // 14. POST /api/simulation/experiment
+    {
+      method: 'POST',
+      pattern: /^\/api\/simulation\/experiment$/,
+      handler: async ({ res, body }) => {
+        if (body && typeof body === 'object') {
+          activeSimulationExperiment = {
+            ...activeSimulationExperiment,
+            ...body,
+          };
+        }
+        json(res, 200, activeSimulationExperiment);
+      },
+    },
+
+    // 15. POST /api/simulation/run
+    {
+      method: 'POST',
+      pattern: /^\/api\/simulation\/run$/,
+      handler: async ({ res }) => {
+        // Run simulated Playwright test execution
+        activeSimulationExperiment.tests = activeSimulationExperiment.tests.map((t) => ({
+          ...t,
+          status: 'passed' as const,
+        }));
+        json(res, 200, {
+          success: true,
+          total: 18,
+          passed: 18,
+          failed: 0,
+          skipped: 0,
+          tests: activeSimulationExperiment.tests,
+        });
+      },
+    },
+
+    // 16. GET /api/test-runs
+    {
+      method: 'GET',
+      pattern: /^\/api\/test-runs$/,
+      handler: async ({ res }) => {
+        json(res, 200, [
+          { id: 'tr_101', name: 'Homepage loads', duration: '12s', status: 'Passed', runAt: '2 hours ago' },
+          { id: 'tr_102', name: 'Product search', duration: '18s', status: 'Failed', runAt: '4 hours ago' },
+          { id: 'tr_103', name: 'Add to cart', duration: '22s', status: 'Repaired', runAt: '6 hours ago' },
+          { id: 'tr_104', name: 'Checkout flow', duration: '45s', status: 'Failed', runAt: '6 hours ago' },
+          { id: 'tr_105', name: 'Login test', duration: '30s', status: 'Passed', runAt: '8 hours ago' },
+          { id: 'tr_106', name: 'Profile update', duration: '28s', status: 'Passed', runAt: '1 day ago' },
+        ]);
+      },
+    },
+
+    // 17. GET /api/analytics/summary
+    {
+      method: 'GET',
+      pattern: /^\/api\/analytics\/summary$/,
+      handler: async ({ res }) => {
+        json(res, 200, {
+          testSuccessRate: 89,
+          changesDetected: 24,
+          averageRepairTime: '2.4 min',
+          repairSuccessRate: 92,
+          changeTypes: { layout: 8, content: 6, elements: 5, navigation: 3, other: 2 },
+          failurePatterns: [
+            { label: 'Element not found', percentage: 42 },
+            { label: 'Selector changed', percentage: 28 },
+            { label: 'Text content changed', percentage: 18 },
+            { label: 'Button disabled', percentage: 8 },
+            { label: 'Other', percentage: 4 },
+          ],
+        });
+      },
+    },
+
+    // 18. GET /api/storage/files
+    {
+      method: 'GET',
+      pattern: /^\/api\/storage\/files$/,
+      handler: async ({ res }) => {
+        json(res, 200, [
+          { id: 'f_1', name: 'homepage_2024-01-16.png', type: 'Screenshot', size: '2.1 MB', date: '2 hours ago' },
+          { id: 'f_2', name: 'test-run-001.zip', type: 'Test Logs', size: '12 MB', date: '4 hours ago' },
+          { id: 'f_3', name: 'change-diff.html', type: 'Change Report', size: '450 KB', date: '6 hours ago' },
+          { id: 'f_4', name: 'checkout-trace.zip', type: 'Playwright Trace', size: '8.2 MB', date: '1 day ago' },
+          { id: 'f_5', name: 'repair-report.pdf', type: 'Repair Report', size: '320 KB', date: '1 day ago' },
+        ]);
       },
     },
   ];

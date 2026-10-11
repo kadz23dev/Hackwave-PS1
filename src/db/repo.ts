@@ -128,6 +128,16 @@ export interface StoredAuditLog {
   payload: unknown;
 }
 
+export interface StoredSite {
+  id: number;
+  name: string;
+  base_url: string;
+  baseUrl: string;
+  allowlist_json: string;
+  allowlist: unknown;
+  created_at?: string;
+}
+
 export class Repo {
   constructor(public db: Database.Database) {}
 
@@ -555,6 +565,24 @@ export class Repo {
           allowlist: tryParse(row.allowlist_json),
         },
       };
+    });
+  }
+
+  listSites(actor = 'system'): StoredSite[] {
+    return this.tx(actor, 'site.list', 'sites', () => {
+      const rows = this.db.prepare('SELECT id, name, base_url, allowlist_json, created_at FROM sites ORDER BY id ASC').all() as Array<{
+        id: number;
+        name: string;
+        base_url: string;
+        allowlist_json: string;
+        created_at?: string;
+      }>;
+      const result: StoredSite[] = rows.map((r) => ({
+        ...r,
+        baseUrl: r.base_url,
+        allowlist: tryParse(r.allowlist_json),
+      }));
+      return { id: 0, payload: {}, result };
     });
   }
 

@@ -1,3 +1,33 @@
+import {
+  showToast,
+  updateHeader,
+  renderSimulationStudio,
+  renderJapaneseDashboard,
+  renderTestRunsView,
+  renderJapaneseChanges,
+  renderAIAgentView,
+  renderComparisonView,
+  renderRepairWorkflowView,
+  renderReportsView,
+  renderAnalyticsView,
+  renderStorageView,
+} from './screens.js';
+
+export {
+  showToast,
+  updateHeader,
+  renderSimulationStudio,
+  renderJapaneseDashboard,
+  renderTestRunsView,
+  renderJapaneseChanges,
+  renderAIAgentView,
+  renderComparisonView,
+  renderRepairWorkflowView,
+  renderReportsView,
+  renderAnalyticsView,
+  renderStorageView,
+};
+
 export function el(tag, attrs = {}, ...children) {
   const elem = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -103,11 +133,19 @@ export function severityBadge(sev) {
 }
 
 const views = [
-  { id: 'view-overview', regex: /^(?:#\/?|#\/overview)?$/ },
-  { id: 'view-dashboard', regex: /^#\/dashboard$/ },
+  { id: 'view-simulation', regex: /^#(?:simulation|\/simulation)$/ },
+  { id: 'view-dashboard', regex: /^#(?:dashboard|\/dashboard)$/ },
+  { id: 'view-test-runs', regex: /^#(?:test-runs|\/test-runs)$/ },
   { id: 'view-changes', regex: /^#\/changes$/ },
   { id: 'view-change', regex: /^#\/changes\/(\d+)$/ },
   { id: 'view-repair', regex: /^#\/repairs\/(\d+)$/ },
+  { id: 'view-ai-agent', regex: /^#(?:ai-agent|\/ai-agent)$/ },
+  { id: 'view-comparison', regex: /^#(?:comparison|\/comparison)$/ },
+  { id: 'view-repair-workflow', regex: /^#(?:repairs|\/repairs|\/repair-workflow)$/ },
+  { id: 'view-reports', regex: /^#(?:reports|\/reports)$/ },
+  { id: 'view-analytics', regex: /^#(?:analytics|\/analytics)$/ },
+  { id: 'view-storage', regex: /^#(?:storage|\/storage)$/ },
+  { id: 'view-overview', regex: /^(?:#\/?|#\/overview)?$/ },
   { id: 'view-audit', regex: /^#\/audit$/ },
   { id: 'view-settings', regex: /^#\/settings$/ },
   { id: 'view-billing', regex: /^#\/billing$/ },
@@ -160,16 +198,32 @@ export function route() {
     }
   }
 
-  if (matchedView === 'view-overview') {
-    renderOverview();
+  if (matchedView === 'view-simulation') {
+    renderSimulationStudio();
   } else if (matchedView === 'view-dashboard') {
-    renderDashboardWorkspace();
+    renderJapaneseDashboard();
+  } else if (matchedView === 'view-test-runs') {
+    renderTestRunsView();
   } else if (matchedView === 'view-changes') {
     renderChanges();
   } else if (matchedView === 'view-change') {
     renderChange(params[0]);
   } else if (matchedView === 'view-repair') {
     renderRepair(params[0]);
+  } else if (matchedView === 'view-ai-agent') {
+    renderAIAgentView();
+  } else if (matchedView === 'view-comparison') {
+    renderComparisonView();
+  } else if (matchedView === 'view-repair-workflow') {
+    renderRepairWorkflowView();
+  } else if (matchedView === 'view-reports') {
+    renderReportsView();
+  } else if (matchedView === 'view-analytics') {
+    renderAnalyticsView();
+  } else if (matchedView === 'view-storage') {
+    renderStorageView();
+  } else if (matchedView === 'view-overview') {
+    renderOverview();
   } else if (matchedView === 'view-audit') {
     renderAudit();
   } else if (matchedView === 'view-settings') {
@@ -2460,6 +2514,18 @@ if (typeof window !== 'undefined') {
     BADGE,
     badge,
     route,
+    renderSimulationStudio,
+    renderJapaneseDashboard,
+    renderTestRunsView,
+    renderJapaneseChanges,
+    renderAIAgentView,
+    renderComparisonView,
+    renderRepairWorkflowView,
+    renderReportsView,
+    renderAnalyticsView,
+    renderStorageView,
+    showToast,
+    updateHeader,
     renderLandingHero,
     renderOverview,
     renderDashboardWorkspace,
