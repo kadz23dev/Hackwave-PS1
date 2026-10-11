@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import http from 'node:http';
+import { resolve } from 'node:path';
 import { Command } from 'commander';
 import { openDb } from './db/index.js';
 import { Repo } from './db/repo.js';
@@ -14,6 +14,8 @@ import { captureSnapshot } from './snapshot/capture.js';
 import { findReplacement } from './match/matcher.js';
 import { elementToTarget } from './match/score.js';
 import { loadPolicy } from './governance/policy.js';
+import { createServer } from './server/http.js';
+import { buildRoutes } from './server/api.js';
 import type { ChangeItem, ElementRecord, PageSnapshot, Step, TargetFingerprint } from './types.js';
 
 function errMessage(e: unknown): string {
@@ -419,60 +421,10 @@ program
     try {
       const port = parseInt(opts.port ?? '4300', 10);
       const db = openDb(opts.db);
-
-      const server = http.createServer((req, res) => {
-        const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
-        const pathname = url.pathname;
-
-        if (pathname === '/' || pathname === '/index.html') {
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end(`<!DOCTYPE html>
-<html>
-<head><title>HealTest Dashboard</title></head>
-<body>
-  <div id="view-overview"></div>
-  <div id="view-changes"></div>
-  <div id="view-change"></div>
-  <div id="view-repair"></div>
-  <div id="view-audit"></div>
-</body>
-</html>`);
-          return;
-        }
-
-        if (pathname === '/api/sites') {
-          const rows = db.prepare('SELECT * FROM sites').all();
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(rows));
-          return;
-        }
-
-        if (pathname === '/api/changes') {
-          const rows = db.prepare('SELECT * FROM changes ORDER BY id DESC').all();
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(rows));
-          return;
-        }
-
-        const repairMatch = pathname.match(/^\/api\/repairs\/(\d+)$/);
-        if (repairMatch) {
-          const id = parseInt(repairMatch[1], 10);
-          const row = db.prepare('SELECT * FROM repairs WHERE id = ?').get(id);
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(row ?? {}));
-          return;
-        }
-
-        if (pathname === '/api/audit') {
-          const rows = db.prepare('SELECT * FROM audit_log ORDER BY id DESC').all();
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(rows));
-          return;
-        }
-
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Not found' } }));
-      });
+      const repo = new Repo(db);
+      const routes = buildRoutes(repo);
+      const staticDir = resolve('dashboard');
+      const server = createServer(routes, staticDir);
 
       server.listen(port, '127.0.0.1', () => {
         console.log(`HealTest dashboard: http://127.0.0.1:${port}`);
