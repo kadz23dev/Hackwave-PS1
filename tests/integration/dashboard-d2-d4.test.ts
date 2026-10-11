@@ -79,6 +79,38 @@ describe('Dashboard D2, D3, D4 Integration — T18', { timeout: 90000 }, () => {
       explanation: 'Harmless theme attribute adjustment on secondary button.',
     });
 
+    // Seed a MEDIUM severity change so LOW filter tests always have non-LOW results
+    repo.insertChange({
+      baseSnapshotId: firstChange.base_snapshot_id,
+      headSnapshotId: firstChange.head_snapshot_id,
+      kind: 'ATTR_CHANGED',
+      severity: 'MEDIUM',
+      classification: 'BREAKING_UI',
+      confidence: 0.9,
+      evidence: [
+        {
+          kind: 'ATTR_CHANGED',
+          before: {
+            role: 'button',
+            name: 'Submit',
+            selector: 'button.primary',
+            pagePath: '/',
+            attrs: { 'data-state': 'ready' },
+          },
+          after: {
+            role: 'button',
+            name: 'Submit',
+            selector: 'button.primary',
+            pagePath: '/',
+            attrs: { 'data-state': 'disabled' },
+          },
+          evidence: 'Primary button state attribute changed',
+        },
+      ],
+      affectedSteps: ['step_medium_1'],
+      explanation: 'Primary action button state changed and may affect flow.',
+    });
+
     // 3. Start local dashboard server
     server = createServer(buildRoutes(repo), resolve('dashboard'));
     await new Promise<void>((res) => {
@@ -210,23 +242,29 @@ describe('Dashboard D2, D3, D4 Integration — T18', { timeout: 90000 }, () => {
 
     // Both healed change and low change are initially visible
     const lowCardsInitially = session.page.locator('.change-card[data-severity="LOW"]');
+    const mediumCardsInitially = session.page.locator('.change-card[data-severity="MEDIUM"]');
     expect(await lowCardsInitially.count()).toBeGreaterThan(0);
+    expect(await mediumCardsInitially.count()).toBeGreaterThan(0);
 
     // Uncheck LOW checkbox
     const lowCheckbox = session.page.locator('input[type="checkbox"][name="severity"][value="LOW"]');
     await lowCheckbox.uncheck();
 
-    // Wait for list to update: LOW card should disappear
+    // Wait for list to update: LOW cards disappear and non-LOW cards are rendered
     await session.page.waitForFunction(() => {
-      return document.querySelectorAll('.change-card[data-severity="LOW"]').length === 0;
+      const cards = Array.from(document.querySelectorAll('.change-card'));
+      return (
+        cards.length > 0 &&
+        cards.every((card) => card.getAttribute('data-severity') !== 'LOW')
+      );
     });
 
     const lowCardsAfter = session.page.locator('.change-card[data-severity="LOW"]');
     expect(await lowCardsAfter.count()).toBe(0);
 
-    // Other changes (e.g. HIGH or MEDIUM) should still be visible
-    const remainingCards = session.page.locator('.change-card');
-    expect(await remainingCards.count()).toBeGreaterThan(0);
+    // Non-LOW changes should still be visible
+    const mediumCardsAfter = session.page.locator('.change-card[data-severity="MEDIUM"]');
+    expect(await mediumCardsAfter.count()).toBeGreaterThan(0);
 
     // Re-check LOW checkbox
     await lowCheckbox.check();
