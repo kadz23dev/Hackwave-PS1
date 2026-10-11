@@ -104,7 +104,7 @@ export async function signUpUser(
             } else {
               throw new Error('An account with this email address already exists.');
             }
-          } catch (e) {
+          } catch {
             throw new Error('An account with this email address already exists.');
           }
         } else if (msg?.includes('WEAK_PASSWORD')) {

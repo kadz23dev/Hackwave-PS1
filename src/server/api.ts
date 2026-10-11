@@ -1,5 +1,4 @@
 import { createReadStream, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { type Route, json, fail } from './http.js';
 import { csrfToken, check as checkCsrf } from './csrf.js';
 import type { Repo } from '../db/repo.js';
@@ -972,6 +971,7 @@ export function buildRoutes(repo: Repo): Route[] {
             targetUrl,
             errorMessage: errMsg,
             errorType: errType,
+            nearText: intentText,
           });
           if (result?.healing) {
             if (selector === '#add-to-cart' && (result.healing.newSelector.includes('bag') || result.healing.newSelector.includes('Add to bag'))) {

@@ -3610,3 +3610,84 @@ dialog::backdrop {
   align-items: center;
   background: var(--paper);
 }
+
+/* Guest Access Control & Authorization Badges */
+.nav-lock {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.guest-welcome-banner {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap) * 2);
+  padding: calc(var(--gap) * 2) calc(var(--gap) * 2.5);
+  background: var(--gold-wash);
+  border: 1px solid var(--gold-leaf);
+  border-radius: var(--radius);
+  margin-bottom: calc(var(--gap) * 3);
+  color: var(--ink);
+}
+
+.guest-banner-icon {
+  font-size: 1.5rem;
+  color: var(--amber);
+  flex-shrink: 0;
+}
+
+.guest-banner-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guest-banner-content strong {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.guest-banner-content span {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.guest-banner-actions {
+  display: flex;
+  gap: var(--gap);
+  flex-shrink: 0;
+}
+
+.auth-required-notice {
+  padding: calc(var(--gap) * 1.5) calc(var(--gap) * 2);
+  background: var(--crimson-wash);
+  border: 1px solid var(--crimson);
+  color: var(--crimson-deep);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  margin-bottom: calc(var(--gap) * 2);
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.firebase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: calc(var(--gap) * 2);
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+}
+
+.user-profile.clickable-profile {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.user-profile.clickable-profile:hover {
+  background: var(--crimson-fill);
+  color: var(--on-fill);
+}

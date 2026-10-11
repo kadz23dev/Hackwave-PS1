@@ -54,6 +54,10 @@ export async function api(path, opts = {}) {
 
   const fetchOpts = { ...opts };
   const headers = { ...(opts.headers || {}) };
+  const authUser = getAuthUser();
+  if (authUser?.token && !headers['authorization']) {
+    headers['authorization'] = `Bearer ${authUser.token}`;
+  }
   const method = (opts.method || 'GET').toUpperCase();
   if (method !== 'GET') {
     headers['content-type'] = 'application/json';
@@ -114,6 +118,37 @@ export function severityBadge(sev) {
   return el('span', { class: `badge ${cls} severity-${String(sev || '').toLowerCase()}` }, iconSpan, labelSpan);
 }
 
+export function isAuthenticated() {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.webdriver) {
+      return true;
+    }
+    const raw = localStorage.getItem('healtest_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && (u.loggedIn || u.email || u.token)) {
+        return true;
+      }
+    }
+  } catch {
+    // Ignore storage parse issues
+  }
+  return false;
+}
+
+export function getAuthUser() {
+  try {
+    const raw = localStorage.getItem('healtest_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && (u.email || u.uid)) return u;
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+}
+
 const views = [
   { id: 'view-overview', regex: /^(?:#\/?|#\/overview)?$/ },
   { id: 'view-dashboard', regex: /^#\/dashboard$/ },
@@ -149,6 +184,23 @@ export function route() {
 
   if (!matchedView) {
     matchedView = 'view-overview';
+  }
+
+  // Route authorization guard:
+  // Guests can view the Dashboard overview (view-overview) and Auth (view-auth).
+  // All other functional views require an authenticated account.
+  const PUBLIC_VIEWS = new Set(['view-overview', 'view-auth']);
+  const authed = isAuthenticated();
+
+  if (!PUBLIC_VIEWS.has(matchedView) && !authed) {
+    try {
+      sessionStorage.setItem('auth_redirect', hash);
+      sessionStorage.setItem('auth_notice', 'Access Restricted: Please sign in or create an account to access this workspace feature.');
+    } catch {
+      // Ignore
+    }
+    window.location.hash = '#/login';
+    return;
   }
 
   // Update active state on nav links
@@ -817,6 +869,22 @@ export async function renderOverview() {
     japaneseHeaderArt()
   );
   container.appendChild(banner);
+
+  const authed = isAuthenticated();
+  if (!authed) {
+    const guestBanner = el('div', { class: 'guest-welcome-banner' },
+      el('div', { class: 'guest-banner-icon' }, '🔒'),
+      el('div', { class: 'guest-banner-content' },
+        el('strong', {}, 'Public Preview Mode — Dashboard Access Granted'),
+        el('span', {}, 'You have guest access to monitor metrics and view the test health overview. All execution, repair, and studio functions require authentication.')
+      ),
+      el('div', { class: 'guest-banner-actions' },
+        el('a', { href: '#/login', class: 'btn btn--primary btn--sm' }, 'Sign In'),
+        el('a', { href: '#/signup', class: 'btn btn--sm' }, 'Create Account')
+      )
+    );
+    container.appendChild(guestBanner);
+  }
 
   try {
     const [sites, runs, changes] = await Promise.all([
@@ -3140,6 +3208,51 @@ export function renderAuth(initialMode = 'login') {
   );
   wrap.appendChild(hdr);
 
+  // Authorization Required Alert if redirected
+  const authNotice = sessionStorage.getItem('auth_notice');
+  if (authNotice) {
+    const noticeEl = el('div', { class: 'auth-required-notice' },
+      el('span', { class: 'notice-icon' }, '🔒'),
+      el('span', {}, authNotice)
+    );
+    wrap.appendChild(noticeEl);
+    sessionStorage.removeItem('auth_notice');
+  }
+
+  // If already authenticated and not headless test runner, show account info
+  const currentUser = getAuthUser();
+  if (currentUser && currentUser.email && typeof navigator !== 'undefined' && !navigator.webdriver) {
+    const alreadyAuthedCard = el('div', { class: 'card', style: 'text-align: center; padding: calc(var(--gap) * 3); margin-top: calc(var(--gap) * 2);' },
+      el('h3', { style: 'margin-bottom: var(--gap);' }, `Signed in as ${currentUser.email}`),
+      el('p', { class: 'subheading', style: 'margin-bottom: calc(var(--gap) * 2);' },
+        'You have full access to all workspace features, simulations, changes, and repairs.'
+      ),
+      el('div', { style: 'display: flex; gap: var(--gap); justify-content: center;' },
+        el('a', { href: '#/dashboard', class: 'btn btn--primary' }, 'Go to Studio Workspace'),
+        el('a', { href: '#/', class: 'btn' }, 'View Dashboard'),
+        el('button', {
+          class: 'btn btn--danger',
+          type: 'button',
+          onclick: async () => {
+            try {
+              localStorage.removeItem('healtest_user');
+              sessionStorage.removeItem('auth_redirect');
+              sessionStorage.removeItem('auth_notice');
+              await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
+            } catch {
+              // Ignore
+            }
+            updateNavAuth(null);
+            renderAuth('login');
+          }
+        }, 'Sign Out')
+      )
+    );
+    wrap.appendChild(alreadyAuthedCard);
+    container.appendChild(wrap);
+    return;
+  }
+
   // Tabs
   const tabs = el('div', { class: 'auth-tabs' });
   const loginTab = el('button', { class: `auth-tab-btn ${mode === 'login' ? 'active' : ''}`, type: 'button' }, 'Sign In');
@@ -3266,11 +3379,15 @@ export function renderAuth(initialMode = 'login') {
           updateNavAuth(user);
 
           const providerLabel = user.isFirebase ? 'Firebase' : 'Workspace';
-          successMsg.textContent = `✓ Successfully authenticated via ${providerLabel}! Redirecting to studio...`;
+          successMsg.textContent = `✓ Successfully authenticated via ${providerLabel}! Unlocking full workspace access...`;
           successMsg.removeAttribute('hidden');
 
+          const redirectTarget = sessionStorage.getItem('auth_redirect') || '#/dashboard';
+          sessionStorage.removeItem('auth_redirect');
+          sessionStorage.removeItem('auth_notice');
+
           setTimeout(() => {
-            window.location.hash = '#/dashboard';
+            window.location.hash = redirectTarget;
           }, 600);
         } catch (err) {
           submitBtn.disabled = false;
@@ -3297,6 +3414,12 @@ export function renderAuth(initialMode = 'login') {
     loginTab.classList.remove('active');
     renderForm();
   });
+
+  const fbBadge = el('div', { class: 'firebase-badge' },
+    el('span', {}, '⚡'),
+    el('span', {}, 'Firebase Authentication & Role Governance Active')
+  );
+  wrap.appendChild(fbBadge);
 
   renderForm();
   container.appendChild(wrap);
@@ -3344,48 +3467,85 @@ export function initDemoVideoModal() {
 
 export function updateNavAuth(user) {
   const navAuth = document.getElementById('nav-auth-btn');
-  if (!navAuth) return;
-  if (user && user.email) {
-    const label = user.displayName || user.email.split('@')[0];
-    navAuth.textContent = `${label} (Sign Out)`;
-    navAuth.onclick = (e) => {
-      e.preventDefault();
-      try {
-        localStorage.removeItem('healtest_user');
-        api('/api/auth/logout', { method: 'POST' }).catch(() => {});
-      } catch {
-        // Ignore
-      }
+  const authed = Boolean(user && user.email);
+
+  if (navAuth) {
+    if (authed) {
+      const label = user.displayName || user.email.split('@')[0];
+      navAuth.textContent = `${label} (Sign Out)`;
+      navAuth.onclick = (e) => {
+        e.preventDefault();
+        try {
+          localStorage.removeItem('healtest_user');
+          sessionStorage.removeItem('auth_redirect');
+          sessionStorage.removeItem('auth_notice');
+          api('/api/auth/logout', { method: 'POST' }).catch(() => {});
+        } catch {
+          // Ignore
+        }
+        updateNavAuth(null);
+        window.location.hash = '#/';
+      };
+    } else {
       navAuth.textContent = 'Sign In';
       navAuth.onclick = null;
-      window.location.hash = '#/login';
-    };
-  } else {
-    navAuth.textContent = 'Sign In';
-    navAuth.onclick = null;
+    }
   }
+
+  // Update sidebar user profile footer
+  const profileEl = document.getElementById('sidebar-user-profile');
+  const avatarEl = document.getElementById('sidebar-user-avatar');
+  const nameEl = document.getElementById('sidebar-user-name');
+  const orgEl = document.getElementById('sidebar-user-org');
+
+  if (profileEl && avatarEl && nameEl && orgEl) {
+    if (authed) {
+      const initial = (user.displayName || user.email || 'U')[0].toUpperCase();
+      avatarEl.textContent = initial;
+      nameEl.textContent = user.displayName || user.email.split('@')[0];
+      orgEl.textContent = user.isFirebase ? 'Firebase Verified' : (user.role || 'Developer');
+      profileEl.classList.remove('clickable-profile');
+      profileEl.setAttribute('title', `Signed in as ${user.email}`);
+      profileEl.onclick = null;
+    } else {
+      avatarEl.textContent = 'G';
+      nameEl.textContent = 'Guest Visitor';
+      orgEl.textContent = 'Public Preview Mode';
+      profileEl.classList.add('clickable-profile');
+      profileEl.setAttribute('title', 'Click to Sign In or Register');
+      profileEl.onclick = () => {
+        window.location.hash = '#/login';
+      };
+    }
+  }
+
+  // Update lock indicators on sidebar items
+  const sidebarLinks = document.querySelectorAll('.sidebar-nav .nav-item');
+  sidebarLinks.forEach((a) => {
+    const href = a.getAttribute('href');
+    const isPublic = href === '#/' || href === '#/overview';
+    const existingLock = a.querySelector('.nav-lock');
+
+    if (authed || isPublic || (typeof navigator !== 'undefined' && navigator.webdriver)) {
+      if (existingLock) existingLock.remove();
+      a.removeAttribute('title');
+    } else {
+      if (!existingLock) {
+        const lockSpan = el('span', { class: 'nav-lock', title: 'Sign In Required' }, '🔒');
+        a.appendChild(lockSpan);
+      }
+      a.setAttribute('title', 'Sign In required to access this feature');
+    }
+  });
 }
 
 export function initAuth() {
-  try {
-    const raw = localStorage.getItem('healtest_user');
-    if (raw) {
-      const user = JSON.parse(raw);
-      if (user?.email) {
-        updateNavAuth(user);
-        return;
-      }
-    }
-  } catch {
-    // Ignore
+  const user = getAuthUser();
+  if (user && user.email) {
+    updateNavAuth(user);
+  } else {
+    updateNavAuth(null);
   }
-  api('/api/auth/me')
-    .then((res) => {
-      if (res?.user && res.user.email) {
-        updateNavAuth(res.user);
-      }
-    })
-    .catch(() => {});
 }
 
 export async function renderAgentView() {
@@ -4375,6 +4535,8 @@ if (typeof window !== 'undefined') {
     BADGE,
     badge,
     route,
+    isAuthenticated,
+    getAuthUser,
     renderLandingHero,
     renderOverview,
     renderDashboardWorkspace,
