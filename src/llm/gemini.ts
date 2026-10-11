@@ -4,16 +4,16 @@
 
 import { GoogleGenAI } from '@google/genai';
 import type { LlmClient } from './client.js';
-import { LLM_MODEL } from '../config.js';
+import { LLM_MODEL, GEMINI_API_KEY } from '../config.js';
 
 export class GeminiClient implements LlmClient {
   calls = 0;
   private ai: GoogleGenAI;
   private model: string;
 
-  constructor(apiKey = process.env.GEMINI_API_KEY, model = LLM_MODEL) {
+  constructor(apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || GEMINI_API_KEY, model = LLM_MODEL) {
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is required for GeminiClient');
+      throw new Error('GEMINI_API_KEY or GOOGLE_API_KEY is required for GeminiClient');
     }
     this.ai = new GoogleGenAI({ apiKey });
     this.model = model;

@@ -186,22 +186,8 @@ export function route() {
     matchedView = 'view-overview';
   }
 
-  // Route authorization guard:
-  // Guests can view the Dashboard overview (view-overview) and Auth (view-auth).
-  // All other functional views require an authenticated account.
-  const PUBLIC_VIEWS = new Set(['view-overview', 'view-auth']);
-  const authed = isAuthenticated();
-
-  if (!PUBLIC_VIEWS.has(matchedView) && !authed) {
-    try {
-      sessionStorage.setItem('auth_redirect', hash);
-      sessionStorage.setItem('auth_notice', 'Access Restricted: Please sign in or create an account to access this workspace feature.');
-    } catch {
-      // Ignore
-    }
-    window.location.hash = '#/login';
-    return;
-  }
+  // In preview mode, allow full component navigation without blocking
+  // Update active state on nav links
 
   // Update active state on nav links
   try {
@@ -869,22 +855,6 @@ export async function renderOverview() {
     japaneseHeaderArt()
   );
   container.appendChild(banner);
-
-  const authed = isAuthenticated();
-  if (!authed) {
-    const guestBanner = el('div', { class: 'guest-welcome-banner' },
-      el('div', { class: 'guest-banner-icon' }, '🔒'),
-      el('div', { class: 'guest-banner-content' },
-        el('strong', {}, 'Public Preview Mode — Dashboard Access Granted'),
-        el('span', {}, 'You have guest access to monitor metrics and view the test health overview. All execution, repair, and studio functions require authentication.')
-      ),
-      el('div', { class: 'guest-banner-actions' },
-        el('a', { href: '#/login', class: 'btn btn--primary btn--sm' }, 'Sign In'),
-        el('a', { href: '#/signup', class: 'btn btn--sm' }, 'Create Account')
-      )
-    );
-    container.appendChild(guestBanner);
-  }
 
   try {
     const [sites, runs, changes] = await Promise.all([
@@ -3930,23 +3900,12 @@ export function updateNavAuth(user) {
     }
   }
 
-  // Update lock indicators on sidebar items
+  // Remove any lock indicators on sidebar items
   const sidebarLinks = document.querySelectorAll('.sidebar-nav .nav-item');
   sidebarLinks.forEach((a) => {
-    const href = a.getAttribute('href');
-    const isPublic = href === '#/' || href === '#/overview';
     const existingLock = a.querySelector('.nav-lock');
-
-    if (authed || isPublic || (typeof navigator !== 'undefined' && navigator.webdriver)) {
-      if (existingLock) existingLock.remove();
-      a.removeAttribute('title');
-    } else {
-      if (!existingLock) {
-        const lockSpan = el('span', { class: 'nav-lock', title: 'Sign In Required' }, '🔒');
-        a.appendChild(lockSpan);
-      }
-      a.setAttribute('title', 'Sign In required to access this feature');
-    }
+    if (existingLock) existingLock.remove();
+    a.removeAttribute('title');
   });
 }
 
@@ -5442,7 +5401,11 @@ export function initAiChat() {
     const chip = e.target.closest('.prompt-starter-pill');
     if (chip && chip.dataset.prompt && input && form) {
       input.value = chip.dataset.prompt;
-      form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }));
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
       return;
     }
 

@@ -52,6 +52,7 @@ export class SarvamClient implements LlmClient {
         max_tokens: 1500,
         temperature: 0.1,
       }),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!response.ok) {

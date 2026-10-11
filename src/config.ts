@@ -35,6 +35,8 @@ export const NAV_TIMEOUT_MS = 8000;      // page.goto / waitForURL
 export const ACTION_TIMEOUT_MS = 5000;   // click/fill
 export const HOME = process.env.HEALTEST_HOME ?? '.healtest';
 export const SARVAM_API_KEY = process.env.SARVAM_API_KEY ?? '';
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? '';
+export const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? process.env.GEMINI_API_KEY ?? '';
 export const LLM_PROVIDER = process.env.HEALTEST_LLM_PROVIDER ?? 'sarvam';
 export const LLM_MODEL = process.env.HEALTEST_LLM_MODEL ?? (LLM_PROVIDER === 'sarvam' ? 'sarvam-105b-conversations' : 'gemini-2.5-flash');
 export const LLM_MODE = (process.env.HEALTEST_LLM ?? 'live') as 'off'|'record'|'replay'|'live';

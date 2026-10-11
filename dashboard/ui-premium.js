@@ -146,25 +146,8 @@
   });
 })();
 
-/* ─── 5. ACTIVE NAV INDICATOR ─── */
-(function initNavIndicator() {
-  function updateNav() {
-    const hash = location.hash || '#/';
-    const navItems = document.querySelectorAll('.nav-item');
+/* ─── 5. ACTIVE NAV INDICATOR (delegated to app.js router) ─── */
 
-    navItems.forEach((item) => {
-      const href = item.getAttribute('href');
-      if (href === hash || (hash === '#/' && href === '#/')) {
-        item.classList.add('nav-link--active');
-      } else {
-        item.classList.remove('nav-link--active');
-      }
-    });
-  }
-
-  window.addEventListener('hashchange', updateNav);
-  updateNav();
-})();
 
 /* ─── 6. CHAT TYPING INDICATOR ─── */
 (function initChatEnhance() {
@@ -195,4 +178,33 @@
   });
 })();
 
-console.log('🎨 Kaizen AI Premium UI v4.0 loaded — High Performance · Air-Gapped');
+/* ─── 7. MOBILE SIDEBAR RESPONSIVE TOGGLE ─── */
+(function initMobileSidebar() {
+  document.addEventListener('click', (e) => {
+    const toggleBtn = e.target.closest('#mobile-sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    if (toggleBtn && sidebar) {
+      sidebar.classList.toggle('sidebar--open');
+      return;
+    }
+
+    if (sidebar && sidebar.classList.contains('sidebar--open')) {
+      const clickedInside = e.target.closest('.sidebar');
+      if (!clickedInside) {
+        sidebar.classList.remove('sidebar--open');
+      }
+    }
+  });
+
+  // Close sidebar on navigation item click
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.sidebar-nav .nav-item')) {
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar && sidebar.classList.contains('sidebar--open')) {
+        sidebar.classList.remove('sidebar--open');
+      }
+    }
+  });
+})();
+
+console.log('🎨 Kaizen AI Premium UI v5.0 loaded — Minimalist Soft Morphism · Responsive');

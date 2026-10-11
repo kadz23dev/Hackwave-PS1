@@ -417,7 +417,7 @@ program
   .description('Start HealTest dashboard server and local API')
   .option('--port <port>', 'Port to listen on', '4300')
   .option('--db <path>', 'Path to SQLite database')
-  .action((opts: { port?: string; db?: string }) => {
+  .action(async (opts: { port?: string; db?: string }) => {
     try {
       const port = parseInt(opts.port ?? '4300', 10);
       const db = openDb(opts.db);
@@ -429,6 +429,7 @@ program
       server.listen(port, '127.0.0.1', () => {
         console.log(`HealTest dashboard: http://127.0.0.1:${port}`);
       });
+      await new Promise(() => {});
     } catch (e) {
       console.error(`error: ${errMessage(e)}`);
       process.exitCode = 1;

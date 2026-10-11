@@ -60,7 +60,7 @@ export class MultiAgentBus {
   constructor(repo?: Repo) {
     this.repo = repo;
     this.sarvamClient = new SarvamClient(SARVAM_API_KEY);
-    if (process.env.GEMINI_API_KEY) {
+    if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
       try {
         this.geminiClient = new GeminiClient();
       } catch {

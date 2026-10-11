@@ -172,7 +172,7 @@ export function createServer(variant) {
   return server;
 }
 
-export function startServer(variant, port) {
+export function startServer(variant, port, retries = 5) {
   return new Promise((resolve, reject) => {
     const s = createServer(variant);
     s.listen(port, '127.0.0.1', () => {
@@ -180,7 +180,15 @@ export function startServer(variant, port) {
       console.log(`LISTENING ${variant} ${assignedPort}`);
       resolve({ server: s, port: assignedPort, variant });
     });
-    s.on('error', reject);
+    s.on('error', (err) => {
+      if (err.code === 'EADDRINUSE' && retries > 0) {
+        setTimeout(() => {
+          startServer(variant, port, retries - 1).then(resolve, reject);
+        }, 500);
+      } else {
+        reject(err);
+      }
+    });
   });
 }
 
@@ -193,10 +201,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       startServer('shop-v2', 4102),
       startServer('shop-v2-bug', 4103),
       startServer('shop-v2-ambiguous', 4104),
-    ]).catch(err => {
-      console.error(err);
-      process.exit(1);
-    });
+    ])
+      .then(() => new Promise(() => {}))
+      .catch(err => {
+        console.error(err);
+        process.exit(1);
+      });
   } else {
     let variant = 'shop-v1';
     let port = 0;

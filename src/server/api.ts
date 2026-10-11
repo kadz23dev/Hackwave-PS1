@@ -329,7 +329,51 @@ export function buildRoutes(repo: Repo): Route[] {
       },
     },
 
-    // 9. GET /api/repairs/:id
+    // 9. GET /api/repairs
+    {
+      method: 'GET',
+      pattern: /^\/api\/repairs$/,
+      handler: async ({ res, query }) => {
+        const status = query.get('status');
+        let sql = 'SELECT * FROM repairs WHERE 1=1';
+        const queryParams: unknown[] = [];
+        if (status) {
+          sql += ' AND status = ?';
+          queryParams.push(status);
+        }
+        sql += ' ORDER BY id DESC LIMIT 50';
+        const rows = repo.db.prepare(sql).all(...queryParams) as Array<{
+          id: number;
+          change_id: number;
+          status: string;
+          proposer: string;
+          explanation: string;
+          proposal_json: string;
+          created_at: string;
+        }>;
+        const result = rows.map((r) => {
+          let proposal: unknown = {};
+          try {
+            proposal = JSON.parse(r.proposal_json || '{}');
+          } catch {
+            proposal = {};
+          }
+          return {
+            id: r.id,
+            displayId: fmtId('rep', r.id),
+            changeId: r.change_id,
+            status: r.status,
+            proposer: r.proposer,
+            explanation: r.explanation,
+            proposal,
+            createdAt: r.created_at,
+          };
+        });
+        json(res, 200, result);
+      },
+    },
+
+    // 9b. GET /api/repairs/:id
     {
       method: 'GET',
       pattern: /^\/api\/repairs\/(\d+)$/,
@@ -1400,11 +1444,12 @@ export function buildRoutes(repo: Repo): Route[] {
         const changeIdParam = query.get('changeId');
         const sites = repo.db.prepare('SELECT id, name, base_url FROM sites').all() as Array<{ id: number; name: string; base_url: string }>;
         
-        let targetChange: { id: number; base_snapshot_id: number; target_snapshot_id: number; kind: string; severity: string; classification: string; explanation: string; created_at: string } | null = null;
+        type ChangeRow = { id: number; base_snapshot_id: number; target_snapshot_id: number; kind: string; severity: string; classification: string; explanation: string; created_at: string };
+        let targetChange: ChangeRow | null = null;
         if (changeIdParam) {
           const cid = parseInt(changeIdParam, 10);
           if (!isNaN(cid)) {
-            targetChange = (repo.db.prepare('SELECT id, base_snapshot_id, target_snapshot_id, kind, severity, classification, explanation, created_at FROM changes WHERE id = ?').get(cid) as any) || null;
+            targetChange = (repo.db.prepare('SELECT id, base_snapshot_id, target_snapshot_id, kind, severity, classification, explanation, created_at FROM changes WHERE id = ?').get(cid) as ChangeRow | undefined) || null;
           }
         }
 
@@ -1424,15 +1469,15 @@ export function buildRoutes(repo: Repo): Route[] {
         let vB = null;
 
         if (targetChange) {
-          vA = snapshots.find(s => s.id === targetChange!.base_snapshot_id) || repo.db.prepare(`
+          vA = snapshots.find(s => s.id === targetChange!.base_snapshot_id) || (repo.db.prepare(`
             SELECT s.id, s.version_label, s.captured_at, s.screenshot_path, p.path, p.site_id
             FROM snapshots s JOIN pages p ON s.page_id = p.id WHERE s.id = ?
-          `).get(targetChange.base_snapshot_id) as any;
+          `).get(targetChange.base_snapshot_id) as (typeof snapshots)[number] | undefined) || null;
 
-          vB = snapshots.find(s => s.id === targetChange!.target_snapshot_id) || repo.db.prepare(`
+          vB = snapshots.find(s => s.id === targetChange!.target_snapshot_id) || (repo.db.prepare(`
             SELECT s.id, s.version_label, s.captured_at, s.screenshot_path, p.path, p.site_id
             FROM snapshots s JOIN pages p ON s.page_id = p.id WHERE s.id = ?
-          `).get(targetChange.target_snapshot_id) as any;
+          `).get(targetChange.target_snapshot_id) as (typeof snapshots)[number] | undefined) || null;
         }
 
         if (!vA || !vB) {
@@ -1567,7 +1612,7 @@ export function buildRoutes(repo: Repo): Route[] {
 
         const verdict = scenario === 'bug' ? 'APP_BUG' : (scenario === 'drift' ? 'HEALED_PASS' : 'PASS');
 
-        let intent = repo.db.prepare('SELECT id, name, sha256 FROM intents LIMIT 1').get() as { id: number; name: string; sha256: string } | undefined;
+        const intent = repo.db.prepare('SELECT id, name, sha256 FROM intents LIMIT 1').get() as { id: number; name: string; sha256: string } | undefined;
         if (intent) {
           repo.db.prepare(`
             INSERT INTO runs (intent_id, intent_sha256, verdict, started_at, finished_at, explanation, llm_calls, evidence_json)
@@ -1587,6 +1632,21 @@ export function buildRoutes(repo: Repo): Route[] {
           oracleMessage: scenario === 'bug' 
             ? 'Backend Oracle: invariant violation ✕ | POST /api/orders 500 ✕ | APP_BUG'
             : 'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS',
+        });
+      },
+    },
+
+    // 39. GET /api/simulation/run
+    {
+      method: 'GET',
+      pattern: /^\/api\/simulation\/run$/,
+      handler: async ({ res }) => {
+        json(res, 200, {
+          ok: true,
+          status: 'ready',
+          defaultScenario: 'drift',
+          targetUrl: 'http://127.0.0.1:4102/cart.html',
+          supportedScenarios: ['drift', 'bug', 'ambiguous', 'baseline'],
         });
       },
     },

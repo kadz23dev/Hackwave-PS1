@@ -12,9 +12,9 @@ body {
   min-height: 100vh;
 }
 
-/* Sidebar Asian Aesthetic Deep Burgundy Palette */
+/* Sidebar Minimalist Soft Morphism Palette */
 .sidebar {
-  width: 175px;
+  width: 240px;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--sidebar-sub);
   display: flex;
@@ -26,6 +26,7 @@ body {
   box-sizing: border-box;
   z-index: 90;
   color: var(--sidebar-text);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s ease;
 }
 
 :root:not([data-theme="light"]) .sidebar,
@@ -107,25 +108,30 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: calc(var(--gap) * 1.5);
-  padding: 8px 12px;
-  border-radius: var(--radius);
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-interactive, 10px);
   color: var(--sidebar-muted);
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.875rem;
-  transition: color 0.15s ease, background 0.15s ease;
+  font-size: 0.84rem;
+  transition: all 0.18s ease-out;
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
-  color: var(--sidebar-text);
-  background: var(--sidebar-sub);
+  color: var(--crimson);
+  background: var(--crimson-wash);
+  border-color: var(--line);
+  transform: translateX(2px);
 }
 
 .nav-item.nav-item--active,
 .nav-item.nav-link--active {
-  background: var(--crimson-fill);
-  color: var(--on-fill);
+  background: var(--crimson-wash) !important;
+  color: var(--crimson) !important;
+  border-color: var(--line-strong) !important;
   font-weight: 600;
 }
 
@@ -3879,8 +3885,21 @@ dialog::backdrop {
 /* Guest Access Control & Authorization Badges */
 .nav-lock {
   margin-left: auto;
-  font-size: 0.75rem;
-  opacity: 0.75;
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--gold-wash);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+
+.nav-item:hover .nav-lock {
+  opacity: 1;
 }
 
 .guest-welcome-banner {

@@ -365,10 +365,9 @@ export async function runActs(
           const staticDir = resolve('dashboard');
           dashboardServer = createServer(routes, staticDir);
 
-          await new Promise<void>((res) => {
+          await new Promise<void>(() => {
             dashboardServer!.listen(4300, '127.0.0.1', () => {
               console.log('\nHealTest dashboard: http://127.0.0.1:4300\n');
-              res();
             });
           });
         }

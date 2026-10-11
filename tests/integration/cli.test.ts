@@ -47,8 +47,16 @@ describe('CLI integration and exit codes — T15', { timeout: 120000 }, () => {
   });
 
   afterAll(() => {
-    if (fixturesProc) {
-      fixturesProc.kill();
+    if (fixturesProc && fixturesProc.pid) {
+      if (process.platform === 'win32') {
+        try {
+          spawnSync('taskkill', ['/pid', String(fixturesProc.pid), '/f', '/t']);
+        } catch {
+          fixturesProc.kill();
+        }
+      } else {
+        fixturesProc.kill();
+      }
     }
   });
 
