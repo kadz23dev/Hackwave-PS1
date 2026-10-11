@@ -390,8 +390,10 @@ From the Playwright runtime perspective, our multi-agent pipeline validates sele
    * Deterministic heuristic fallback when live API is completely unreachable.
    */
   private synthesizeHeuristicDiagnostic(ctx: PlaywrightErrorContext): RawDiagnosticOutput {
-    const isBug = ctx.errorType === 'APP_500_ERROR' || ctx.errorMessage.toLowerCase().includes('500');
-    const isAmbiguous = ctx.errorMessage.toLowerCase().includes('strict mode') || ctx.errorMessage.toLowerCase().includes('multiple elements');
+    const lowerError = ctx.errorMessage.toLowerCase();
+    const hasHttp500Signal = /\b500\b/.test(lowerError) && /(http|status|internal server|api)/.test(lowerError);
+    const isBug = ctx.errorType === 'APP_500_ERROR' || hasHttp500Signal;
+    const isAmbiguous = lowerError.includes('strict mode') || lowerError.includes('multiple elements');
 
     if (isBug) {
       return {
