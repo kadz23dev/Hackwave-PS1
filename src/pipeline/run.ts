@@ -327,7 +327,11 @@ export async function runIntent(
         planIsKnownGood: false,
       });
     } else {
-      oracles = await runOracles(intent, targetOrigin, session.network, session.page);
+      if (plannerStatus === 'budget' || plannerStatus === 'stuck') {
+        oracles = [];
+      } else {
+        oracles = await runOracles(intent, targetOrigin, session.network, session.page);
+      }
 
       const appError =
         session.network.some(n => /^\/api\//.test(n.path) && n.status >= 500) ||

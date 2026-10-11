@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import http from 'node:http';
 import { Command } from 'commander';
 import { openDb } from './db/index.js';
 import { Repo } from './db/repo.js';
@@ -8,7 +9,16 @@ import { runIntent } from './pipeline/run.js';
 import { runValidation } from './validate/validation.js';
 import { exitCodeFor } from './classify/verdict.js';
 import { approve, reject, resolveCandidate, rollback } from './governance/approvals.js';
-import type { ElementRecord, PageSnapshot } from './types.js';
+import { openSession } from './browser/session.js';
+import { captureSnapshot } from './snapshot/capture.js';
+import { findReplacement } from './match/matcher.js';
+import { elementToTarget } from './match/score.js';
+import { loadPolicy } from './governance/policy.js';
+import type { ChangeItem, ElementRecord, PageSnapshot, Step, TargetFingerprint } from './types.js';
+
+function errMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
 
 export const program = new Command();
 
@@ -22,56 +32,60 @@ program
   .option('--json', 'Output results as JSON')
   .option('--db <path>', 'Path to SQLite database')
   .action((baseIdStr: string, headIdStr: string, opts: { json?: boolean; db?: string }) => {
-    const baseId = parseInt(baseIdStr, 10);
-    const headId = parseInt(headIdStr, 10);
+    try {
+      const baseId = parseInt(baseIdStr, 10);
+      const headId = parseInt(headIdStr, 10);
 
-    const db = openDb(opts.db);
-    const repo = new Repo(db);
+      const db = openDb(opts.db);
+      const repo = new Repo(db);
 
-    const baseRow = repo.getSnapshot(baseId);
-    if (!baseRow) {
-      console.error(`Base snapshot ${baseId} not found in database.`);
-      process.exit(1);
-    }
-
-    const headRow = repo.getSnapshot(headId);
-    if (!headRow) {
-      console.error(`Head snapshot ${headId} not found in database.`);
-      process.exit(1);
-    }
-
-    const baseSnap: PageSnapshot = {
-      id: baseRow.id,
-      pagePath: '',
-      url: '',
-      title: '',
-      headings: [],
-      elements: (Array.isArray(baseRow.elements) ? baseRow.elements : []) as ElementRecord[],
-      ariaYaml: baseRow.ariaYaml ?? '',
-      contentHash: baseRow.contentHash,
-      screenshotPath: baseRow.screenshotPath,
-    };
-
-    const headSnap: PageSnapshot = {
-      id: headRow.id,
-      pagePath: '',
-      url: '',
-      title: '',
-      headings: [],
-      elements: (Array.isArray(headRow.elements) ? headRow.elements : []) as ElementRecord[],
-      ariaYaml: headRow.ariaYaml ?? '',
-      contentHash: headRow.contentHash,
-      screenshotPath: headRow.screenshotPath,
-    };
-
-    const items = diffSnapshots(baseSnap, headSnap);
-
-    if (opts.json) {
-      console.log(JSON.stringify(items, null, 2));
-    } else {
-      for (const item of items) {
-        console.log(`${item.kind} ${item.evidence}`);
+      const baseRow = repo.getSnapshot(baseId);
+      if (!baseRow) {
+        throw new Error(`Base snapshot ${baseId} not found in database.`);
       }
+
+      const headRow = repo.getSnapshot(headId);
+      if (!headRow) {
+        throw new Error(`Head snapshot ${headId} not found in database.`);
+      }
+
+      const baseSnap: PageSnapshot = {
+        id: baseRow.id,
+        pagePath: '',
+        url: '',
+        title: '',
+        headings: [],
+        elements: (Array.isArray(baseRow.elements) ? baseRow.elements : []) as ElementRecord[],
+        ariaYaml: baseRow.ariaYaml ?? '',
+        contentHash: baseRow.contentHash,
+        screenshotPath: baseRow.screenshotPath,
+      };
+
+      const headSnap: PageSnapshot = {
+        id: headRow.id,
+        pagePath: '',
+        url: '',
+        title: '',
+        headings: [],
+        elements: (Array.isArray(headRow.elements) ? headRow.elements : []) as ElementRecord[],
+        ariaYaml: headRow.ariaYaml ?? '',
+        contentHash: headRow.contentHash,
+        screenshotPath: headRow.screenshotPath,
+      };
+
+      const items = diffSnapshots(baseSnap, headSnap);
+
+      if (opts.json) {
+        console.log(JSON.stringify(items, null, 2));
+      } else {
+        for (const item of items) {
+          console.log(`${item.kind} ${item.evidence}`);
+        }
+      }
+      process.exitCode = 0;
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
+      process.exitCode = 1;
     }
   });
 
@@ -88,8 +102,165 @@ program
         llm: opts.llm,
       });
       process.exitCode = outcome.exitCode;
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command('scan <site>')
+  .description('Capture and store snapshots with screenshots')
+  .requiredOption('--target <url>', 'Target base URL')
+  .option('--paths [paths...]', 'Paths to scan')
+  .option('--db <path>', 'Path to SQLite database')
+  .action(async (siteName: string, opts: { target: string; paths?: string[]; db?: string }) => {
+    try {
+      const db = openDb(opts.db);
+      const repo = new Repo(db);
+      const site = repo.upsertSite(siteName, opts.target, [new URL(opts.target).origin]);
+
+      const rawPaths = opts.paths && opts.paths.length > 0 ? opts.paths : ['/'];
+      const paths = rawPaths.map(p => (p.startsWith('/') ? p : `/${p}`));
+
+      const session = await openSession({ headless: true });
+      try {
+        for (const path of paths) {
+          const fullUrl = `${opts.target.replace(/\/$/, '')}${path}`;
+          await session.page.goto(fullUrl);
+          await session.page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+
+          const snap = await captureSnapshot(session.page, { screenshot: true });
+          const page = repo.upsertPage(site.id, path);
+          const snapId = repo.insertSnapshot(page.id, 'scan', snap);
+          console.log(`[scan] ${path} → snapshot #${snapId}`);
+        }
+      } finally {
+        await session.close();
+      }
+      process.exitCode = 0;
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command('repair <changeId>')
+  .description('Re-run matcher for change affected step against head snapshot and propose repair')
+  .option('--db <path>', 'Path to SQLite database')
+  .action((changeIdStr: string, opts: { db?: string }) => {
+    try {
+      const changeId = parseInt(changeIdStr, 10);
+      const db = openDb(opts.db);
+      const repo = new Repo(db);
+
+      const change = repo.getChange(changeId);
+      if (!change) {
+        throw new Error(`Change chg_${changeId} not found in database.`);
+      }
+
+      const headRow = repo.getSnapshot(change.head_snapshot_id);
+      if (!headRow) {
+        throw new Error(`Head snapshot ${change.head_snapshot_id} not found in database.`);
+      }
+
+      const headSnap: PageSnapshot = {
+        id: headRow.id,
+        pagePath: headRow.pagePath ?? '',
+        url: '',
+        title: '',
+        headings: [],
+        elements: (Array.isArray(headRow.elements) ? headRow.elements : []) as ElementRecord[],
+        ariaYaml: headRow.ariaYaml ?? '',
+        contentHash: headRow.contentHash,
+        screenshotPath: headRow.screenshotPath,
+      };
+
+      // Load change's affected first step target
+      let target: TargetFingerprint | null = null;
+      const affectedStepId = Array.isArray(change.affectedSteps) && change.affectedSteps.length > 0
+        ? String(change.affectedSteps[0])
+        : null;
+
+      if (affectedStepId) {
+        const plans = db.prepare('SELECT steps_json FROM step_plans ORDER BY id DESC').all() as { steps_json: string }[];
+        for (const p of plans) {
+          try {
+            const steps = JSON.parse(p.steps_json) as Step[];
+            const found = steps.find(s => s.stepId === affectedStepId);
+            if (found?.target) {
+              target = found.target;
+              break;
+            }
+          } catch {}
+        }
+      }
+
+      if (!target) {
+        const evidence = (Array.isArray(change.evidence) ? change.evidence : []) as ChangeItem[];
+        const before = evidence[0]?.before;
+        if (before) {
+          target = {
+            role: before.role ?? 'button',
+            name: before.name ?? '',
+            tag: before.tag ?? 'button',
+            text: before.text ?? before.name ?? '',
+            label: before.label ?? '',
+            attrs: before.attrs ?? {},
+            nearText: before.nearText ?? '',
+            bbox: before.bbox ?? { x: 0, y: 0, w: 0, h: 0 },
+            selector: before.selector ?? '',
+            snapshotId: change.base_snapshot_id,
+            ref: before.ref ?? '',
+          };
+        }
+      }
+
+      if (!target) {
+        throw new Error(`Unable to determine target element for change chg_${changeId}.`);
+      }
+
+      const policy = loadPolicy();
+      const match = findReplacement(target, headSnap, policy);
+
+      if (match.kind === 'single') {
+        const replacementEl = headSnap.elements.find(e => e.ref === match.best!.ref);
+        const newTarget = replacementEl ? elementToTarget(replacementEl, headSnap.id ?? 0) : null;
+        const repairId = repo.insertRepair({
+          changeId: change.id,
+          proposer: 'heuristic',
+          proposal: {
+            target: newTarget,
+            candidate: match.best,
+            candidates: match.candidates,
+            pendingChoice: null,
+          },
+          status: 'proposed',
+          explanation: `Proposed repair: match '${target.name}' → '${match.best?.name ?? ''}'`,
+        });
+        console.log(`[repair] change chg_${change.id} proposed repair rep_${repairId}`);
+        process.exitCode = 0;
+      } else {
+        const repairId = repo.insertRepair({
+          changeId: change.id,
+          proposer: 'heuristic',
+          proposal: {
+            pendingChoice: {
+              stepId: affectedStepId ?? 's1',
+              candidates: match.candidates,
+            },
+          },
+          status: 'needs_review',
+          explanation: match.kind === 'ambiguous'
+            ? `Ambiguous match for '${target.name}': multiple candidates`
+            : `No match found for '${target.name}'`,
+        });
+        console.log(`[repair] change chg_${change.id} ${match.kind} match → needs_review rep_${repairId}`);
+        process.exitCode = 11;
+      }
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
       process.exitCode = 1;
     }
   });
@@ -106,8 +277,8 @@ program
       const repo = new Repo(db);
       const outcome = await runValidation(repo, repairId, { target: opts.target });
       process.exitCode = exitCodeFor(outcome.verdict);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
       process.exitCode = 1;
     }
   });
@@ -126,8 +297,8 @@ program
       approve(repo, repairId, opts.actor, opts.reason);
       console.log(`[approve] repair rep_${repairId} approved and applied by ${opts.actor}`);
       process.exitCode = 0;
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
       process.exitCode = 1;
     }
   });
@@ -146,8 +317,8 @@ program
       reject(repo, repairId, opts.actor, opts.reason);
       console.log(`[reject] repair rep_${repairId} rejected by ${opts.actor}`);
       process.exitCode = 0;
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
       process.exitCode = 1;
     }
   });
@@ -168,8 +339,8 @@ program
       const result = await resolveCandidate(repo, repairId, opts.candidate, opts.actor, { target: opts.target });
       console.log(`[resolve] repair rep_${repairId} resolved with candidate ${opts.candidate} → verdict ${result.verdict}`);
       process.exitCode = result.verdict === 'PASS' || result.verdict === 'HEALED_PASS' ? 0 : (result.verdict === 'APP_BUG' ? 10 : 11);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
       process.exitCode = 1;
     }
   });
@@ -188,8 +359,8 @@ program
       rollback(repo, repairId, opts.actor, opts.reason);
       console.log(`[rollback] repair rep_${repairId} rolled back by ${opts.actor}`);
       process.exitCode = 0;
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
       process.exitCode = 1;
     }
   });
@@ -200,37 +371,115 @@ program
   .option('--json', 'Output report as JSON')
   .option('--db <path>', 'Path to SQLite database')
   .action((runIdStr: string, opts: { json?: boolean; db?: string }) => {
-    const runId = parseInt(runIdStr, 10);
-    const db = openDb(opts.db);
+    try {
+      const runId = parseInt(runIdStr, 10);
+      const db = openDb(opts.db);
 
-    const runRow = db.prepare('SELECT * FROM runs WHERE id = ?').get(runId) as
-      | {
-          id: number;
-          intent_id: number;
-          intent_sha256: string;
-          verdict: string;
-          started_at: string;
-          finished_at: string | null;
-          explanation: string;
-          llm_calls: number;
-          evidence_json: string;
-          reused_repair_id: number | null;
-        }
-      | undefined;
+      const runRow = db.prepare('SELECT * FROM runs WHERE id = ?').get(runId) as
+        | {
+            id: number;
+            intent_id: number;
+            intent_sha256: string;
+            verdict: string;
+            started_at: string;
+            finished_at: string | null;
+            explanation: string;
+            llm_calls: number;
+            evidence_json: string;
+            reused_repair_id: number | null;
+          }
+        | undefined;
 
-    if (!runRow) {
-      console.error(`Error: Run #${runId} not found.`);
-      process.exit(1);
+      if (!runRow) {
+        throw new Error(`Run #${runId} not found.`);
+      }
+
+      if (opts.json) {
+        console.log(JSON.stringify(runRow, null, 2));
+      } else {
+        console.log(`Run #${runRow.id}: ${runRow.verdict}`);
+        console.log(`Started: ${runRow.started_at}`);
+        console.log(`Finished: ${runRow.finished_at ?? 'in-progress'}`);
+        console.log(`Explanation: ${runRow.explanation}`);
+        console.log(`LLM Calls: ${runRow.llm_calls}`);
+      }
+      process.exitCode = 0;
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
+      process.exitCode = 1;
     }
+  });
 
-    if (opts.json) {
-      console.log(JSON.stringify(runRow, null, 2));
-    } else {
-      console.log(`Run #${runRow.id}: ${runRow.verdict}`);
-      console.log(`Started: ${runRow.started_at}`);
-      console.log(`Finished: ${runRow.finished_at ?? 'in-progress'}`);
-      console.log(`Explanation: ${runRow.explanation}`);
-      console.log(`LLM Calls: ${runRow.llm_calls}`);
+program
+  .command('serve')
+  .description('Start HealTest dashboard server and local API')
+  .option('--port <port>', 'Port to listen on', '4300')
+  .option('--db <path>', 'Path to SQLite database')
+  .action((opts: { port?: string; db?: string }) => {
+    try {
+      const port = parseInt(opts.port ?? '4300', 10);
+      const db = openDb(opts.db);
+
+      const server = http.createServer((req, res) => {
+        const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
+        const pathname = url.pathname;
+
+        if (pathname === '/' || pathname === '/index.html') {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(`<!DOCTYPE html>
+<html>
+<head><title>HealTest Dashboard</title></head>
+<body>
+  <div id="view-overview"></div>
+  <div id="view-changes"></div>
+  <div id="view-change"></div>
+  <div id="view-repair"></div>
+  <div id="view-audit"></div>
+</body>
+</html>`);
+          return;
+        }
+
+        if (pathname === '/api/sites') {
+          const rows = db.prepare('SELECT * FROM sites').all();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(rows));
+          return;
+        }
+
+        if (pathname === '/api/changes') {
+          const rows = db.prepare('SELECT * FROM changes ORDER BY id DESC').all();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(rows));
+          return;
+        }
+
+        const repairMatch = pathname.match(/^\/api\/repairs\/(\d+)$/);
+        if (repairMatch) {
+          const id = parseInt(repairMatch[1], 10);
+          const row = db.prepare('SELECT * FROM repairs WHERE id = ?').get(id);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(row ?? {}));
+          return;
+        }
+
+        if (pathname === '/api/audit') {
+          const rows = db.prepare('SELECT * FROM audit_log ORDER BY id DESC').all();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(rows));
+          return;
+        }
+
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Not found' } }));
+      });
+
+      server.listen(port, '127.0.0.1', () => {
+        console.log(`HealTest dashboard: http://127.0.0.1:${port}`);
+      });
+    } catch (e) {
+      console.error(`error: ${errMessage(e)}`);
+      process.exitCode = 1;
     }
   });
 
