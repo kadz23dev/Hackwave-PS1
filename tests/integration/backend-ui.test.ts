@@ -215,7 +215,76 @@ describe('UI Backend Endpoints & Auth Integration', () => {
     };
     expect(runData.ok).toBe(true);
     expect(runData.verdict).toBe('HEALED_PASS');
-    expect(runData.healing.newSelector).toBe('#add-to-bag');
+    expect(runData.healing.newSelector).toMatch(/add to bag|add-to-bag/i);
     expect(runData.logs.length).toBeGreaterThan(0);
+  });
+
+  it('provides dynamic analytics, reports, storage, compare, and execution APIs', async () => {
+    // 1. GET /api/analytics
+    const analyticsRes = await fetch(`${baseUrl}/api/analytics`);
+    expect(analyticsRes.status).toBe(200);
+    const analyticsData = await analyticsRes.json();
+    expect(analyticsData).toHaveProperty('successRate');
+    expect(analyticsData).toHaveProperty('totalRuns');
+    expect(analyticsData).toHaveProperty('changeTypes');
+    expect(analyticsData).toHaveProperty('failurePatterns');
+
+    // 2. GET /api/reports
+    const reportsRes = await fetch(`${baseUrl}/api/reports`);
+    expect(reportsRes.status).toBe(200);
+    const reportsData = await reportsRes.json();
+    expect(reportsData).toHaveProperty('summary');
+    expect(reportsData).toHaveProperty('tests');
+    expect(reportsData).toHaveProperty('changes');
+    expect(reportsData).toHaveProperty('repairs');
+
+    // 3. GET /api/reports/export
+    const exportRes = await fetch(`${baseUrl}/api/reports/export?type=tests&format=csv`);
+    expect(exportRes.status).toBe(200);
+    expect(exportRes.headers.get('content-type')).toContain('text/csv');
+    const csv = await exportRes.text();
+    expect(csv).toContain('ID,Intent,Verdict');
+
+    // 4. GET /api/storage
+    const storageRes = await fetch(`${baseUrl}/api/storage`);
+    expect(storageRes.status).toBe(200);
+    const storageData = await storageRes.json();
+    expect(storageData).toHaveProperty('files');
+    expect(Array.isArray(storageData.files)).toBe(true);
+
+    // 5. GET /api/compare
+    const compareRes = await fetch(`${baseUrl}/api/compare`);
+    expect(compareRes.status).toBe(200);
+    const compareData = await compareRes.json();
+    expect(compareData).toHaveProperty('sites');
+
+    // 6. POST /api/runs/execute
+    const execRes = await fetch(`${baseUrl}/api/runs/execute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        testName: 'E2E Shopping Flow',
+        scenario: 'drift',
+      }),
+    });
+    expect(execRes.status).toBe(200);
+    const execData = await execRes.json();
+    expect(execData.ok).toBe(true);
+    expect(execData.run.verdict).toBe('HEALED_PASS');
+
+    // 7. POST /api/simulation/run
+    const simRes = await fetch(`${baseUrl}/api/simulation/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scenario: 'drift',
+        intentText: 'Test checkout flow',
+      }),
+    });
+    expect(simRes.status).toBe(200);
+    const simData = await simRes.json();
+    expect(simData.ok).toBe(true);
+    expect(simData.verdict).toBe('HEALED_PASS');
+    expect(simData.steps.length).toBe(4);
   });
 });

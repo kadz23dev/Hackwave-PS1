@@ -61,9 +61,16 @@
           <span class="nav-label">Storage</span>
         </a>
         <a href="#/audit" class="nav-item">
+          <span class="nav-icon">📜</span>
+          <span class="nav-label">Audit Log</span>
+        </a>
+        <a href="#/settings" class="nav-item">
           <span class="nav-icon">⚙</span>
           <span class="nav-label">Settings</span>
-          <span class="sr-only">Audit</span>
+        </a>
+        <a href="#/billing" class="nav-item">
+          <span class="nav-icon">💳</span>
+          <span class="nav-label">Billing</span>
         </a>
       </nav>
       <div class="sidebar-wave-art" aria-hidden="true">
@@ -73,11 +80,11 @@
         </svg>
       </div>
       <div class="sidebar-footer">
-        <div class="user-profile" id="sidebar-user-profile" role="button" tabindex="0" title="Account Authentication">
-          <div class="user-avatar" id="sidebar-user-avatar">P</div>
+        <div class="user-profile">
+          <div class="user-avatar">P</div>
           <div class="user-meta">
-            <span class="user-name" id="sidebar-user-name">Piyush Sharma</span>
-            <span class="user-org" id="sidebar-user-org">Acme Corp</span>
+            <span class="user-name">Piyush Sharma</span>
+            <span class="user-org">Acme Corp</span>
           </div>
         </div>
       </div>
@@ -85,7 +92,6 @@
 
     <div class="app-main-column">
       <div class="top-utility-actions">
-        <a id="nav-auth-btn" href="#/login" class="btn btn--sm btn--primary nav-auth-pill">Sign In</a>
         <button id="theme-toggle" class="btn btn-icon-round" aria-label="Toggle theme" title="Toggle theme">◐</button>
         <button class="btn btn-icon-round" aria-label="Notifications" title="Notifications">🔔</button>
       </div>
@@ -126,28 +132,55 @@
       </div>
     </form>
   </dialog>
-  <!-- Floating AI Assistant Chat Bot Powered by Sarvam 105B -->
+  <!-- Floating AI Assistant Chat Bot (Gemini / ChatGPT Minimalist Architecture) -->
   <div id="ai-chat-drawer" class="chat-drawer" hidden>
     <div class="chat-header">
       <div class="chat-title-group">
-        <span class="chat-avatar">✦</span>
+        <span class="chat-avatar" aria-hidden="true">✦</span>
         <div class="chat-title-meta">
-          <span class="chat-title-text">KaizenAI Chat Assistant</span>
-          <span class="chat-subtitle mono">SARVAM 105B LIVE</span>
+          <span class="chat-title-text">KaizenAI</span>
+          <span class="chat-subtitle mono">SARVAM 105B · PLAYWRIGHT</span>
         </div>
       </div>
-      <button id="chat-close-btn" class="chat-close" aria-label="Close Chat">✕</button>
+      <div class="chat-header-actions">
+        <button id="chat-clear-btn" class="chat-tool-btn" aria-label="Clear chat" title="Clear conversation">↺</button>
+        <button id="chat-close-btn" class="chat-tool-btn" aria-label="Close chat" title="Close chat">✕</button>
+      </div>
     </div>
     <div id="chat-messages" class="chat-body">
       <div class="chat-msg chat-msg--assistant">
         <div class="msg-bubble">
-          Hello! I am your <strong>KaizenAI Test Engineer</strong> powered by Sarvam AI 105B. Ask me anything about your Playwright test runs, broken selectors, or healing recommendations.
+          <div class="msg-author-header">
+            <span class="msg-author-sparkle">✦</span>
+            <span class="msg-author-name">KaizenAI Assistant</span>
+          </div>
+          <div class="msg-content">
+            Hello! I am your <strong>KaizenAI Test Engineer</strong> powered by Sarvam AI 105B. Ask me anything about your Playwright test runs, broken selectors, or healing recommendations.
+          </div>
+          <div class="chat-prompt-starters">
+            <button type="button" class="prompt-starter-pill" data-prompt="Analyze broken selector drift for cart checkout">✦ Analyze selector drift</button>
+            <button type="button" class="prompt-starter-pill" data-prompt="Generate resilient Playwright patch code">⚡ Generate test patch</button>
+            <button type="button" class="prompt-starter-pill" data-prompt="Diagnose 500 error on checkout submission">🔍 Diagnose server 500 bug</button>
+            <button type="button" class="prompt-starter-pill" data-prompt="Verify backend order database invariants">⚖️ Verify oracle invariants</button>
+          </div>
         </div>
       </div>
     </div>
-    <form id="chat-form" class="chat-input-bar">
-      <input id="chat-input" type="text" placeholder="Ask about tests, selectors, or healing..." autocomplete="off" required>
-      <button type="submit" class="btn btn--primary chat-send-btn">Send</button>
+    <form id="chat-form" class="chat-input-capsule-wrapper">
+      <div class="chat-input-capsule">
+        <span class="capsule-sparkle-icon" aria-hidden="true">✦</span>
+        <input id="chat-input" type="text" class="chat-prompt-input" placeholder="Ask anything about tests, selectors, or healing..." autocomplete="off" required>
+        <button type="submit" id="chat-send-btn" class="capsule-send-btn" aria-label="Send message" title="Send message">
+          <svg viewBox="0 0 24 24" class="send-arrow-svg" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="capsule-footnote mono">
+        <span>Sarvam 105B Engine</span>
+        <span>•</span>
+        <span>Playwright Chromium 124.0</span>
+      </div>
     </form>
   </div>
   <button id="ai-chat-fab" class="chat-fab" aria-label="Open AI Assistant" title="Open AI Assistant">

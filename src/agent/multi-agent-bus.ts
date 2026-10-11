@@ -17,6 +17,7 @@ import type {
   ComponentFix,
   DeveloperAdvisory,
   TesterPromptClarification,
+  PlaywrightStepInstruction,
 } from './types.js';
 import {
   buildDiagnosticPrompt,
@@ -25,8 +26,7 @@ import {
   AGENT_PROFILES
 } from './agents.js';
 import {
-  inspectPromptGuardrails,
-  validateRemediationGuardrails
+  inspectPromptGuardrails
 } from './guardrails.js';
 
 interface RawDiagnosticOutput {
@@ -272,13 +272,13 @@ export class MultiAgentBus {
     }
 
     const { system, user } = buildClarificationPrompt(prompt, targetUrl);
-    let clarificationOutput: any = null;
+    let clarificationOutput: { summary?: string; playwrightInstructions?: PlaywrightStepInstruction[] } | null = null;
 
     try {
       if (LLM_PROVIDER === 'gemini' && this.geminiClient) {
-        clarificationOutput = await this.geminiClient.completeJson(system, user);
+        clarificationOutput = (await this.geminiClient.completeJson(system, user)) as { summary?: string; playwrightInstructions?: PlaywrightStepInstruction[] };
       } else {
-        clarificationOutput = await this.sarvamClient.completeJson(system, user);
+        clarificationOutput = (await this.sarvamClient.completeJson(system, user)) as { summary?: string; playwrightInstructions?: PlaywrightStepInstruction[] };
       }
     } catch {
       clarificationOutput = this.synthesizeHeuristicClarification(prompt, targetUrl);
@@ -291,7 +291,7 @@ export class MultiAgentBus {
     return {
       intent: prompt,
       summary: clarificationOutput.summary || `Execute automated Playwright test: "${prompt}"`,
-      playwrightInstructions: clarificationOutput.playwrightInstructions,
+      playwrightInstructions: clarificationOutput.playwrightInstructions || [],
       guardrailCheck: {
         passed: true,
         backendProtected: true,
@@ -303,10 +303,9 @@ export class MultiAgentBus {
   private synthesizeHeuristicClarification(
     prompt: string,
     targetUrl: string
-  ): { summary: string; playwrightInstructions: any[] } {
+  ): { summary: string; playwrightInstructions: PlaywrightStepInstruction[] } {
     const lower = prompt.toLowerCase();
     const isCart = lower.includes('cart') || lower.includes('bag') || lower.includes('product');
-    const isPay = lower.includes('pay') || lower.includes('checkout') || lower.includes('card');
 
     return {
       summary: `Automated Playwright plan derived from intent: "${prompt}"`,

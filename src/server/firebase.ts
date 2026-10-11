@@ -32,15 +32,6 @@ export async function signUpUser(
   const password = payload.password;
   const displayName = (payload.name || email.split('@')[0] || 'User').trim();
 
-  // 1. Check if email exists locally in database
-  const existing = repo.db.prepare('SELECT id, email FROM users WHERE email = ?').get(email) as
-    | { id: number; email: string }
-    | undefined;
-
-  if (existing) {
-    throw new Error('An account with this email address already exists.');
-  }
-
   let firebaseUid: string | null = null;
   let token = 'tk_' + crypto.randomBytes(16).toString('hex');
   let isFirebase = false;
@@ -84,29 +75,7 @@ export async function signUpUser(
         const errData = (await fbRes.json()) as { error?: { message?: string } };
         const msg = errData?.error?.message;
         if (msg === 'EMAIL_EXISTS') {
-          // Attempt sign in with Firebase to verify if account was created previously
-          try {
-            const loginRes = await fetch(
-              `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_CONFIG.apiKey}`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, returnSecureToken: true }),
-              }
-            );
-            if (loginRes.ok) {
-              const loginData = (await loginRes.json()) as { idToken?: string; localId?: string };
-              if (loginData.idToken && loginData.localId) {
-                firebaseUid = loginData.localId;
-                token = loginData.idToken;
-                isFirebase = true;
-              }
-            } else {
-              throw new Error('An account with this email address already exists.');
-            }
-          } catch (e) {
-            throw new Error('An account with this email address already exists.');
-          }
+          throw new Error('An account with this email address already exists.');
         } else if (msg?.includes('WEAK_PASSWORD')) {
           throw new Error('Password should be at least 6 characters.');
         }
@@ -117,6 +86,15 @@ export async function signUpUser(
       }
       // If network fails or Firebase is unreachable, proceed with local account creation
     }
+  }
+
+  // Check if email exists locally
+  const existing = repo.db.prepare('SELECT id, email FROM users WHERE email = ?').get(email) as
+    | { id: number; email: string }
+    | undefined;
+
+  if (existing) {
+    throw new Error('An account with this email address already exists.');
   }
 
   const pwHash = hashPassword(password);
