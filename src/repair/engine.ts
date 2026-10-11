@@ -105,7 +105,8 @@ export async function replayWithRepair(
           items[0] ?? { evidence: `'${step.target.name}' not found` },
           { best: m.best },
           intent.goal,
-          intent.expected.map(o => o.id)
+          intent.expected.map(o => o.id),
+          intent
         );
 
         const report = buildChangeReport({
@@ -134,7 +135,7 @@ export async function replayWithRepair(
       }
 
       if (m.kind === 'ambiguous') {
-        const explanation = explainAmbiguous(step.stepId, m.candidates);
+        const explanation = explainAmbiguous(step.stepId, m.candidates, intent);
         const report = buildChangeReport({
           base: base.id ?? step.target.snapshotId,
           head: snap.id,
@@ -174,16 +175,19 @@ export async function replayWithRepair(
         repaired = true;
         replanned = true;
 
-        const explanation = explainReplan({
-          stepId: step.stepId,
-          oldName: step.target.name,
-          oldPath: step.pagePath,
-          curPath: snap.pagePath,
-          best: m.candidates[0]?.score ?? 0,
-          strong: policy.match.strong,
-          from: step.stepId,
-          to: plan[plan.length - 1].stepId,
-        });
+        const explanation = explainReplan(
+          {
+            stepId: step.stepId,
+            oldName: step.target.name,
+            oldPath: step.pagePath,
+            curPath: snap.pagePath,
+            best: m.candidates[0]?.score ?? 0,
+            strong: policy.match.strong,
+            from: step.stepId,
+            to: plan[plan.length - 1].stepId,
+          },
+          intent
+        );
 
         const report = buildChangeReport({
           base: base.id ?? step.target.snapshotId,

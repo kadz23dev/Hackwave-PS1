@@ -16,6 +16,7 @@ import { replayWithRepair } from '../repair/engine.js';
 import { loadPolicy, canAutoAccept } from '../governance/policy.js';
 import { approve } from '../governance/approvals.js';
 import { runValidation, type ValidationOutcome } from '../validate/validation.js';
+import { explainVerdict, explainAmbiguous, maskSecrets } from '../explain/templates.js';
 import type { OracleResult, RunOutcome, Step } from '../types.js';
 
 export async function runIntent(
@@ -42,7 +43,10 @@ export async function runIntent(
       kind: 'run',
       targetOrigin,
     });
-    const explanation = `Target origin '${targetOrigin}' is not in allowedOrigins: ${intent.allowedOrigins.join(', ')}`;
+    const explanation = maskSecrets(
+      `Target origin '${targetOrigin}' is not in allowedOrigins: ${intent.allowedOrigins.join(', ')}`,
+      intent
+    );
     repo.finishRun(runId, {
       verdict: 'FAIL_UNREPAIRABLE',
       explanation,
@@ -130,15 +134,28 @@ export async function runIntent(
       executedSteps = replayResult.newSteps;
 
       if (replayResult.ambiguity) {
+        const ambExplanation = explainAmbiguous(
+          replayResult.ambiguity.stepId,
+          replayResult.ambiguity.candidates,
+          intent
+        );
         repairId = repo.insertRepair({
           changeId: replayResult.changeIds[0],
           proposer: 'heuristic',
           proposal: { steps: replayResult.newSteps, pendingChoice: replayResult.ambiguity },
           status: 'needs_review',
-          explanation: 'Ambiguous replacement options detected',
+          explanation: ambExplanation,
         });
 
-        const explanation = 'Run requires review due to ambiguous UI match.';
+        const storedChanges = replayResult.changeIds
+          .map(id => repo.getChange(id))
+          .filter((c): c is NonNullable<typeof c> => c !== null);
+        const explanation = explainVerdict(
+          { verdict: 'NEEDS_REVIEW', oracleResults: [] },
+          storedChanges,
+          { id: repairId, status: 'needs_review', explanation: ambExplanation },
+          intent
+        );
         repo.finishRun(runId, {
           verdict: 'NEEDS_REVIEW',
           explanation,
@@ -235,6 +252,7 @@ export async function runIntent(
       }
 
       if (r.status === 'ambiguous') {
+        const ambExplanation = explainAmbiguous('pending', r.ambiguity ?? [], intent);
         const cId = repo.insertChange({
           baseSnapshotId: startSnapId,
           headSnapshotId: startSnapId,
@@ -244,17 +262,23 @@ export async function runIntent(
           confidence: 0.5,
           evidence: [],
           affectedSteps: [],
-          explanation: 'Ambiguous replacement options during plan',
+          explanation: ambExplanation,
         });
         repairId = repo.insertRepair({
           changeId: cId,
           proposer: 'heuristic',
           proposal: { steps: r.steps, pendingChoice: { stepId: 'pending', candidates: r.ambiguity ?? [] } },
           status: 'needs_review',
-          explanation: 'Ambiguous action encountered',
+          explanation: ambExplanation,
         });
 
-        const explanation = 'Run requires review due to ambiguous UI match.';
+        const changeObj = repo.getChange(cId);
+        const explanation = explainVerdict(
+          { verdict: 'NEEDS_REVIEW', oracleResults: [] },
+          changeObj ? [changeObj] : [],
+          { id: repairId, status: 'needs_review', explanation: ambExplanation },
+          intent
+        );
         repo.finishRun(runId, {
           verdict: 'NEEDS_REVIEW',
           explanation,
@@ -338,10 +362,46 @@ export async function runIntent(
       repo.insertKnownGood(pageIdFor(startSnap.pagePath), startSnapId, null, stepPlanId, 'system:baseline');
     }
 
-    const explanation =
-      verdictDecision.verdict === 'PASS' || verdictDecision.verdict === 'HEALED_PASS'
-        ? 'Workflow completed successfully and all required oracles passed.'
-        : `Run finished with verdict ${verdictDecision.verdict}.`;
+    const storedChanges = changeIds
+      .map(id => repo.getChange(id))
+      .filter((c): c is NonNullable<typeof c> => c !== null);
+    const storedRepair = repairId ? repo.getRepair(repairId) : null;
+
+    let failureDetail: string | undefined;
+    let serverErrorSummary: string | undefined;
+    if (verdictDecision.verdict === 'APP_BUG') {
+      const failedOracle = oracles.find(o => !o.ok && !o.supportingOnly) ?? oracles.find(o => !o.ok);
+      if (failedOracle) {
+        const detailMsg = typeof failedOracle.detail?.reason === 'string'
+          ? failedOracle.detail.reason
+          : typeof failedOracle.detail?.error === 'string'
+          ? failedOracle.detail.error
+          : '';
+        failureDetail = `${failedOracle.oracleId} count 0`;
+        if (detailMsg) {
+          failureDetail = `${failedOracle.oracleId}: ${detailMsg}`;
+        }
+      } else {
+        failureDetail = 'expected backend state not achieved';
+      }
+
+      const netErr = session.network.find(n => n.status >= 500);
+      if (netErr) {
+        serverErrorSummary = `${netErr.method} ${netErr.path} 500`;
+      }
+    }
+
+    const explanation = explainVerdict(
+      {
+        verdict: verdictDecision.verdict,
+        oracleResults: oracles,
+        failureDetail,
+        serverErrorSummary,
+      },
+      storedChanges,
+      storedRepair,
+      intent
+    );
 
     repo.finishRun(runId, {
       verdict: verdictDecision.verdict,

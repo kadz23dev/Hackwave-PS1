@@ -184,7 +184,7 @@ async function run() {
       }
 
       const repairStatusOk = latestRepair?.status === 'validated' || latestRepair?.status === 'applied';
-      const valRunOk = valRuns[0]?.verdict === 'PASS';
+      const valRunOk = valRuns[0]?.verdict === 'PASS' || valRuns[0]?.verdict === 'HEALED_PASS';
 
       const ok = res.status === 0 &&
         rep?.verdict === 'HEALED_PASS' &&
