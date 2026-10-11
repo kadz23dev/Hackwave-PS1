@@ -349,14 +349,7 @@ export function buildRoutes(repo: Repo): Route[] {
         const validationRuns = valRuns.map((vr) => {
           const oracles = repo.db
             .prepare('SELECT * FROM oracle_results WHERE validation_run_id = ?')
-            .all(vr.id) as Array<{
-              id: number;
-              oracle_id: string;
-              type: string;
-              ok: number;
-              supporting_only: number;
-              detail_json: string;
-            }>;
+            .all(vr.id) as Array<Record<string, unknown>>;
 
           return {
             id: vr.id,
@@ -364,13 +357,23 @@ export function buildRoutes(repo: Repo): Route[] {
             verdict: vr.verdict,
             summary: JSON.parse(vr.summary_json || '{}'),
             createdAt: vr.created_at,
-            oracleResults: oracles.map((o) => ({
-              oracleId: o.oracle_id,
-              type: o.type,
-              ok: Boolean(o.ok),
-              supportingOnly: Boolean(o.supporting_only),
-              detail: JSON.parse(o.detail_json || '{}'),
-            })),
+            oracleResults: oracles.map((o) => {
+              let detail: Record<string, unknown> = {};
+              try {
+                detail = JSON.parse(String(o.detail_json || '{}'));
+              } catch {
+                detail = {};
+              }
+              const oracleId = String(o.oracle ?? o.oracle_id ?? '');
+              const supportingOnly = Boolean(o.supporting_only || detail.supportingOnly || detail.supporting_only);
+              return {
+                oracleId,
+                type: String(o.type || detail.type || 'assertion'),
+                ok: Boolean(o.ok),
+                supportingOnly,
+                detail,
+              };
+            }),
           };
         });
 

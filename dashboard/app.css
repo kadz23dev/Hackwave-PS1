@@ -361,6 +361,122 @@ dialog {
   color: var(--ink);
 }
 
+/* D5 Repair Preview */
+.repair-preview-card {
+  margin-top: calc(var(--gap) * 2);
+}
+
+.repair-explanation {
+  margin-top: calc(var(--gap) * 2);
+  font-style: italic;
+  color: var(--ink);
+}
+
+.provenance-badge {
+  text-transform: lowercase;
+}
+
+/* D6 Actions Bar & Candidates */
+.actions-bar {
+  margin-top: calc(var(--gap) * 2);
+}
+
+.actions-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  flex-wrap: wrap;
+}
+
+.actions-bar-buttons {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: var(--gap);
+}
+
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.candidates-container {
+  margin-top: calc(var(--gap) * 2);
+}
+
+.candidate-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin: var(--gap) 0;
+}
+
+.candidate-option {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.resolve-actions {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap) * 2);
+  margin-top: var(--gap);
+}
+
+.validating-text {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+/* D7 Validation Runs & Oracle Results */
+.validation-section, .audit-section {
+  margin-top: calc(var(--gap) * 2);
+}
+
+.oracle-results-row td {
+  background: var(--paper);
+  padding: calc(var(--gap) * 1.5);
+}
+
+.oracle-results-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oracle-item {
+  font-size: 0.875rem;
+  padding: 2px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.oracle-pass {
+  color: var(--jade);
+  font-weight: bold;
+}
+
+.oracle-fail {
+  color: var(--crimson);
+  font-weight: bold;
+}
+
+.oracle-detail {
+  color: var(--ink-2);
+}
+
+.audit-filter-card {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap) * 2);
+  margin-bottom: calc(var(--gap) * 2);
+}
+
 /* Responsive under 900px */
 @media (max-width: 900px) {
   .changes-layout {
