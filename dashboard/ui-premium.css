@@ -32,6 +32,13 @@
   --mouse-y: 50%;
 }
 
+/* Light Mode Only — Remove Dark Mode Toggle Button */
+#theme-toggle {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* ─── 2. BASE & SYSTEM TYPOGRAPHY ─── */
 *, *::before, *::after {
   box-sizing: border-box;

@@ -116,34 +116,39 @@
   --color-ink-muted: #57534e;
 }
 
-/* Dark Theme Support (Warm Obsidian Linen) */
+/* Enforced Light Mode (Linen Beige & Crimson Accents) */
+:root,
+:root[data-theme="light"],
 :root[data-theme="dark"] {
-  --paper: #12100f;
-  --bg-deep: #12100f;
-  --bg-space: #1a1715;
-  --bg-surface: #201c1a;
-  --card: rgba(28, 25, 23, 0.88);
-  --card-solid: #1c1917;
-  --ink: #f5f0e8;
-  --ink-2: #d6cfc7;
-  --text-primary: #f5f0e8;
-  --text-secondary: #d6cfc7;
-  --text-muted: #a8a29e;
-  --crimson: #ef4444;
-  --crimson-fill: #dc2626;
+  --paper: #f5f0e8;
+  --bg-deep: #f5f0e8;
+  --bg-space: #ece4d6;
+  --bg-surface: #f0e8dc;
+  --bg-warm: #f5f0e8;
+  --card: rgba(255, 253, 249, 0.88);
+  --card-solid: #fffdfa;
+  --light-surface: #fffdfa;
+  --ink: #0c0a09;
+  --ink-2: #44403c;
+  --primary-charcoal: #0c0a09;
+  --secondary-charcoal: #1c1917;
+  --tertiary-gray: #44403c;
+  --text-primary: #0c0a09;
+  --text-secondary: #44403c;
+  --text-muted: #57534e;
+  --crimson: #b91c1c;
+  --crimson-fill: #b91c1c;
   --on-fill: #ffffff;
-  --crimson-deep: #b91c1c;
-  --crimson-wash: rgba(239, 68, 68, 0.12);
-  --line: rgba(239, 68, 68, 0.2);
-  --line-strong: rgba(239, 68, 68, 0.35);
-  --border: rgba(239, 68, 68, 0.2);
-  --sidebar-bg: rgba(24, 21, 20, 0.95);
-  --sidebar-sub: rgba(239, 68, 68, 0.2);
-  --sidebar-text: #f5f0e8;
-  --sidebar-muted: #a8a29e;
-  --color-ink: #f5f0e8;
-  --color-ink-muted: #a8a29e;
-  --color-maroon-primary: #ef4444;
+  --crimson-deep: #991b1b;
+  --crimson-rich: #c52233;
+  --crimson-wash: rgba(185, 28, 28, 0.08);
+  --sidebar-bg: rgba(255, 253, 249, 0.94);
+  --sidebar-sub: rgba(185, 28, 28, 0.12);
+  --sidebar-text: #0c0a09;
+  --sidebar-muted: #57534e;
+  --color-ink: #0c0a09;
+  --color-ink-muted: #57534e;
+  --color-maroon-primary: #b91c1c;
 }
 
 
