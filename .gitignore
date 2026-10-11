@@ -2,3 +2,4 @@ node_modules
 dist
 .harness
 .healtest
+demo-home
