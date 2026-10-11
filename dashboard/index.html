@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HealTest</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="band"></div>
+  <header>
+    <a href="#/" class="brand">HealTest</a>
+    <nav>
+      <a href="#/">Overview</a>
+      <a href="#/changes">Changes</a>
+      <a href="#/audit">Audit</a>
+    </nav>
+    <button id="theme-toggle" class="btn" aria-label="Toggle theme">◐</button>
+  </header>
+  <main>
+    <section id="view-overview"></section>
+    <section id="view-changes" hidden></section>
+    <section id="view-change" hidden></section>
+    <section id="view-repair" hidden></section>
+    <section id="view-audit" hidden></section>
+  </main>
+  <dialog id="confirm-dialog">
+    <form method="dialog">
+      <h3>Confirm Action</h3>
+      <div class="form-group">
+        <label for="actor">Actor</label>
+        <input id="actor" name="actor" type="text" required>
+      </div>
+      <div class="form-group">
+        <label for="reason">Reason</label>
+        <input id="reason" name="reason" type="text" required>
+      </div>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn">Cancel</button>
+        <button value="confirm" id="confirm-btn" class="btn btn--primary">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="app.js" type="module"></script>
+</body>
+</html>
