@@ -8,6 +8,7 @@
     "build:client": "vite build",
     "dev:client": "vite",
     "test": "vitest run",
+    "dev": "node scripts/start-app.mjs",
     "start": "node scripts/start-app.mjs",
     "start:demo": "npm run build && node dist/demo.js --serve",
     "demo": "npm run build && node dist/demo.js",

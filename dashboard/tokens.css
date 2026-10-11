@@ -29,84 +29,90 @@
 }
 
 :root {
-  /* Font Family Stacks (Unified with Landing Page) */
-  --font-serif: 'Faculty Glyphic', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, sans-serif;
-  --font-heading: 'Faculty Glyphic', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, sans-serif;
-  --font-semi: 'Elagern', 'Faculty Glyphic', Georgia, serif;
-  --font-semiheading: 'Elagern', 'Faculty Glyphic', Georgia, serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', 'Inter', Roboto, sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', 'Inter', Roboto, sans-serif;
+  /* Font Family Stacks (Montserrat & Poppins) */
+  --font-heading: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: var(--font-heading);
+  --font-sans: var(--font-body);
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
 
-  /* Color Palette - Linen Beige Warm Foundation */
-  --paper: #F8F3E8;
-  --card: #FFFDF7;
-  --ink: #1F1A17;
-  --ink-2: #5A4A42;
-  --crimson: #B3202A;
-  --crimson-fill: #B3202A;
-  --on-fill: #F8F3E8;
-  --crimson-deep: #8E1B22;
-  --crimson-wash: #F6E1DF;
-  --jade: #1F6B57;
-  --jade-wash: #DDEEE6;
-  --amber: #8A5A00;
-  --gold-wash: #F4E7C2;
-  --slate: #3B4A6B;
-  --slate-wash: #E3E8F2;
-  --line: #E4D9C3;
-  --line-strong: #8C7B62;
-  --focus: #B3202A;
-  --gold-leaf: #C9A227;
+  /* Color Palette - Minimal Formal Morphism */
+  /* 70% White & Warm Off-White, 20% Maroon Structural, 10% Blood Orange Accent */
+  --paper: #FBF7F6;
+  --card: #FFFFFF;
+  --ink: #2A1418;
+  --ink-2: #7C6A6D;
+  --crimson: #9B4A57;
+  --crimson-fill: #7A3441;
+  --on-fill: #FFFFFF;
+  --crimson-deep: #7A3441;
+  --crimson-wash: #F7EBEF;
+  --jade: #1B6D55;
+  --jade-wash: #E6F4EF;
+  --amber: #C23805;
+  --gold-wash: #FDF2ED;
+  --slate: #4A4550;
+  --slate-wash: #F0EDF2;
+  --line: #EADBDD;
+  --line-strong: #7C6A6D;
+  --focus: #D2410D;
+  --gold-leaf: #C2410C;
 
-  /* Supplemental UI Variables */
-  --bg-deep: #f5f0e8;
-  --bg-space: #ece4d6;
-  --bg-surface: #f0e8dc;
-  --bg-warm: #f5f0e8;
-  --card-solid: #fffdfa;
-  --light-surface: #fffdfa;
-  --primary-charcoal: #0c0a09;
-  --secondary-charcoal: #1c1917;
-  --tertiary-gray: #44403c;
-  --text-primary: #0c0a09;
-  --text-secondary: #44403c;
-  --text-muted: #57534e;
-  --crimson-rich: #c52233;
+  /* Semantic Design Tokens */
+  --maroon-light: #9B4A57;
+  --maroon-deep: #7A3441;
+  --blood-orange: #D2410D;
+  --bg-page: #FBF7F6;
+  --bg-surface: #FFFFFF;
+  --bg-warm: #FBF7F6;
+  --card-solid: #FFFFFF;
+  --light-surface: #FFFFFF;
+  --text-primary: #2A1418;
+  --text-secondary: #7C6A6D;
+  --text-muted: #7C6A6D;
+  --primary-charcoal: #2A1418;
+  --secondary-charcoal: #4A4550;
+  --tertiary-gray: #7C6A6D;
 
-  /* Frosted Linen Glass Sidebar */
-  --sidebar-bg: #FFFDF7;
-  --sidebar-sub: #E4D9C3;
-  --sidebar-text: #1F1A17;
-  --sidebar-muted: #57534e;
+  /* Morphism Glass & Hairlines */
+  --sidebar-bg: rgba(255, 255, 255, 0.94);
+  --sidebar-sub: #EADBDD;
+  --sidebar-text: #2A1418;
+  --sidebar-muted: #7C6A6D;
+  --glass-surface: rgba(255, 255, 255, 0.85);
+  --glass-blur: blur(14px);
+  --border-hairline: 1px solid rgba(155, 74, 87, 0.12);
+  --border-subtle: 1px solid rgba(155, 74, 87, 0.08);
 
   /* Buttons & Hover States */
-  --btn-hover-primary-bg: #8E1B22;
-  --btn-hover-primary-deep: #881337;
-  --btn-hover-success-bg: #1F6B57;
-  --btn-hover-danger-bg: #dc2626;
-  --btn-hover-outline-bg: #F6E1DF;
-  --btn-hover-outline-border: #B3202A;
-  --btn-hover-icon-bg: #F6E1DF;
-  --btn-hover-chip-bg: #F6E1DF;
+  --btn-hover-primary-bg: #7A3441;
+  --btn-hover-primary-deep: #612833;
+  --btn-hover-cta-bg: #BA380A;
+  --btn-hover-success-bg: #155743;
+  --btn-hover-danger-bg: #B91C1C;
+  --btn-hover-outline-bg: #F7EBEF;
+  --btn-hover-outline-border: #9B4A57;
+  --btn-hover-icon-bg: #F7EBEF;
+  --btn-hover-chip-bg: #F7EBEF;
 
-  /* Glass Specular Highlights */
-  --glass-specular: #ffffff;
-  --glass-specular-soft: #fbf7f2;
-  --glass-surface: #FFFDF7;
-  --glass-border-light: #E4D9C3;
-  --aurora-glow: #B3202A;
-  --emerald-glow: #1F6B57;
+  /* Layered Morphic Shadows */
+  --shadow-sm: 0 2px 8px -1px rgba(42, 20, 24, 0.04), 0 1px 3px rgba(42, 20, 24, 0.02);
+  --shadow-md: 0 8px 24px -4px rgba(42, 20, 24, 0.06), 0 2px 6px -1px rgba(42, 20, 24, 0.03);
+  --shadow-lg: 0 16px 36px -6px rgba(42, 20, 24, 0.08), 0 4px 12px -2px rgba(42, 20, 24, 0.04);
+  --shadow-cta: 0 6px 20px -2px rgba(210, 65, 13, 0.35);
 
-  /* Layout & Radii */
-  --radius: 12px;
+  /* Layout, Spacing & Radii (8px grid, 14-20px cards, 10-12px buttons) */
   --gap: 8px;
-  --shadow-sm: 0 4px 14px rgba(120, 53, 53, 0.05);
-  --shadow-md: 0 12px 28px -6px rgba(120, 53, 53, 0.08);
-  --color-maroon-primary: #B3202A;
-  --color-maroon-deep: #8E1B22;
-  --color-ink: #1F1A17;
-  --color-ink-muted: #57534e;
+  --radius: 16px;
+  --radius-card: 18px;
+  --radius-btn: 10px;
+  --radius-input: 10px;
+  --radius-pill: 9999px;
+
+  --color-maroon-primary: #9B4A57;
+  --color-maroon-deep: #7A3441;
+  --color-ink: #2A1418;
+  --color-ink-muted: #7C6A6D;
 }
 
 /* @dark */

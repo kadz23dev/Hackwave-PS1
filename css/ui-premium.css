@@ -150,16 +150,16 @@ h5, h6, .badge, .seal, .status-pill, .section-pill {
 .sidebar-crest {
   width: 32px !important;
   height: 32px !important;
-  background: linear-gradient(135deg, #c52233 0%, #b91c1c 100%) !important;
+  background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-fill) 100%) !important;
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(185, 28, 28, 0.28) !important;
+  box-shadow: 0 2px 8px rgba(155, 74, 87, 0.28) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-weight: 700 !important;
-  font-family: var(--font-serif) !important;
+  font-family: var(--font-heading) !important;
   font-size: 1rem !important;
   transition: transform var(--tx-spring) !important;
 }
@@ -282,13 +282,13 @@ h5, h6, .badge, .seal, .status-pill, .section-pill {
   width: 32px !important;
   height: 32px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #c52233 0%, #b91c1c 100%) !important;
+  background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-fill) 100%) !important;
   color: #ffffff !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-weight: 700 !important;
-  font-family: var(--font-sans) !important;
+  font-family: var(--font-body) !important;
   font-size: 0.85rem !important;
 }
 

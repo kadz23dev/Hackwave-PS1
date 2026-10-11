@@ -1,23 +1,21 @@
 /* ==========================================================================
    KAIZEN AI LOGIN & SIGN UP STYLING
-   Palette: Crimson Red Medium & Linen Beige
-   New Age Typography: Faculty Glyphic & Elagern
-   HORIZONTAL ANIMATION SUITE:
-   - Horizontal Top Navigation Bar with Gliding Pill Switcher
-   - Horizontal Dual Carousel Slide (Form & Hero Tracks)
-   - Zero-jump transitions with spring easing
+   Palette: Light Maroon (#9B4A57), Deep Maroon (#7A3441), Blood Orange (#D2410D)
+   Surfaces: White (#FFFFFF) & Warm Off-White (#FBF7F6), Ink (#2A1418), Muted (#7C6A6D)
+   Typography: Montserrat (Headings) & Poppins (Body)
    ========================================================================== */
 
 :root {
-  --color-primary: #b91c1c;        /* Crimson Red Medium */
-  --color-primary-rich: #c52233;   /* Vibrant Crimson */
-  --color-dark: #991b1b;           /* Deep Crimson Ruby */
-  --color-wine: #881337;           /* Velvet Wine */
-  --color-text: #0c0a09;           /* Deepest Obsidian */
-  --color-muted: #57534e;          /* Warm Stone Taupe */
-  --color-bg-linen: #f5f0e8;       /* Warm Linen Beige Foundation */
-  --color-bg-card: rgba(255, 253, 249, 0.98);
-  --color-nav-bg: #faf7f2;
+  --color-primary: #9B4A57;        /* Light Maroon */
+  --color-primary-rich: #7A3441;   /* Deep Maroon */
+  --color-accent: #D2410D;         /* Blood Orange */
+  --color-dark: #7A3441;           /* Deep Maroon */
+  --color-wine: #612833;           /* Maroon Deep */
+  --color-text: #2A1418;           /* Ink */
+  --color-muted: #7C6A6D;          /* Muted text */
+  --color-bg-linen: #FBF7F6;       /* Warm Off-White */
+  --color-bg-card: rgba(255, 255, 255, 0.92);
+  --color-nav-bg: #FFFFFF;
 }
 
 * {
@@ -29,9 +27,9 @@ body {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', 'Inter', Roboto, sans-serif;
-  background: radial-gradient(circle at 10% 10%, rgba(185, 28, 28, 0.08) 0%, transparent 40%),
-              radial-gradient(circle at 90% 90%, rgba(220, 38, 38, 0.06) 0%, transparent 40%),
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at 10% 10%, rgba(155, 74, 87, 0.05) 0%, transparent 40%),
+              radial-gradient(circle at 90% 90%, rgba(210, 65, 13, 0.04) 0%, transparent 40%),
               var(--color-bg-linen);
   color: var(--color-text);
   overflow-x: hidden;
@@ -41,6 +39,7 @@ body {
 button,
 input {
   font: inherit;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Back Link to Landing Page */
@@ -57,15 +56,16 @@ input {
   gap: 8px;
   text-decoration: none;
   color: var(--color-text);
-  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
   font-size: 0.88rem;
   padding: 8px 16px;
   border-radius: 9999px;
-  background: rgba(255, 253, 249, 0.88);
-  border: 1px solid rgba(185, 28, 28, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(155, 74, 87, 0.15);
   backdrop-filter: blur(12px);
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(120, 53, 53, 0.05);
+  box-shadow: 0 2px 8px rgba(42, 20, 24, 0.04);
 }
 
 .back-home-link:hover {
@@ -391,20 +391,20 @@ input {
 
 .hero-pane h2 {
   margin: 0 0 10px;
-  font-size: 25px;
-  font-family: 'Faculty Glyphic', -apple-system, BlinkMacSystemFont, serif;
-  font-weight: 800;
+  font-size: 24px;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: #ffffff;
 }
 
 .hero-pane h3 {
   margin: 0;
-  color: #fce7e7;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
-  font-weight: 450;
-  line-height: 1.55;
-  font-family: 'Elagern', Georgia, serif;
+  font-weight: 400;
+  line-height: 1.6;
+  font-family: 'Poppins', sans-serif;
 }
 
 .hero-pane a.hero-link {
@@ -500,10 +500,10 @@ input {
 }
 
 .form-field label {
-  color: #0c0a09;
+  color: #2A1418;
   font-size: 13px;
-  font-weight: 700;
-  font-family: 'Elagern', Georgia, serif;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
 }
 
 .form-field input[type="text"],
@@ -511,18 +511,19 @@ input {
 .form-field input[type="password"] {
   width: 100%;
   padding: 11px 14px;
-  border: 1px solid rgba(185, 28, 28, 0.2);
+  border: 1px solid rgba(155, 74, 87, 0.18);
   border-radius: 10px;
   outline: none;
   background: #ffffff;
-  color: #0c0a09;
+  color: #2A1418;
+  font-family: 'Poppins', sans-serif;
   font-size: 0.92rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-field input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.15);
+  border-color: #D2410D;
+  box-shadow: 0 0 0 3px rgba(210, 65, 13, 0.15);
 }
 
 .form-row {
@@ -537,9 +538,9 @@ input {
   display: flex !important;
   align-items: center;
   gap: 6px;
-  font-weight: 500 !important;
+  font-weight: 400 !important;
   cursor: pointer;
-  color: #57534e;
+  color: #7C6A6D;
 }
 
 .remember input[type="checkbox"] {
@@ -547,29 +548,30 @@ input {
 }
 
 .form-row a {
-  color: var(--color-primary);
-  font-weight: 700;
+  color: #9B4A57;
+  font-weight: 500;
   text-decoration: underline;
   transition: color 0.2s ease;
 }
 
 .form-row a:hover {
-  color: var(--color-dark);
+  color: #7A3441;
 }
 
-/* Submit Buttons */
+/* Submit Buttons: Blood Orange Accent */
 .submit-btn {
   border: 0;
   height: 46px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--color-primary-rich) 0%, var(--color-primary) 50%, var(--color-dark) 100%);
+  background: #D2410D;
   color: white;
-  font-weight: 750;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
   font-size: 0.94rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
-  box-shadow: 0 6px 18px rgba(185, 28, 28, 0.35);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(210, 65, 13, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -577,9 +579,9 @@ input {
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-dark) 100%);
+  background: #BA380A;
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(185, 28, 28, 0.45);
+  box-shadow: 0 6px 20px rgba(210, 65, 13, 0.45);
 }
 
 .submit-btn:active {
