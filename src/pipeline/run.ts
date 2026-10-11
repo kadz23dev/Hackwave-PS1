@@ -13,7 +13,8 @@ import { runOracles } from '../oracle/runner.js';
 import { decideVerdict, type VerdictDecision } from '../classify/verdict.js';
 import { makeLlm } from '../llm/client.js';
 import { replayWithRepair } from '../repair/engine.js';
-import { loadPolicy } from '../governance/policy.js';
+import { loadPolicy, canAutoAccept } from '../governance/policy.js';
+import { approve } from '../governance/approvals.js';
 import { runValidation, type ValidationOutcome } from '../validate/validation.js';
 import type { OracleResult, RunOutcome, Step } from '../types.js';
 
@@ -204,6 +205,15 @@ export async function runIntent(
           'system:validator',
           `Validation verdict: ${valResult.verdict}`
         );
+
+        if (isValidated) {
+          const classification = replanned ? 'BREAKING_UI' : 'HARMLESS_UI';
+          const candidatesCount = 1;
+          const policy = loadPolicy();
+          if (canAutoAccept(classification, candidatesCount, valResult.oracleResults, policy)) {
+            approve(repo, repairId, 'system:policy', 'auto-accept policy');
+          }
+        }
       }
     } else {
       // 6a. No plan (first run / baseline)
@@ -309,8 +319,8 @@ export async function runIntent(
         repaired: false,
         replanned: false,
         ambiguous: false,
-        reusedRepair: plan ? plan.repairId != null : false,
-        planIsKnownGood: plan ? plan.repairId == null : false,
+        reusedRepair: plan ? plan.reusedRepairId != null : false,
+        planIsKnownGood: plan ? plan.planIsKnownGood : false,
       });
     }
 
@@ -338,7 +348,7 @@ export async function runIntent(
       explanation,
       llmCalls: llm.calls,
       evidence: { changeIds },
-      reusedRepairId: plan?.repairId ?? null,
+      reusedRepairId: plan?.reusedRepairId ?? null,
     });
 
     console.log(`[verdict]  ${verdictDecision.verdict}`);
@@ -351,7 +361,7 @@ export async function runIntent(
       changeIds,
       repairId,
       validationRunId,
-      reusedRepairId: plan?.repairId ?? null,
+      reusedRepairId: plan?.reusedRepairId ?? null,
       llmCalls: llm.calls,
       explanation,
       oracleResults: oracles,

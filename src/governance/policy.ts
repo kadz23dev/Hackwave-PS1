@@ -29,3 +29,21 @@ export function loadPolicy(path = 'policy.json'): Policy {
 export function resetPolicyCache(): void {
   _cached = null;
 }
+
+/**
+ * Check whether a repair can be automatically accepted per governance policy — PRD §8.3
+ */
+export function canAutoAccept(
+  classification: string | null,
+  candidateCount: number,
+  oracleResults: Array<{ ok: boolean }>,
+  policy: Policy,
+): boolean {
+  if (!classification) return false;
+  return (
+    policy.autoAccept.classification.includes(classification) &&
+    candidateCount <= policy.autoAccept.maxCandidates &&
+    (!policy.autoAccept.requireAllOracles || oracleResults.every(r => r.ok))
+  );
+}
+
