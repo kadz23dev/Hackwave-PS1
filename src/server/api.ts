@@ -956,5 +956,41 @@ export function buildRoutes(repo: Repo): Route[] {
         json(res, 200, result);
       },
     },
+
+    // 27. POST /api/chat (Interactive AI Assistant via Sarvam 105B)
+    {
+      method: 'POST',
+      pattern: /^\/api\/chat$/,
+      handler: async ({ res, body }) => {
+        const userMsg = body?.message?.trim();
+        if (!userMsg) {
+          fail(res, 400, 'BAD_REQUEST', 'Message is required');
+          return;
+        }
+
+        // Gather real context from database
+        const runs = repo.db.prepare('SELECT id, verdict, started_at, explanation FROM runs ORDER BY id DESC LIMIT 5').all();
+        const changes = repo.db.prepare('SELECT id, kind, severity, classification, explanation FROM changes ORDER BY id DESC LIMIT 5').all();
+
+        const systemPrompt = `You are KaizenAI, an elite AI Test Healing Agent built for Playwright automated tests.
+You are powered by Sarvam AI 105B parameter model.
+Here is the current live system context from the database:
+- Recent Test Runs: ${JSON.stringify(runs)}
+- Detected Changes: ${JSON.stringify(changes)}
+
+Answer questions about Playwright test runs, broken selectors, repairs, and healing recommendations succinctly, clearly, and insightfully using markdown formatting.`;
+
+        try {
+          const { SarvamClient } = await import('../llm/sarvam.js');
+          const client = new SarvamClient();
+          const reply = await client.completeChat(systemPrompt, userMsg);
+          json(res, 200, { reply });
+        } catch {
+          json(res, 200, {
+            reply: `**KaizenAI Agent (Local Fallback)**: Test runs and DOM snapshots are actively monitored. Regarding: "${userMsg}" — recent runs show ${runs.length} test records and ${changes.length} interface changes detected. Need help inspecting a specific selector?`
+          });
+        }
+      },
+    },
   ];
 }

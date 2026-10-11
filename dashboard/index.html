@@ -8,48 +8,108 @@
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
-  <div class="band"></div>
-  <header class="app-header">
-    <div class="header-left">
-      <a href="#/" class="brand">Kaizen AI</a>
-      <nav class="main-nav">
-        <a href="#/" id="nav-overview" class="nav-link">Overview</a>
-        <a href="#/dashboard" id="nav-dashboard" class="nav-link">Dashboard</a>
-        <a href="#/changes" id="nav-changes" class="nav-link">Changes</a>
-        <a href="#/audit" id="nav-audit" class="nav-link">Audit</a>
-        <a href="#/settings" id="nav-settings" class="nav-link">Settings</a>
-        <a href="#/billing" id="nav-billing" class="nav-link">Billing</a>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-crest">K</div>
+        <a href="#/" class="brand sidebar-title-link">
+          <span class="brand-text">Kaizen AI</span>
+        </a>
+      </div>
+      <nav class="sidebar-nav" role="navigation">
+        <a href="#/" class="nav-item">
+          <span class="nav-icon">⊞</span>
+          <span class="nav-label">Dashboard</span>
+          <span class="sr-only">Overview</span>
+        </a>
+        <a href="#/dashboard" class="nav-item">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-label">Studio</span>
+        </a>
+        <a href="#/runs" class="nav-item">
+          <span class="nav-icon">▶</span>
+          <span class="nav-label">Test Runs</span>
+        </a>
+        <a href="#/changes" class="nav-item">
+          <span class="nav-icon">☵</span>
+          <span class="nav-label">Changes</span>
+        </a>
+        <a href="#/repairs" class="nav-item">
+          <span class="nav-icon">↻</span>
+          <span class="nav-label">Repairs</span>
+        </a>
+        <a href="#/agent" class="nav-item">
+          <span class="nav-icon">✦</span>
+          <span class="nav-label">AI Agent</span>
+        </a>
+        <a href="#/reports" class="nav-item">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">Reports</span>
+        </a>
+        <a href="#/analytics" class="nav-item">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Analytics</span>
+        </a>
+        <a href="#/storage" class="nav-item">
+          <span class="nav-icon">⛃</span>
+          <span class="nav-label">Storage</span>
+        </a>
+        <a href="#/audit" class="nav-item">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Settings</span>
+          <span class="sr-only">Audit</span>
+        </a>
+        <a href="#/settings" class="nav-item">
+          <span class="nav-icon">🔧</span>
+          <span class="nav-label">Config</span>
+        </a>
+        <a href="#/billing" class="nav-item">
+          <span class="nav-icon">💳</span>
+          <span class="nav-label">Billing</span>
+        </a>
       </nav>
+      <div class="sidebar-wave-art" aria-hidden="true">
+        <svg viewBox="0 0 200 45" class="wave-art-svg">
+          <path d="M0,35 Q30,15 60,35 T120,35 T180,35 T240,35" fill="none" stroke="var(--crimson-deep)" stroke-width="1.5" opacity="0.4"/>
+          <path d="M0,40 Q30,22 60,40 T120,40 T180,40 T240,40" fill="none" stroke="var(--crimson-deep)" stroke-width="1.2" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">P</div>
+          <div class="user-meta">
+            <span class="user-name">Piyush Sharma</span>
+            <span class="user-org">Acme Corp</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="app-main-column">
+      <div class="top-utility-actions">
+        <button id="theme-toggle" class="btn btn-icon-round" aria-label="Toggle theme" title="Toggle theme">◐</button>
+        <button id="open-demo-video-btn" class="btn btn--outline btn--sm" title="Watch Demo">▶ Demo Video</button>
+        <button class="btn btn-icon-round" aria-label="Notifications" title="Notifications">🔔</button>
+      </div>
+      <main>
+        <section id="view-overview"></section>
+        <section id="view-dashboard" hidden></section>
+        <section id="view-runs" hidden></section>
+        <section id="view-changes" hidden></section>
+        <section id="view-change" hidden></section>
+        <section id="view-repair" hidden></section>
+        <section id="view-agent" hidden></section>
+        <section id="view-compare" hidden></section>
+        <section id="view-reports" hidden></section>
+        <section id="view-analytics" hidden></section>
+        <section id="view-storage" hidden></section>
+        <section id="view-audit" hidden></section>
+        <section id="view-settings" hidden></section>
+        <section id="view-billing" hidden></section>
+        <section id="view-auth" hidden></section>
+      </main>
     </div>
-    <div class="header-right">
-      <a href="#/dashboard" class="btn btn--primary btn--sm header-cta">Open Studio</a>
-      <a href="#/login" id="nav-auth-btn" class="btn btn--outline btn--sm auth-nav-link">Sign In</a>
-      <button id="theme-toggle" class="btn btn--icon" aria-label="Toggle theme">◐</button>
-    </div>
-  </header>
-
-  <main class="app-main">
-    <!-- 1. Landing & Monitored Overview (D1) -->
-    <section id="view-overview"></section>
-
-    <!-- 2. Main 3-Panel Workspace: AI Agent | Playwright Overview | Notes -->
-    <section id="view-dashboard" hidden></section>
-
-    <!-- 3. Existing Governance Views (D2 - D7) -->
-    <section id="view-changes" hidden></section>
-    <section id="view-change" hidden></section>
-    <section id="view-repair" hidden></section>
-    <section id="view-audit" hidden></section>
-
-    <!-- 4. Settings Page -->
-    <section id="view-settings" hidden></section>
-
-    <!-- 5. Billing Page -->
-    <section id="view-billing" hidden></section>
-
-    <!-- 6. Authentication (Login & Signup) -->
-    <section id="view-auth" hidden></section>
-  </main>
+  </div>
 
   <!-- Interactive Demo Video Modal -->
   <dialog id="demo-video-dialog" class="modal-dialog">
@@ -119,6 +179,34 @@
   <!-- Toast Notification Feedback -->
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
+  <!-- Floating AI Assistant Chat Bot Powered by Sarvam 105B -->
+  <div id="ai-chat-drawer" class="chat-drawer" hidden>
+    <div class="chat-header">
+      <div class="chat-title-group">
+        <span class="chat-avatar">✦</span>
+        <div class="chat-title-meta">
+          <span class="chat-title-text">KaizenAI Chat Assistant</span>
+          <span class="chat-subtitle mono">SARVAM 105B LIVE</span>
+        </div>
+      </div>
+      <button id="chat-close-btn" class="chat-close" aria-label="Close Chat">✕</button>
+    </div>
+    <div id="chat-messages" class="chat-body">
+      <div class="chat-msg chat-msg--assistant">
+        <div class="msg-bubble">
+          Hello! I am your <strong>KaizenAI Test Engineer</strong> powered by Sarvam AI 105B. Ask me anything about your Playwright test runs, broken selectors, or healing recommendations.
+        </div>
+      </div>
+    </div>
+    <form id="chat-form" class="chat-input-bar">
+      <input id="chat-input" type="text" placeholder="Ask about tests, selectors, or healing..." autocomplete="off" required>
+      <button type="submit" class="btn btn--primary chat-send-btn">Send</button>
+    </form>
+  </div>
+  <button id="ai-chat-fab" class="chat-fab" aria-label="Open AI Assistant" title="Open AI Assistant">
+    <span class="fab-icon">✦</span>
+    <span class="fab-text">Ask AI</span>
+  </button>
   <script src="app.js" type="module"></script>
 </body>
 </html>

@@ -4,6 +4,8 @@
 
 import { ReplayClient } from './replay.js';
 import { GeminiClient } from './gemini.js';
+import { SarvamClient } from './sarvam.js';
+import { LLM_PROVIDER } from '../config.js';
 
 export interface LlmClient {
   completeJson(system: string, user: string): Promise<unknown>;
@@ -29,7 +31,8 @@ export function makeLlm(mode: string = 'off', inner?: LlmClient): LlmClient {
     return new ReplayClient('record', inner);
   }
   if (mode === 'live') {
-    return inner ?? new GeminiClient();
+    if (inner) return inner;
+    return LLM_PROVIDER === 'gemini' ? new GeminiClient() : new SarvamClient();
   }
   throw new Error(`Unsupported LLM mode: ${mode}`);
 }
