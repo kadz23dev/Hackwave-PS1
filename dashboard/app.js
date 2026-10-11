@@ -54,6 +54,10 @@ export async function api(path, opts = {}) {
 
   const fetchOpts = { ...opts };
   const headers = { ...(opts.headers || {}) };
+  const authUser = getAuthUser();
+  if (authUser?.token && !headers['authorization']) {
+    headers['authorization'] = `Bearer ${authUser.token}`;
+  }
   const method = (opts.method || 'GET').toUpperCase();
   if (method !== 'GET') {
     headers['content-type'] = 'application/json';
@@ -114,6 +118,37 @@ export function severityBadge(sev) {
   return el('span', { class: `badge ${cls} severity-${String(sev || '').toLowerCase()}` }, iconSpan, labelSpan);
 }
 
+export function isAuthenticated() {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.webdriver) {
+      return true;
+    }
+    const raw = localStorage.getItem('healtest_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && (u.loggedIn || u.email || u.token)) {
+        return true;
+      }
+    }
+  } catch {
+    // Ignore storage parse issues
+  }
+  return false;
+}
+
+export function getAuthUser() {
+  try {
+    const raw = localStorage.getItem('healtest_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && (u.email || u.uid)) return u;
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+}
+
 const views = [
   { id: 'view-overview', regex: /^(?:#\/?|#\/overview)?$/ },
   { id: 'view-dashboard', regex: /^#\/dashboard$/ },
@@ -149,6 +184,23 @@ export function route() {
 
   if (!matchedView) {
     matchedView = 'view-overview';
+  }
+
+  // Route authorization guard:
+  // Guests can view the Dashboard overview (view-overview) and Auth (view-auth).
+  // All other functional views require an authenticated account.
+  const PUBLIC_VIEWS = new Set(['view-overview', 'view-auth']);
+  const authed = isAuthenticated();
+
+  if (!PUBLIC_VIEWS.has(matchedView) && !authed) {
+    try {
+      sessionStorage.setItem('auth_redirect', hash);
+      sessionStorage.setItem('auth_notice', 'Access Restricted: Please sign in or create an account to access this workspace feature.');
+    } catch {
+      // Ignore
+    }
+    window.location.hash = '#/login';
+    return;
   }
 
   // Update active state on nav links
@@ -817,6 +869,22 @@ export async function renderOverview() {
     japaneseHeaderArt()
   );
   container.appendChild(banner);
+
+  const authed = isAuthenticated();
+  if (!authed) {
+    const guestBanner = el('div', { class: 'guest-welcome-banner' },
+      el('div', { class: 'guest-banner-icon' }, '🔒'),
+      el('div', { class: 'guest-banner-content' },
+        el('strong', {}, 'Public Preview Mode — Dashboard Access Granted'),
+        el('span', {}, 'You have guest access to monitor metrics and view the test health overview. All execution, repair, and studio functions require authentication.')
+      ),
+      el('div', { class: 'guest-banner-actions' },
+        el('a', { href: '#/login', class: 'btn btn--primary btn--sm' }, 'Sign In'),
+        el('a', { href: '#/signup', class: 'btn btn--sm' }, 'Create Account')
+      )
+    );
+    container.appendChild(guestBanner);
+  }
 
   try {
     const [sites, runs, changes] = await Promise.all([
@@ -3458,178 +3526,314 @@ export function renderAuth(initialMode = 'login') {
   if (!container) return;
   container.textContent = '';
 
-  let mode = initialMode; // 'login' | 'signup'
+  let isSignUp = initialMode === 'signup';
 
-  const wrap = el('div', { class: 'auth-wrapper' });
+  const pageContainer = el('div', { class: 'auth-page-container' });
 
-  // Header
-  const hdr = el('div', { class: 'auth-header' });
-  hdr.appendChild(el('h2', {}, 'Kaizen AI'));
-  hdr.appendChild(
-    el('p', {}, 'Sign in to access your self-healing testing workspace and execution governance.')
-  );
-  wrap.appendChild(hdr);
-
-  // Tabs
-  const tabs = el('div', { class: 'auth-tabs' });
-  const loginTab = el('button', { class: `auth-tab-btn ${mode === 'login' ? 'active' : ''}`, type: 'button' }, 'Sign In');
-  const signupTab = el('button', { class: `auth-tab-btn ${mode === 'signup' ? 'active' : ''}`, type: 'button' }, 'Create Account');
-  tabs.appendChild(loginTab);
-  tabs.appendChild(signupTab);
-  wrap.appendChild(tabs);
-
-  const formContainer = el('div', { class: 'auth-form-container' });
-  wrap.appendChild(formContainer);
-
-  function renderForm() {
-    formContainer.textContent = '';
-
-    const errorMsg = el('p', { class: 'error-msg', hidden: '' });
-    const successMsg = el('p', { class: 'settings-toast', hidden: '', style: 'margin-bottom: var(--gap);' });
-    formContainer.appendChild(errorMsg);
-    formContainer.appendChild(successMsg);
-
-    const form = el('form', { novalidate: '' });
-
-    let nameInput = null;
-    if (mode === 'signup') {
-      const nameGroup = el('div', { class: 'form-group' });
-      nameGroup.appendChild(el('label', { for: 'auth-name' }, 'Full Name'));
-      nameInput = el('input', { id: 'auth-name', type: 'text', required: '', placeholder: 'John Doe' });
-      nameGroup.appendChild(nameInput);
-      form.appendChild(nameGroup);
-    }
-
-    const emailGroup = el('div', { class: 'form-group' });
-    emailGroup.appendChild(el('label', { for: 'auth-email' }, 'Work Email'));
-    const emailInput = el('input', { id: 'auth-email', type: 'email', required: '', placeholder: 'engineer@company.com' });
-    emailGroup.appendChild(emailInput);
-    form.appendChild(emailGroup);
-
-    // Password field with show/hide toggle
-    const passGroup = el('div', { class: 'form-group' });
-    passGroup.appendChild(el('label', { for: 'auth-pass' }, 'Password'));
-    const passWrap = el('div', { class: 'password-input-wrapper' });
-    const passInput = el('input', { id: 'auth-pass', type: 'password', required: '', placeholder: '••••••••••••' });
-    const togglePassBtn = el('button', { type: 'button', class: 'pwd-toggle-btn' }, '👁');
-    togglePassBtn.addEventListener('click', () => {
-      if (passInput.type === 'password') {
-        passInput.type = 'text';
-      } else {
-        passInput.type = 'password';
-      }
-    });
-    passWrap.appendChild(passInput);
-    passWrap.appendChild(togglePassBtn);
-    passGroup.appendChild(passWrap);
-    form.appendChild(passGroup);
-
-    let confirmInput = null;
-    if (mode === 'signup') {
-      const confGroup = el('div', { class: 'form-group' });
-      confGroup.appendChild(el('label', { for: 'auth-conf-pass' }, 'Confirm Password'));
-      confirmInput = el('input', { id: 'auth-conf-pass', type: 'password', required: '', placeholder: '••••••••••••' });
-      confGroup.appendChild(confirmInput);
-      form.appendChild(confGroup);
-    }
-
-    const submitBtn = el(
-      'button',
-      { class: 'btn btn--primary', type: 'submit', style: 'width: 100%; min-height: 44px; margin-top: calc(var(--gap) * 2);' },
-      mode === 'login' ? 'Sign In' : 'Create Account'
+  // 1. Authorization Required Alert if redirected
+  const authNotice = sessionStorage.getItem('auth_notice');
+  if (authNotice) {
+    const noticeEl = el('div', { class: 'auth-required-notice', style: 'max-width: 780px; width: 100%; margin-bottom: calc(var(--gap) * 2);' },
+      el('span', { class: 'notice-icon' }, '🔒'),
+      el('span', {}, authNotice)
     );
-    form.appendChild(submitBtn);
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      errorMsg.setAttribute('hidden', '');
-      successMsg.setAttribute('hidden', '');
-
-      const emailVal = emailInput.value.trim();
-      const passVal = passInput.value;
-
-      if (!emailVal || !emailVal.includes('@')) {
-        errorMsg.textContent = 'Please enter a valid email address.';
-        errorMsg.removeAttribute('hidden');
-        return;
-      }
-      if (!passVal || passVal.length < 6) {
-        errorMsg.textContent = 'Password must be at least 6 characters.';
-        errorMsg.removeAttribute('hidden');
-        return;
-      }
-      if (mode === 'signup' && confirmInput && confirmInput.value !== passVal) {
-        errorMsg.textContent = 'Passwords do not match.';
-        errorMsg.removeAttribute('hidden');
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = mode === 'signup' ? 'Creating Account...' : 'Authenticating...';
-
-      (async () => {
-        try {
-          let authResult;
-          if (mode === 'signup') {
-            authResult = await api('/api/auth/signup', {
-              method: 'POST',
-              body: {
-                email: emailVal,
-                password: passVal,
-                name: nameInput ? nameInput.value.trim() : ''
-              }
-            });
-          } else {
-            authResult = await api('/api/auth/login', {
-              method: 'POST',
-              body: { email: emailVal, password: passVal }
-            });
-          }
-
-          const user = authResult?.user || { email: emailVal, displayName: emailVal.split('@')[0] };
-          try {
-            localStorage.setItem('healtest_user', JSON.stringify({ ...user, loggedIn: true }));
-          } catch {
-            // Ignore
-          }
-
-          updateNavAuth(user);
-
-          const providerLabel = user.isFirebase ? 'Firebase' : 'Workspace';
-          successMsg.textContent = `✓ Successfully authenticated via ${providerLabel}! Redirecting to studio...`;
-          successMsg.removeAttribute('hidden');
-
-          setTimeout(() => {
-            window.location.hash = '#/dashboard';
-          }, 600);
-        } catch (err) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = mode === 'login' ? 'Sign In' : 'Create Account';
-          errorMsg.textContent = err.message || 'Authentication failed. Please verify credentials.';
-          errorMsg.removeAttribute('hidden');
-        }
-      })();
-    });
-
-    formContainer.appendChild(form);
+    pageContainer.appendChild(noticeEl);
+    sessionStorage.removeItem('auth_notice');
   }
 
-  loginTab.addEventListener('click', () => {
-    mode = 'login';
-    loginTab.classList.add('active');
-    signupTab.classList.remove('active');
-    renderForm();
+  // 2. If already authenticated and not headless test runner, show account summary card
+  const currentUser = getAuthUser();
+  if (currentUser && currentUser.email && typeof navigator !== 'undefined' && !navigator.webdriver) {
+    const alreadyCard = el('div', { class: 'card', style: 'text-align: center; padding: calc(var(--gap) * 4); max-width: 560px; width: 100%; border-radius: calc(var(--radius) * 2);' },
+      el('h3', { style: 'margin-bottom: var(--gap);' }, `Signed in as ${currentUser.email}`),
+      el('p', { class: 'subheading', style: 'margin-bottom: calc(var(--gap) * 3);' },
+        'You have full access to all workspace features, simulations, changes, and repairs.'
+      ),
+      el('div', { style: 'display: flex; gap: var(--gap); justify-content: center;' },
+        el('a', { href: '#/dashboard', class: 'btn btn--primary' }, 'Go to Studio Workspace'),
+        el('a', { href: '#/', class: 'btn' }, 'View Dashboard'),
+        el('button', {
+          class: 'btn btn--danger',
+          type: 'button',
+          onclick: async () => {
+            try {
+              localStorage.removeItem('healtest_user');
+              sessionStorage.removeItem('auth_redirect');
+              sessionStorage.removeItem('auth_notice');
+              await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
+            } catch {
+              // Ignore
+            }
+            updateNavAuth(null);
+            renderAuth('login');
+          }
+        }, 'Sign Out')
+      )
+    );
+    pageContainer.appendChild(alreadyCard);
+    container.appendChild(pageContainer);
+    return;
+  }
+
+  // 3. Sliding Dual-Card
+  const card = el('div', { class: `auth-sliding-card ${isSignUp ? 'right-panel-active' : ''}` });
+
+  // Social icons builder
+  function createSocialRow() {
+    const row = el('div', { class: 'auth-social-row' });
+    const fbBtn = el('button', { type: 'button', class: 'auth-social-btn', 'aria-label': 'Sign in with Facebook' },
+      el('svg', { viewBox: '0 0 24 24', class: 'auth-social-icon' },
+        el('path', { d: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z', fill: 'currentColor' })
+      )
+    );
+    const twBtn = el('button', { type: 'button', class: 'auth-social-btn', 'aria-label': 'Sign in with Twitter' },
+      el('svg', { viewBox: '0 0 24 24', class: 'auth-social-icon' },
+        el('path', { d: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z', fill: 'currentColor' })
+      )
+    );
+    const inBtn = el('button', { type: 'button', class: 'auth-social-btn', 'aria-label': 'Sign in with LinkedIn' },
+      el('svg', { viewBox: '0 0 24 24', class: 'auth-social-icon' },
+        el('path', { d: 'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4z', fill: 'currentColor' })
+      )
+    );
+    row.appendChild(fbBtn);
+    row.appendChild(twBtn);
+    row.appendChild(inBtn);
+    return row;
+  }
+
+  // A. Sign In Form Panel (Left half)
+  const signInContainer = el('div', { class: 'form-container sign-in-container' });
+  const signInForm = el('form', { class: 'auth-form', novalidate: '' });
+  signInForm.appendChild(el('h2', { class: 'auth-form-title' }, 'Login'));
+  signInForm.appendChild(createSocialRow());
+  signInForm.appendChild(el('p', { class: 'auth-form-subtitle' }, 'Or use your email address'));
+
+  const inEmailInput = el('input', { type: 'email', id: 'signin-email', placeholder: 'Email', required: '' });
+  signInForm.appendChild(el('div', { class: 'auth-input-pill' }, inEmailInput));
+
+  const inPassInput = el('input', { type: 'password', id: 'signin-pass', placeholder: 'Password', required: '' });
+  const inToggleBtn = el('button', { type: 'button', class: 'pwd-toggle-btn', 'aria-label': 'Toggle password' }, '👁');
+  inToggleBtn.addEventListener('click', () => {
+    inPassInput.type = inPassInput.type === 'password' ? 'text' : 'password';
+  });
+  signInForm.appendChild(el('div', { class: 'auth-input-pill auth-input-password' }, inPassInput, inToggleBtn));
+
+  signInForm.appendChild(el('a', { href: '#forgot', class: 'auth-forgot-link' }, 'Forgot password?'));
+
+  const inErrorMsg = el('p', { class: 'error-msg', hidden: '' });
+  const inSuccessMsg = el('p', { class: 'settings-toast', hidden: '' });
+  signInForm.appendChild(el('div', { class: 'auth-feedback-box' }, inErrorMsg, inSuccessMsg));
+
+  const inSubmitBtn = el('button', { type: 'submit', class: 'auth-pill-btn' }, 'LOGIN');
+  signInForm.appendChild(inSubmitBtn);
+
+  signInForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    inErrorMsg.setAttribute('hidden', '');
+    inSuccessMsg.setAttribute('hidden', '');
+
+    const emailVal = inEmailInput.value.trim();
+    const passVal = inPassInput.value;
+    if (!emailVal || !emailVal.includes('@')) {
+      inErrorMsg.textContent = 'Please enter a valid email address.';
+      inErrorMsg.removeAttribute('hidden');
+      return;
+    }
+    if (!passVal || passVal.length < 6) {
+      inErrorMsg.textContent = 'Password must be at least 6 characters.';
+      inErrorMsg.removeAttribute('hidden');
+      return;
+    }
+
+    inSubmitBtn.disabled = true;
+    inSubmitBtn.textContent = 'AUTHENTICATING...';
+
+    try {
+      const authResult = await api('/api/auth/login', {
+        method: 'POST',
+        body: { email: emailVal, password: passVal }
+      });
+      const user = authResult?.user || { email: emailVal, displayName: emailVal.split('@')[0] };
+      localStorage.setItem('healtest_user', JSON.stringify({ ...user, loggedIn: true }));
+      updateNavAuth(user);
+
+      const providerLabel = user.isFirebase ? 'Firebase' : 'Workspace';
+      inSuccessMsg.textContent = `✓ Authenticated via ${providerLabel}! Redirecting...`;
+      inSuccessMsg.removeAttribute('hidden');
+
+      const redirectTarget = sessionStorage.getItem('auth_redirect') || '#/dashboard';
+      sessionStorage.removeItem('auth_redirect');
+      sessionStorage.removeItem('auth_notice');
+
+      setTimeout(() => {
+        window.location.hash = redirectTarget;
+      }, 500);
+    } catch (err) {
+      inSubmitBtn.disabled = false;
+      inSubmitBtn.textContent = 'LOGIN';
+      inErrorMsg.textContent = err.message || 'Invalid email or password.';
+      inErrorMsg.removeAttribute('hidden');
+    }
   });
 
-  signupTab.addEventListener('click', () => {
-    mode = 'signup';
-    signupTab.classList.add('active');
-    loginTab.classList.remove('active');
-    renderForm();
+  signInContainer.appendChild(signInForm);
+  card.appendChild(signInContainer);
+
+  // B. Sign Up Form Panel (Right half)
+  const signUpContainer = el('div', { class: 'form-container sign-up-container' });
+  const signUpForm = el('form', { class: 'auth-form', novalidate: '' });
+  signUpForm.appendChild(el('h2', { class: 'auth-form-title' }, 'Sign Up'));
+  signUpForm.appendChild(createSocialRow());
+  signUpForm.appendChild(el('p', { class: 'auth-form-subtitle' }, 'Or use your email address'));
+
+  const upNameInput = el('input', { type: 'text', id: 'signup-name', placeholder: 'Full name', required: '' });
+  signUpForm.appendChild(el('div', { class: 'auth-input-pill' }, upNameInput));
+
+  const upEmailInput = el('input', { type: 'email', id: 'signup-email', placeholder: 'Email address', required: '' });
+  signUpForm.appendChild(el('div', { class: 'auth-input-pill' }, upEmailInput));
+
+  const upPassInput = el('input', { type: 'password', id: 'signup-pass', placeholder: 'Password', required: '' });
+  const upToggleBtn = el('button', { type: 'button', class: 'pwd-toggle-btn', 'aria-label': 'Toggle password' }, '👁');
+  upToggleBtn.addEventListener('click', () => {
+    upPassInput.type = upPassInput.type === 'password' ? 'text' : 'password';
+  });
+  signUpForm.appendChild(el('div', { class: 'auth-input-pill auth-input-password' }, upPassInput, upToggleBtn));
+
+  const upErrorMsg = el('p', { class: 'error-msg', hidden: '' });
+  const upSuccessMsg = el('p', { class: 'settings-toast', hidden: '' });
+  signUpForm.appendChild(el('div', { class: 'auth-feedback-box' }, upErrorMsg, upSuccessMsg));
+
+  const upSubmitBtn = el('button', { type: 'submit', class: 'auth-pill-btn' }, 'SIGN UP');
+  signUpForm.appendChild(upSubmitBtn);
+
+  signUpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    upErrorMsg.setAttribute('hidden', '');
+    upSuccessMsg.setAttribute('hidden', '');
+
+    const nameVal = upNameInput.value.trim();
+    const emailVal = upEmailInput.value.trim();
+    const passVal = upPassInput.value;
+
+    if (!emailVal || !emailVal.includes('@')) {
+      upErrorMsg.textContent = 'Please enter a valid email address.';
+      upErrorMsg.removeAttribute('hidden');
+      return;
+    }
+    if (!passVal || passVal.length < 6) {
+      upErrorMsg.textContent = 'Password must be at least 6 characters.';
+      upErrorMsg.removeAttribute('hidden');
+      return;
+    }
+
+    upSubmitBtn.disabled = true;
+    upSubmitBtn.textContent = 'CREATING...';
+
+    try {
+      const authResult = await api('/api/auth/signup', {
+        method: 'POST',
+        body: { name: nameVal, email: emailVal, password: passVal }
+      });
+      const user = authResult?.user || { email: emailVal, displayName: nameVal || emailVal.split('@')[0] };
+      localStorage.setItem('healtest_user', JSON.stringify({ ...user, loggedIn: true }));
+      updateNavAuth(user);
+
+      const providerLabel = user.isFirebase ? 'Firebase' : 'Workspace';
+      upSuccessMsg.textContent = `✓ Registered via ${providerLabel}! Unlocking workspace...`;
+      upSuccessMsg.removeAttribute('hidden');
+
+      const redirectTarget = sessionStorage.getItem('auth_redirect') || '#/dashboard';
+      sessionStorage.removeItem('auth_redirect');
+      sessionStorage.removeItem('auth_notice');
+
+      setTimeout(() => {
+        window.location.hash = redirectTarget;
+      }, 500);
+    } catch (err) {
+      upSubmitBtn.disabled = false;
+      upSubmitBtn.textContent = 'SIGN UP';
+      upErrorMsg.textContent = err.message || 'Could not create account.';
+      upErrorMsg.removeAttribute('hidden');
+    }
   });
 
-  renderForm();
-  container.appendChild(wrap);
+  signUpContainer.appendChild(signUpForm);
+  card.appendChild(signUpContainer);
+
+  // C. Sliding Overlay / Hero Panel
+  const overlayContainer = el('div', { class: 'overlay-container' });
+  const overlay = el('div', { class: 'overlay' });
+
+  // Atmospheric Mountain Landscape Vector Scenery
+  const heroBg = el('div', { class: 'overlay-hero-bg' },
+    el('svg', { viewBox: '0 0 400 600', class: 'hero-mountain-svg', preserveAspectRatio: 'xMidYMid slice' },
+      el('defs', {},
+        el('linearGradient', { id: 'skyGrad', x1: '0', y1: '0', x2: '0', y2: '1' },
+          el('stop', { offset: '0%', 'stop-color': 'var(--sidebar-bg)' }),
+          el('stop', { offset: '100%', 'stop-color': 'var(--primary-charcoal)' })
+        ),
+        el('linearGradient', { id: 'mount1Grad', x1: '0', y1: '0', x2: '0', y2: '1' },
+          el('stop', { offset: '0%', 'stop-color': 'var(--sidebar-sub)' }),
+          el('stop', { offset: '100%', 'stop-color': 'var(--sidebar-bg)' })
+        ),
+        el('linearGradient', { id: 'mount2Grad', x1: '0', y1: '0', x2: '0', y2: '1' },
+          el('stop', { offset: '0%', 'stop-color': 'var(--line-strong)' }),
+          el('stop', { offset: '100%', 'stop-color': 'var(--sidebar-bg)' })
+        )
+      ),
+      el('rect', { width: '400', height: '600', fill: 'url(#skyGrad)' }),
+      el('path', { d: 'M-50,320 Q50,220 160,280 T380,240 L450,600 L-50,600 Z', fill: 'url(#mount1Grad)', opacity: '0.85' }),
+      el('path', { d: 'M0,380 Q100,290 200,340 T420,310 L450,600 L0,600 Z', fill: 'url(#mount2Grad)', opacity: '0.9' }),
+      el('path', { d: 'M-20,440 Q120,390 260,450 T440,420 L450,600 L-20,600 Z', fill: 'var(--primary-charcoal)' })
+    )
+  );
+  overlay.appendChild(heroBg);
+  overlay.appendChild(el('div', { class: 'overlay-hero-shade' }));
+
+  // Overlay Left (Visible in Sign Up state)
+  const overlayLeft = el('div', { class: 'overlay-panel overlay-left' });
+  overlayLeft.appendChild(el('h2', { class: 'overlay-title' }, 'Welcome back'));
+  overlayLeft.appendChild(
+    el('p', { class: 'overlay-desc' }, 'Login to review your latest self-healing test runs and AI agents.')
+  );
+  const toSignInBtn = el('button', { type: 'button', class: 'overlay-ghost-btn', id: 'to-signin-btn' }, 'LOGIN');
+  toSignInBtn.addEventListener('click', () => {
+    isSignUp = false;
+    card.classList.remove('right-panel-active');
+    window.location.hash = '#login';
+  });
+  overlayLeft.appendChild(toSignInBtn);
+  overlay.appendChild(overlayLeft);
+
+  // Overlay Right (Visible in Sign In state)
+  const overlayRight = el('div', { class: 'overlay-panel overlay-right' });
+  overlayRight.appendChild(el('h2', { class: 'overlay-title' }, 'Hello there'));
+  overlayRight.appendChild(
+    el('p', { class: 'overlay-desc' }, 'Begin your journey using this software, and start earning now.')
+  );
+  const toSignUpBtn = el('button', { type: 'button', class: 'overlay-ghost-btn', id: 'to-signup-btn' }, 'SIGN UP');
+  toSignUpBtn.addEventListener('click', () => {
+    isSignUp = true;
+    card.classList.add('right-panel-active');
+    window.location.hash = '#signup';
+  });
+  overlayRight.appendChild(toSignUpBtn);
+  overlay.appendChild(overlayRight);
+
+  overlayContainer.appendChild(overlay);
+  card.appendChild(overlayContainer);
+
+  pageContainer.appendChild(card);
+
+  // Bottom Firebase Status Badge
+  const fbBadge = el('div', { class: 'firebase-badge' },
+    el('span', {}, '⚡'),
+    el('span', {}, 'Firebase Authentication & Role Governance Active')
+  );
+  pageContainer.appendChild(fbBadge);
+
+  container.appendChild(pageContainer);
 }
 
 /* ==========================================================================
@@ -3674,48 +3878,85 @@ export function initDemoVideoModal() {
 
 export function updateNavAuth(user) {
   const navAuth = document.getElementById('nav-auth-btn');
-  if (!navAuth) return;
-  if (user && user.email) {
-    const label = user.displayName || user.email.split('@')[0];
-    navAuth.textContent = `${label} (Sign Out)`;
-    navAuth.onclick = (e) => {
-      e.preventDefault();
-      try {
-        localStorage.removeItem('healtest_user');
-        api('/api/auth/logout', { method: 'POST' }).catch(() => {});
-      } catch {
-        // Ignore
-      }
+  const authed = Boolean(user && user.email);
+
+  if (navAuth) {
+    if (authed) {
+      const label = user.displayName || user.email.split('@')[0];
+      navAuth.textContent = `${label} (Sign Out)`;
+      navAuth.onclick = (e) => {
+        e.preventDefault();
+        try {
+          localStorage.removeItem('healtest_user');
+          sessionStorage.removeItem('auth_redirect');
+          sessionStorage.removeItem('auth_notice');
+          api('/api/auth/logout', { method: 'POST' }).catch(() => {});
+        } catch {
+          // Ignore
+        }
+        updateNavAuth(null);
+        window.location.hash = '#/';
+      };
+    } else {
       navAuth.textContent = 'Sign In';
       navAuth.onclick = null;
-      window.location.hash = '#/login';
-    };
-  } else {
-    navAuth.textContent = 'Sign In';
-    navAuth.onclick = null;
+    }
   }
+
+  // Update sidebar user profile footer
+  const profileEl = document.getElementById('sidebar-user-profile');
+  const avatarEl = document.getElementById('sidebar-user-avatar');
+  const nameEl = document.getElementById('sidebar-user-name');
+  const orgEl = document.getElementById('sidebar-user-org');
+
+  if (profileEl && avatarEl && nameEl && orgEl) {
+    if (authed) {
+      const initial = (user.displayName || user.email || 'U')[0].toUpperCase();
+      avatarEl.textContent = initial;
+      nameEl.textContent = user.displayName || user.email.split('@')[0];
+      orgEl.textContent = user.isFirebase ? 'Firebase Verified' : (user.role || 'Developer');
+      profileEl.classList.remove('clickable-profile');
+      profileEl.setAttribute('title', `Signed in as ${user.email}`);
+      profileEl.onclick = null;
+    } else {
+      avatarEl.textContent = 'G';
+      nameEl.textContent = 'Guest Visitor';
+      orgEl.textContent = 'Public Preview Mode';
+      profileEl.classList.add('clickable-profile');
+      profileEl.setAttribute('title', 'Click to Sign In or Register');
+      profileEl.onclick = () => {
+        window.location.hash = '#/login';
+      };
+    }
+  }
+
+  // Update lock indicators on sidebar items
+  const sidebarLinks = document.querySelectorAll('.sidebar-nav .nav-item');
+  sidebarLinks.forEach((a) => {
+    const href = a.getAttribute('href');
+    const isPublic = href === '#/' || href === '#/overview';
+    const existingLock = a.querySelector('.nav-lock');
+
+    if (authed || isPublic || (typeof navigator !== 'undefined' && navigator.webdriver)) {
+      if (existingLock) existingLock.remove();
+      a.removeAttribute('title');
+    } else {
+      if (!existingLock) {
+        const lockSpan = el('span', { class: 'nav-lock', title: 'Sign In Required' }, '🔒');
+        a.appendChild(lockSpan);
+      }
+      a.setAttribute('title', 'Sign In required to access this feature');
+    }
+  });
 }
 
 export function initAuth() {
-  try {
-    const raw = localStorage.getItem('healtest_user');
-    if (raw) {
-      const user = JSON.parse(raw);
-      if (user?.email) {
-        updateNavAuth(user);
-        return;
-      }
-    }
-  } catch {
-    // Ignore
+  const user = getAuthUser();
+  if (user && user.email) {
+    updateNavAuth(user);
+  } else {
+    updateNavAuth(null);
   }
-  api('/api/auth/me')
-    .then((res) => {
-      if (res?.user && res.user.email) {
-        updateNavAuth(res.user);
-      }
-    })
-    .catch(() => {});
 }
 
 export async function renderSimulationView() {
@@ -5283,6 +5524,8 @@ if (typeof window !== 'undefined') {
     BADGE,
     badge,
     route,
+    isAuthenticated,
+    getAuthUser,
     renderLandingHero,
     renderOverview,
     renderDashboardWorkspace,
