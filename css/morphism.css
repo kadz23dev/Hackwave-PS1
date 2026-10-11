@@ -1,0 +1,778 @@
+/* ==========================================================================
+   DYNAMIC MORPHISM DESIGN SYSTEM
+   Palette: Crimson Red Medium & Linen Beige
+   KaizenAI - Autonomous E2E Testing for Product Companies & Startups
+   ========================================================================== */
+
+/* New Age Fonts Integration */
+@font-face {
+  font-family: 'Faculty Glyphic';
+  src: url('../fonts/FacultyGlyphic-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Elagern';
+  src: url('../fonts/Elagern-nRPoO.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Elagern';
+  src: url('../fonts/elagernitalic-lgmxw.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* Font Family Stacks - New Age Stack */
+  --font-heading: 'Faculty Glyphic', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, sans-serif;
+  --font-semiheading: 'Elagern', 'Faculty Glyphic', Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', 'Inter', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+
+  /* Color Palette - Linen Beige Warm Foundation */
+  --bg-deep: #f5f0e8;           /* Warm, organic Linen Beige base */
+  --bg-space: #ece4d6;          /* Tactile Linen Sand */
+  --bg-surface: #f0e8dc;        /* Soft Linen Stone */
+  
+  /* Glass Surfaces (Dynamic Linen Glassmorphism) */
+  --glass-bg: rgba(255, 253, 249, 0.76);
+  --glass-bg-subtle: rgba(247, 242, 234, 0.58);
+  --glass-bg-hover: rgba(255, 255, 255, 0.94);
+  --glass-bg-active: rgba(244, 238, 228, 0.95);
+  
+  /* Specular Borders & Crimson Red Accents */
+  --glass-border: rgba(185, 28, 28, 0.14);
+  --glass-border-subtle: rgba(168, 148, 134, 0.25);
+  --glass-border-hover: rgba(185, 28, 28, 0.45);
+  --glass-border-accent: rgba(197, 34, 51, 0.6);
+  
+  /* Depth, Shadows & Specular Bevels */
+  --glass-blur: blur(18px);
+  --glass-blur-heavy: blur(28px);
+  --glass-shadow: 0 20px 48px -12px rgba(120, 53, 53, 0.1), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --glass-shadow-sm: 0 10px 24px -6px rgba(120, 53, 53, 0.08);
+  --glass-shadow-lg: 0 30px 70px -15px rgba(120, 53, 53, 0.18), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --glass-bevel: inset 1px 1px 1.5px rgba(255, 255, 255, 0.95), inset -1px -1px 2px rgba(185, 28, 28, 0.08);
+  --glass-bevel-subtle: inset 0.5px 0.5px 1px rgba(255, 255, 255, 0.85);
+  
+  /* Crimson Red Medium & Complementary Accents */
+  --accent-primary: #b91c1c;    /* Crimson Red Medium */
+  --accent-crimson-rich: #c52233; /* Vibrant Medium Crimson */
+  --accent-secondary: #991b1b;  /* Deep Crimson Ruby */
+  --accent-crimson-deep: #881337; /* Velvet Wine */
+  --accent-linen: #ede4d6;      /* Linen Cream */
+  --accent-linen-gold: #b45309; /* Warm Ochre Amber */
+  --accent-emerald: #047857;    /* Forest Emerald for PASS */
+  --accent-amber: #c2410c;      /* Rust Amber */
+  --accent-crimson: #dc2626;    /* Alert Crimson */
+  
+  /* Gradients */
+  --grad-primary: linear-gradient(135deg, #c52233 0%, #b91c1c 45%, #991b1b 100%);
+  --grad-crimson: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  --grad-linen: linear-gradient(135deg, #faf7f2 0%, #ede5d8 100%);
+  --grad-crimson-soft: linear-gradient(135deg, rgba(185, 28, 28, 0.12) 0%, rgba(197, 34, 51, 0.05) 100%);
+  --grad-linen-mesh: radial-gradient(at 0% 0%, rgba(185, 28, 28, 0.1) 0px, transparent 50%),
+                     radial-gradient(at 100% 0%, rgba(220, 38, 38, 0.08) 0px, transparent 50%),
+                     radial-gradient(at 100% 100%, rgba(210, 185, 150, 0.2) 0px, transparent 50%),
+                     radial-gradient(at 0% 100%, rgba(185, 28, 28, 0.06) 0px, transparent 50%);
+  
+  /* Text & Typography - High Contrast on Linen Beige (50% Darker for Crisp Legibility) */
+  --text-primary: #0c0a09;      /* Warm Deepest Charcoal / Obsidian */
+  --text-secondary: #1c1917;    /* 50% darker: Deep Charcoal Espresso */
+  --text-muted: #292524;        /* 50% darker: Rich Warm Charcoal */
+  --text-highlight: #000000;    /* Pure Obsidian Black */
+  --text-crimson: #991b1b;      /* Deeper High-Contrast Crimson */
+  
+  /* Layout & Radii */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 9999px;
+  
+  /* Transitions */
+  --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Base Reset & Typography */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', 'Inter', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+/* Typography Hierarchy: Faculty Glyphic & Elagern */
+h1, h2, .font-heading {
+  font-family: var(--font-heading);
+  letter-spacing: -0.025em;
+}
+
+h3, h4, h5, h6, .font-semiheading {
+  font-family: var(--font-semiheading);
+  letter-spacing: -0.015em;
+}
+
+/* Ambient Floating Liquid Glow Orbs (Crimson & Linen Light Refraction Layer) */
+.ambient-glow-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(85px);
+  opacity: 0.45;
+  animation: floatOrb 22s ease-in-out infinite alternate;
+}
+
+.ambient-orb-1 {
+  width: 580px;
+  height: 580px;
+  background: radial-gradient(circle, rgba(197, 34, 51, 0.24) 0%, rgba(197, 34, 51, 0) 70%);
+  top: -160px;
+  left: -100px;
+  animation-duration: 24s;
+}
+
+.ambient-orb-2 {
+  width: 680px;
+  height: 680px;
+  background: radial-gradient(circle, rgba(235, 220, 200, 0.8) 0%, rgba(235, 220, 200, 0) 70%);
+  bottom: 5%;
+  right: -160px;
+  animation-duration: 28s;
+  animation-delay: -5s;
+}
+
+.ambient-orb-3 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(185, 28, 28, 0.18) 0%, rgba(185, 28, 28, 0) 70%);
+  top: 45%;
+  left: 35%;
+  animation-duration: 32s;
+  animation-delay: -10s;
+}
+
+.ambient-orb-4 {
+  width: 440px;
+  height: 440px;
+  background: radial-gradient(circle, rgba(215, 185, 150, 0.4) 0%, rgba(215, 185, 150, 0) 70%);
+  top: 25%;
+  right: 20%;
+  animation-duration: 20s;
+  animation-delay: -7s;
+}
+
+@keyframes floatOrb {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, 70px) scale(1.1); }
+  100% { transform: translate(-35px, 45px) scale(0.96); }
+}
+
+/* Background Linen Grid Overlay */
+.cyber-grid {
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(185, 28, 28, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(185, 28, 28, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Container Structure */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ==========================================================================
+   DYNAMIC MORPHISM CORE PANELS (Frosted Linen & Crimson Glow)
+   ========================================================================== */
+
+.morphism-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-bevel);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-smooth);
+}
+
+.morphism-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.35), transparent 45%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.morphism-card:hover::before {
+  opacity: 1;
+}
+
+.morphism-card:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 26px 65px -12px rgba(120, 53, 53, 0.18), 
+              0 0 25px rgba(185, 28, 28, 0.15), 
+              var(--glass-bevel);
+  transform: translateY(-3px);
+}
+
+.morphism-subtle {
+  background: var(--glass-bg-subtle);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow-sm), var(--glass-bevel-subtle);
+}
+
+.morphism-glow-accent {
+  position: relative;
+}
+.morphism-glow-accent::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.4), rgba(197, 34, 51, 0.2), transparent 70%);
+  z-index: -1;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   BUTTONS & TACTILE CONTROLS (Crimson Red Medium & Linen)
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  outline: none;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--grad-primary);
+  color: #ffffff;
+  box-shadow: 0 10px 25px -4px rgba(185, 28, 28, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 32px -4px rgba(185, 28, 28, 0.65), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.btn-glass {
+  background: rgba(255, 253, 249, 0.85);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--text-primary);
+  border: 1px solid rgba(185, 28, 28, 0.18);
+  box-shadow: var(--glass-shadow-sm), var(--glass-bevel);
+}
+
+.btn-glass:hover {
+  background: #ffffff;
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -5px rgba(120, 53, 53, 0.15), var(--glass-bevel);
+}
+
+.btn-cyan {
+  background: linear-gradient(135deg, #b91c1c 0%, #a71d2a 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 24px -4px rgba(185, 28, 28, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+.btn-cyan:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -4px rgba(185, 28, 28, 0.6);
+}
+
+.btn-emerald {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 24px -4px rgba(4, 120, 87, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.btn-crimson {
+  background: var(--grad-crimson);
+  color: #ffffff;
+  box-shadow: 0 8px 24px -4px rgba(220, 38, 38, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 1.05rem;
+}
+
+/* ==========================================================================
+   STATUS BADGES & MORPHISM CHIPS
+   ========================================================================= */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.badge-pass {
+  background: rgba(4, 120, 87, 0.1);
+  color: #065f46;
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  box-shadow: 0 0 10px rgba(4, 120, 87, 0.12);
+}
+
+.badge-healed {
+  background: rgba(185, 28, 28, 0.1);
+  color: #991b1b;
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  box-shadow: 0 0 10px rgba(185, 28, 28, 0.15);
+}
+
+.badge-bug {
+  background: rgba(220, 38, 38, 0.14);
+  color: #7f1d1d;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.18);
+}
+
+.badge-review {
+  background: rgba(194, 65, 12, 0.12);
+  color: #9a3412;
+  border: 1px solid rgba(194, 65, 12, 0.3);
+  box-shadow: 0 0 10px rgba(194, 65, 12, 0.15);
+}
+
+.badge-neutral {
+  background: rgba(120, 113, 108, 0.12);
+  color: #44403c;
+  border: 1px solid rgba(120, 113, 108, 0.25);
+}
+
+.badge-tenant {
+  background: rgba(185, 28, 28, 0.08);
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.22);
+}
+
+/* Pulsing Status Dot */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-live {
+  background-color: #047857;
+  box-shadow: 0 0 8px #047857;
+  animation: pulseDot 2s infinite;
+}
+.dot-warning {
+  background-color: #c2410c;
+  box-shadow: 0 0 8px #c2410c;
+  animation: pulseDot 2s infinite;
+}
+.dot-danger {
+  background-color: #dc2626;
+  box-shadow: 0 0 8px #dc2626;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(185, 28, 28, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(185, 28, 28, 0); }
+}
+
+/* ==========================================================================
+   NAVIGATION BAR (Linen Glass Floating Header)
+   ========================================================================== */
+
+.navbar {
+  position: sticky;
+  top: 16px;
+  z-index: 100;
+  margin-bottom: 32px;
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px;
+  background: rgba(255, 253, 249, 0.85);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 30px -10px rgba(120, 53, 53, 0.1), var(--glass-bevel);
+  border-radius: var(--radius-pill);
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--text-highlight);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--grad-primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(185, 28, 28, 0.35);
+  color: #fff;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  list-style: none;
+}
+
+.nav-link {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.94rem;
+  font-weight: 700;
+  transition: color var(--transition-fast);
+  position: relative;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--accent-primary);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--accent-primary);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Tenant Quick-Badge */
+.tenant-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(185, 28, 28, 0.08);
+  border: 1px solid rgba(185, 28, 28, 0.22);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   APPROVED SEAL (Official Wax / Crimson Governance Stamp D6)
+   ========================================================================== */
+
+.seal-approved {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border: 2px dashed #b91c1c;
+  border-radius: var(--radius-sm);
+  background: rgba(185, 28, 28, 0.08);
+  color: #b91c1c;
+  font-family: monospace;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  transform: rotate(-3deg);
+  box-shadow: 0 0 20px rgba(185, 28, 28, 0.18);
+  animation: sealPop 0.4s var(--transition-spring);
+}
+
+.seal-approved .seal-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+.seal-approved .seal-meta {
+  font-size: 0.65rem;
+  opacity: 0.85;
+}
+
+@keyframes sealPop {
+  0% { transform: scale(0.6) rotate(-12deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-3deg); opacity: 1; }
+}
+
+/* ==========================================================================
+   INTERACTIVE TERMINAL / CODE BLOCKS (Rich Dark Walnut & Crimson Glow)
+   ========================================================================== */
+
+.glass-terminal {
+  background: rgba(26, 20, 18, 0.94);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(185, 28, 28, 0.22);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 40px -10px rgba(78, 52, 46, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+.terminal-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot-red { background: #dc2626; }
+.dot-yellow { background: #d97706; }
+.dot-green { background: #047857; }
+
+.terminal-title {
+  font-size: 0.78rem;
+  color: #a8a29e;
+}
+
+.terminal-body {
+  padding: 18px;
+  font-size: 0.85rem;
+  color: #f5f0e8;
+  line-height: 1.7;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.terminal-line {
+  margin-bottom: 4px;
+  display: flex;
+  gap: 10px;
+}
+
+.terminal-tag {
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+.tag-intent { color: #f5f0e8; background: rgba(185, 28, 28, 0.25); }
+.tag-plan { color: #f5d0b5; background: rgba(180, 83, 9, 0.2); }
+.tag-replay { color: #fde047; background: rgba(234, 179, 8, 0.2); }
+.tag-detect { color: #fca5a5; background: rgba(220, 38, 38, 0.25); }
+.tag-repair { color: #86efac; background: rgba(4, 120, 87, 0.25); }
+.tag-replan { color: #fbcfe8; background: rgba(219, 39, 119, 0.2); }
+.tag-validate { color: #fed7aa; background: rgba(234, 88, 12, 0.2); }
+.tag-verdict { color: #ffffff; font-weight: 800; background: #b91c1c; }
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(235, 225, 215, 0.4);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(185, 28, 28, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(185, 28, 28, 0.45);
+}
+
+/* ==========================================================================
+   MODAL DIALOG (Governance Approvals)
+   ========================================================================== */
+
+.morphism-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 32, 28, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-smooth);
+}
+
+.morphism-modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.morphism-modal {
+  width: 90%;
+  max-width: 540px;
+  background: rgba(255, 252, 248, 0.95);
+  backdrop-filter: var(--glass-blur-heavy);
+  border: 1px solid var(--glass-border-hover);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow-lg), var(--glass-bevel);
+  padding: 30px;
+  transform: scale(0.95) translateY(10px);
+  transition: transform var(--transition-spring);
+}
+
+.morphism-modal-backdrop.active .morphism-modal {
+  transform: scale(1) translateY(0);
+}
+
+/* Form Controls in Modal */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid rgba(185, 28, 28, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 15px rgba(185, 28, 28, 0.25);
+}
+
+/* Footer Section */
+.footer {
+  border-top: 1px solid var(--glass-border-subtle);
+  padding: 60px 0 40px;
+  margin-top: 100px;
+  background: rgba(245, 240, 232, 0.85);
+  backdrop-filter: blur(10px);
+}
+
+/* Responsive queries */
+@media (max-width: 900px) {
+  .nav-links {
+    display: none;
+  }
+  .nav-container {
+    padding: 10px 18px;
+  }
+}
