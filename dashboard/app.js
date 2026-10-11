@@ -104,10 +104,14 @@ export function severityBadge(sev) {
 
 const views = [
   { id: 'view-overview', regex: /^(?:#\/?|#\/overview)?$/ },
+  { id: 'view-dashboard', regex: /^#\/dashboard$/ },
   { id: 'view-changes', regex: /^#\/changes$/ },
   { id: 'view-change', regex: /^#\/changes\/(\d+)$/ },
   { id: 'view-repair', regex: /^#\/repairs\/(\d+)$/ },
   { id: 'view-audit', regex: /^#\/audit$/ },
+  { id: 'view-settings', regex: /^#\/settings$/ },
+  { id: 'view-billing', regex: /^#\/billing$/ },
+  { id: 'view-auth', regex: /^#(?:login|signup)$/ },
 ];
 
 export function route() {
@@ -128,6 +132,23 @@ export function route() {
     matchedView = 'view-overview';
   }
 
+  // Update active state on nav links
+  try {
+    const navLinks = document.querySelectorAll('.nav-link');
+    for (const link of navLinks) {
+      const href = link.getAttribute('href');
+      if (href === hash || (hash === '#/' && href === '#/')) {
+        link.classList.add('active');
+      } else if (href && href !== '#/' && hash.startsWith(href)) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    }
+  } catch {
+    // Ignore DOM query issues
+  }
+
   for (const v of views) {
     const sec = document.getElementById(v.id);
     if (sec) {
@@ -141,6 +162,8 @@ export function route() {
 
   if (matchedView === 'view-overview') {
     renderOverview();
+  } else if (matchedView === 'view-dashboard') {
+    renderDashboardWorkspace();
   } else if (matchedView === 'view-changes') {
     renderChanges();
   } else if (matchedView === 'view-change') {
@@ -149,6 +172,12 @@ export function route() {
     renderRepair(params[0]);
   } else if (matchedView === 'view-audit') {
     renderAudit();
+  } else if (matchedView === 'view-settings') {
+    renderSettings();
+  } else if (matchedView === 'view-billing') {
+    renderBilling();
+  } else if (matchedView === 'view-auth') {
+    renderAuth(hash === '#signup' ? 'signup' : 'login');
   }
 }
 
@@ -421,11 +450,290 @@ export async function renderChange(id) {
   }
 }
 
+export function renderLandingHero(container) {
+  const landing = el('div', { class: 'landing-container' });
+
+  // 1. Hero
+  const hero = el('div', { class: 'landing-hero' });
+  hero.appendChild(el('div', { class: 'hero-pill' }, '⚡ Intent-Aware E2E Testing Platform'));
+  hero.appendChild(el('h1', { class: 'hero-title' }, 'Tests that heal. Confidence that stays.'));
+  hero.appendChild(
+    el(
+      'p',
+      { class: 'hero-subtitle' },
+      'Author high-level user intents in natural language. When UI drift or frontend redesigns break fragile CSS selectors, HealTest automatically synthesizes and validates robust repairs against backend oracles with zero flaky assertions.'
+    )
+  );
+
+  const heroActions = el('div', { class: 'hero-actions' });
+  const openStudioBtn = el('a', { href: '#/dashboard', class: 'btn btn--primary' }, 'Open Dashboard →');
+  const watchDemoBtn = el('button', { class: 'btn btn--outline', type: 'button' }, '▶ Watch Demo');
+  watchDemoBtn.addEventListener('click', () => {
+    const dlg = document.getElementById('demo-video-dialog');
+    if (dlg) dlg.showModal();
+  });
+  heroActions.appendChild(openStudioBtn);
+  heroActions.appendChild(watchDemoBtn);
+  hero.appendChild(heroActions);
+
+  // Large Product Dashboard Mockup Preview
+  const mockupFrame = el('div', { class: 'hero-mockup-frame' });
+  const mockupBar = el('div', { class: 'mockup-window-bar' });
+  const mockupDots = el(
+    'div',
+    { class: 'mockup-dots' },
+    el('span', { class: 'mockup-dot' }),
+    el('span', { class: 'mockup-dot' }),
+    el('span', { class: 'mockup-dot' })
+  );
+  const mockupUrl = el('span', { class: 'mockup-url mono' }, 'healtest.studio/#/dashboard');
+  mockupBar.appendChild(mockupDots);
+  mockupBar.appendChild(mockupUrl);
+  mockupFrame.appendChild(mockupBar);
+
+  const mockupContent = el('div', { class: 'mockup-preview-content' });
+  const mockupGrid = el('div', { class: 'mockup-preview-grid' });
+
+  // Left Col (AI Agent)
+  const colA = el('div', { class: 'mockup-col' });
+  colA.appendChild(el('span', { class: 'mockup-col-header' }, 'AI Agent · Active'));
+  colA.appendChild(el('span', { class: 'mockup-skeleton-pill' }, 'Intent: Complete checkout'));
+  colA.appendChild(el('div', { class: 'mockup-skeleton-line' }));
+  colA.appendChild(el('div', { class: 'mockup-skeleton-line' }));
+  mockupGrid.appendChild(colA);
+
+  // Center Col (Playwright Overview)
+  const colB = el('div', { class: 'mockup-col' });
+  colB.appendChild(el('span', { class: 'mockup-col-header' }, 'Playwright Real-Time · Step 4/6'));
+  colB.appendChild(el('div', { class: 'mockup-skeleton-line' }));
+  colB.appendChild(el('span', { class: 'mockup-skeleton-pill' }, 'Healed: #add-to-bag ✓'));
+  colB.appendChild(el('div', { class: 'mockup-skeleton-line' }));
+  mockupGrid.appendChild(colB);
+
+  // Right Col (Notes)
+  const colC = el('div', { class: 'mockup-col' });
+  colC.appendChild(el('span', { class: 'mockup-col-header' }, 'Session Notes (3)'));
+  colC.appendChild(el('div', { class: 'mockup-skeleton-line' }));
+  colC.appendChild(el('div', { class: 'mockup-skeleton-line' }));
+  mockupGrid.appendChild(colC);
+
+  mockupContent.appendChild(mockupGrid);
+  mockupFrame.appendChild(mockupContent);
+  hero.appendChild(mockupFrame);
+  landing.appendChild(hero);
+
+  // 2. Demo Video Section
+  const videoSection = el('section', { class: 'video-section' });
+  videoSection.appendChild(el('div', { class: 'section-tag' }, 'Interactive Simulation'));
+  videoSection.appendChild(el('h2', { class: 'section-title' }, 'Watch HealTest in Action'));
+  videoSection.appendChild(
+    el(
+      'p',
+      { class: 'section-desc' },
+      'Observe how HealTest encounters a button ID redesign on shop-v2, identifies candidate alternatives, and verifies backend order creation before greenlighting the test.'
+    )
+  );
+
+  const videoCard = el('div', { class: 'video-player-frame' });
+  const topBar = el(
+    'div',
+    { class: 'player-top-bar' },
+    el('span', { class: 'player-dot red' }),
+    el('span', { class: 'player-dot yellow' }),
+    el('span', { class: 'player-dot green' }),
+    el('span', { class: 'player-title mono' }, 'healtest-act2-drift-recovery.mp4')
+  );
+  videoCard.appendChild(topBar);
+
+  const vViewport = el('div', { class: 'player-viewport' });
+  vViewport.appendChild(el('div', { class: 'sim-step-badge mono' }, 'ACT 2 · Version B: Redesign Detected'));
+
+  const browserMock = el('div', { class: 'sim-browser-mockup' });
+  browserMock.appendChild(el('div', { class: 'sim-browser-bar mono' }, 'http://127.0.0.1:4102/cart.html'));
+  const pageContent = el('div', { class: 'sim-page-content' });
+  pageContent.appendChild(el('h4', {}, 'Shopping Bag'));
+  pageContent.appendChild(el('p', { class: 'sim-item' }, 'Gizmo Mini — $19.99 (Qty 1)'));
+
+  const actionHigh = el('div', { class: 'sim-action-highlight' });
+  actionHigh.appendChild(el('button', { class: 'btn btn--primary btn--sm' }, 'Add to bag'));
+  actionHigh.appendChild(el('span', { class: 'sim-tag mono' }, 'Healed: #add-to-bag (Score 0.74)'));
+  pageContent.appendChild(actionHigh);
+  browserMock.appendChild(pageContent);
+  vViewport.appendChild(browserMock);
+
+  vViewport.appendChild(
+    el(
+      'div',
+      { class: 'sim-oracle-toast mono' },
+      'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS'
+    )
+  );
+  videoCard.appendChild(vViewport);
+
+  const controls = el('div', { class: 'player-controls' });
+  const playBtn = el('button', { class: 'btn btn--sm btn--primary', type: 'button' }, '▶ Play Demo');
+  playBtn.addEventListener('click', () => {
+    const dlg = document.getElementById('demo-video-dialog');
+    if (dlg) dlg.showModal();
+  });
+  controls.appendChild(playBtn);
+  const scrubber = el('div', { class: 'player-scrubber' }, el('div', { class: 'scrubber-fill' }));
+  controls.appendChild(scrubber);
+  controls.appendChild(el('span', { class: 'player-time mono' }, '00:14 / 00:42'));
+  videoCard.appendChild(controls);
+  videoSection.appendChild(videoCard);
+  landing.appendChild(videoSection);
+
+  // 3. Features Section
+  const featSection = el('section', { class: 'features-section' });
+  featSection.appendChild(el('div', { class: 'section-tag' }, 'Core Capabilities'));
+  featSection.appendChild(el('h2', { class: 'section-title' }, 'Engineered for Resilience, Built for Confidence'));
+  featSection.appendChild(
+    el(
+      'p',
+      { class: 'section-desc' },
+      'Traditional E2E tests break whenever frontend code changes. HealTest bridges user intent and execution reality.'
+    )
+  );
+
+  const featGrid = el('div', { class: 'features-grid' });
+  const features = [
+    {
+      icon: '🎯',
+      title: 'Intent-Based Testing',
+      desc: 'Declare tests through high-level user intents rather than brittle DOM paths. Tests remain valid even across major frontend framework migrations.'
+    },
+    {
+      icon: '⚡',
+      title: 'Automatic UI-Drift Recovery',
+      desc: 'When UI structures shift, HealTest inspects surrounding semantics, computes candidate match scores, and synthesizes localized selector repairs.'
+    },
+    {
+      icon: '🛡️',
+      title: 'Deterministic Verification',
+      desc: 'Never rely on hallucinated visual assertions. Every candidate repair is strictly verified against real database rows, API responses, and side-effect oracles.'
+    },
+    {
+      icon: '♻️',
+      title: 'Reusable Healed Steps',
+      desc: 'Approved repairs are stored directly into known-good execution plans. Future CI runs replay at native Playwright speeds with zero LLM API latency.'
+    }
+  ];
+
+  for (const f of features) {
+    const card = el('div', { class: 'feature-card' });
+    card.appendChild(el('div', { class: 'feature-icon-wrapper' }, f.icon));
+    card.appendChild(el('h3', { class: 'feature-title' }, f.title));
+    card.appendChild(el('p', { class: 'feature-desc' }, f.desc));
+    featGrid.appendChild(card);
+  }
+  featSection.appendChild(featGrid);
+  landing.appendChild(featSection);
+
+  // 4. How It Works Section
+  const howSection = el('section', { class: 'how-it-works-section' });
+  howSection.appendChild(el('div', { class: 'section-tag' }, 'Workflow Architecture'));
+  howSection.appendChild(el('h2', { class: 'section-title' }, 'How HealTest Works'));
+  howSection.appendChild(
+    el('p', { class: 'section-desc' }, 'Four disciplined steps from high-level user journey to deterministic CI greenlight.')
+  );
+
+  const stepsGrid = el('div', { class: 'workflow-steps' });
+  const stepsData = [
+    {
+      num: 'STEP 01',
+      title: 'Express Intent',
+      desc: 'Write declarative test intentions in natural language or compact YAML with explicit backend oracle invariants.',
+      code: 'intent: checkout-valid-card'
+    },
+    {
+      num: 'STEP 02',
+      title: 'Intercept UI Drift',
+      desc: 'Playwright executes against Chromium. When an element is missing, execution pauses and captures DOM state and screenshots.',
+      code: 'Error: #add-to-cart not found'
+    },
+    {
+      num: 'STEP 03',
+      title: 'Synthesize & Validate',
+      desc: 'Heuristic engine evaluates candidates, picks the best semantic match, and validates with fresh database state.',
+      code: 'Healed: #add-to-bag (Score 0.74)'
+    },
+    {
+      num: 'STEP 04',
+      title: 'Promote & Replay',
+      desc: 'Governance audits the change. Once promoted, subsequent test executions replay instantly with 0 LLM token cost.',
+      code: 'Verdict: HEALED_PASS (0 LLM)'
+    }
+  ];
+
+  for (const s of stepsData) {
+    const sc = el('div', { class: 'step-card' });
+    sc.appendChild(el('span', { class: 'step-num' }, s.num));
+    sc.appendChild(el('h4', {}, s.title));
+    sc.appendChild(el('p', {}, s.desc));
+    sc.appendChild(el('code', { class: 'step-code mono' }, s.code));
+    stepsGrid.appendChild(sc);
+  }
+  howSection.appendChild(stepsGrid);
+  landing.appendChild(howSection);
+
+  // 5. Pricing Preview
+  const pricingSection = el('section', { class: 'pricing-preview-section' });
+  pricingSection.appendChild(el('div', { class: 'section-tag' }, 'Transparent Plans'));
+  pricingSection.appendChild(el('h2', { class: 'section-title' }, 'Simple, Predictable Plans'));
+  pricingSection.appendChild(
+    el('p', { class: 'section-desc' }, 'Get started with core self-healing for free, or upgrade to Pro for automated code-change assistance.')
+  );
+
+  const priceRow = el('div', { class: 'pricing-preview-row' });
+  // Free Mini Card
+  const freeCard = el('div', { class: 'pricing-mini-card' });
+  freeCard.appendChild(el('h4', {}, 'Free Plan'));
+  freeCard.appendChild(el('div', { class: 'pricing-price' }, 'Free'));
+  const freeList = el(
+    'ul',
+    { class: 'pricing-mini-list' },
+    el('li', {}, 'AI Agent natural language intent'),
+    el('li', {}, 'Playwright integration & Chromium execution'),
+    el('li', {}, 'Session Notes & scratchpad'),
+    el('li', {}, 'Core test execution & self-healing')
+  );
+  freeCard.appendChild(freeList);
+  freeCard.appendChild(el('a', { href: '#/dashboard', class: 'btn btn--outline btn--sm' }, 'Get Started'));
+  priceRow.appendChild(freeCard);
+
+  // Pro Mini Card
+  const proCard = el('div', { class: 'pricing-mini-card highlight' });
+  proCard.appendChild(el('h4', {}, 'Pro Plan'));
+  proCard.appendChild(el('div', { class: 'pricing-price' }, 'Contact us'));
+  const proList = el(
+    'ul',
+    { class: 'pricing-mini-list' },
+    el('li', {}, 'Everything in Free'),
+    el('li', {}, 'Real-time code-change assistance'),
+    el('li', {}, 'Automatically apply small code fixes'),
+    el('li', {}, 'Developer review routing for risky changes')
+  );
+  proCard.appendChild(proList);
+  proCard.appendChild(el('a', { href: '#/billing', class: 'btn btn--primary btn--sm' }, 'Compare & Upgrade'));
+  priceRow.appendChild(proCard);
+
+  pricingSection.appendChild(priceRow);
+  landing.appendChild(pricingSection);
+
+  container.appendChild(landing);
+}
+
 export async function renderOverview() {
   const container = document.getElementById('view-overview');
   if (!container) return;
   container.textContent = '';
-  container.appendChild(el('h2', {}, 'Overview'));
+
+  // Render rich marketing landing sections
+  renderLandingHero(container);
+
+  const telemetryHeader = el('h2', { style: 'margin-top: calc(var(--gap) * 4);' }, 'Monitored Sites & Telemetry');
+  container.appendChild(telemetryHeader);
 
   try {
     const [sites, runs] = await Promise.all([
@@ -1145,6 +1453,964 @@ export async function renderAudit() {
   await fetchAndRenderAudit();
 }
 
+/* ==========================================================================
+   2. THREE-PANEL DASHBOARD WORKSPACE (AI Agent | Playwright | Notes)
+   ========================================================================== */
+let workspaceState = {
+  agentStatus: 'Healed', // 'Idle' | 'Running' | 'Healed' | 'Needs Review' | 'Failed'
+  intentText: 'Complete checkout using a valid card.',
+  activeStep: 4,
+  totalSteps: 6,
+  testName: 'checkout-valid-card.yaml',
+  targetUrl: 'http://127.0.0.1:4102/cart.html',
+  chatMessages: [
+    {
+      sender: 'agent',
+      time: '10:14:02',
+      text: 'Ready. I am monitoring Chromium execution on port 4102. Enter a natural language test intent or pick an example prompt below.'
+    },
+    {
+      sender: 'user',
+      time: '10:14:18',
+      text: 'Complete checkout using a valid card.'
+    },
+    {
+      sender: 'agent',
+      time: '10:14:22',
+      text: 'Executing checkout journey. Step 3 detected UI drift on selector #add-to-cart (redesign to shopping bag). Synthesizing self-healing candidate...',
+      healing: {
+        oldSelector: '#add-to-cart',
+        newSelector: '#add-to-bag',
+        score: '0.74',
+        provenance: 'text-similarity & role-button',
+        oracle: 'order-created ✓ | POST /api/orders 200 ✓'
+      }
+    }
+  ],
+  logs: [
+    { time: '10:14:19', level: 'info', msg: 'Browser launched: Chromium 124.0 headless context' },
+    { time: '10:14:20', level: 'info', msg: 'Navigated to http://127.0.0.1:4102/cart.html (HTTP 200)' },
+    { time: '10:14:21', level: 'warn', msg: 'Step 3: Element "#add-to-cart" not found in DOM tree' },
+    { time: '10:14:21', level: 'heal', msg: 'UI Drift: synthesized replacement "#add-to-bag" (score 0.74)' },
+    { time: '10:14:22', level: 'pass', msg: 'Clicked "#add-to-bag" · item quantity updated in bag' },
+    { time: '10:14:23', level: 'pass', msg: 'Backend Oracle validated: order-created invariant matched' }
+  ],
+  activeNoteId: 1,
+  notesSearch: ''
+};
+
+function getNotes() {
+  try {
+    const raw = localStorage.getItem('healtest_notes');
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // Ignore error
+  }
+  return [
+    {
+      id: 1,
+      title: 'Cart checkout selector drift on v2',
+      tag: 'Checkout',
+      updated: '10 mins ago',
+      body: 'Button ID changed from #add-to-cart to #add-to-bag in shop-v2 redesign. Self-healing candidate score was 0.74. Backend order verification passed cleanly with zero LLM fallback calls.'
+    },
+    {
+      id: 2,
+      title: 'Oracle assertions on order API',
+      tag: 'Oracles',
+      updated: '1 hour ago',
+      body: 'Always verify POST /api/orders returns HTTP 200 and sqlite orders table increment matches the order-created invariant before promoting repairs.'
+    },
+    {
+      id: 3,
+      title: 'Flaky payment button investigation',
+      tag: 'Investigation',
+      updated: 'Yesterday',
+      body: 'Investigating timing differences between instant replay and fresh navigation context. Candidate scoring heuristics successfully filtered ambiguous options.'
+    }
+  ];
+}
+
+function saveNotes(notes) {
+  try {
+    localStorage.setItem('healtest_notes', JSON.stringify(notes));
+  } catch {
+    // Ignore error
+  }
+}
+
+export function renderDashboardWorkspace() {
+  const container = document.getElementById('view-dashboard');
+  if (!container) return;
+  container.textContent = '';
+
+  const wrapper = el('div', { class: 'workspace-wrapper' });
+
+  // Workspace Header Bar
+  const headerBar = el('div', { class: 'workspace-header-bar' });
+  const titleGroup = el('div', { class: 'workspace-title-group' });
+  titleGroup.appendChild(el('h2', {}, 'Studio Workspace'));
+  titleGroup.appendChild(
+    el('p', { class: 'workspace-subtitle' }, 'Persistent 3-panel environment for intent orchestration, Playwright execution, and session notes.')
+  );
+  headerBar.appendChild(titleGroup);
+
+  const headerActions = el('div', { class: 'header-right' });
+  const resetBtn = el('button', { class: 'btn btn--outline btn--sm', type: 'button' }, '↺ Reset State');
+  resetBtn.addEventListener('click', () => {
+    workspaceState.agentStatus = 'Idle';
+    workspaceState.activeStep = 1;
+    workspaceState.chatMessages = [
+      {
+        sender: 'agent',
+        time: new Date().toLocaleTimeString(),
+        text: 'Session reset. Specify a natural language test intent or click an example prompt below.'
+      }
+    ];
+    workspaceState.logs = [
+      { time: new Date().toLocaleTimeString(), level: 'info', msg: 'Session reset. Connected to Chromium 124.0 on port 4102.' }
+    ];
+    renderDashboardWorkspace();
+  });
+  headerActions.appendChild(resetBtn);
+  headerBar.appendChild(headerActions);
+  wrapper.appendChild(headerBar);
+
+  // 3-Panel Grid
+  const grid = el('div', { class: 'workspace-3panel' });
+
+  // ==========================================
+  // PANEL A: AI AGENT (Left)
+  // ==========================================
+  const panelA = el('div', { class: 'panel agent-panel' });
+  const headerA = el('div', { class: 'panel-header' });
+  headerA.appendChild(el('h3', { class: 'panel-title' }, '🤖 AI Agent'));
+  const statusPill = el(
+    'span',
+    { class: `panel-status status--${workspaceState.agentStatus.toLowerCase().replace(/\s+/g, '')}` },
+    workspaceState.agentStatus
+  );
+  headerA.appendChild(statusPill);
+  panelA.appendChild(headerA);
+
+  // Conversation Area
+  const chatArea = el('div', { class: 'agent-chat-area' });
+  for (const m of workspaceState.chatMessages) {
+    const bubble = el('div', { class: `chat-bubble chat-bubble--${m.sender}` });
+    bubble.appendChild(el('div', { class: 'mono', style: 'font-size: 0.7rem; opacity: 0.7; margin-bottom: 2px;' }, `${m.sender.toUpperCase()} · ${m.time}`));
+    bubble.appendChild(el('div', {}, m.text));
+
+    if (m.healing) {
+      const hCard = el('div', { class: 'agent-healing-card' });
+      hCard.appendChild(el('div', { class: 'agent-healing-header' }, '⚡ Self-Healing Proposal Synthesized'));
+      hCard.appendChild(
+        el(
+          'p',
+          { class: 'agent-healing-desc mono' },
+          `Drift: ${m.healing.oldSelector} → ${m.healing.newSelector} (Score: ${m.healing.score})`
+        )
+      );
+      hCard.appendChild(
+        el('div', { class: 'agent-healing-desc mono', style: 'font-size: 0.75rem; margin-top: 4px;' }, `Oracle: ${m.healing.oracle}`)
+      );
+      bubble.appendChild(hCard);
+    }
+    chatArea.appendChild(bubble);
+  }
+  panelA.appendChild(chatArea);
+
+  // Suggested Actions Chips
+  const suggestionsBox = el('div', { class: 'agent-suggestions' });
+  suggestionsBox.appendChild(el('div', { class: 'suggestions-label' }, 'Suggested Intent Prompts'));
+  const chipsContainer = el('div', { class: 'suggestion-chips' });
+  const suggestedPrompts = [
+    'Complete checkout using a valid card.',
+    'Add item with promotional discount',
+    'Verify cart quantity increment',
+    'Shop v2 redesign checkout'
+  ];
+
+  for (const promptText of suggestedPrompts) {
+    const chip = el('button', { class: 'suggestion-chip', type: 'button' }, promptText);
+    chip.addEventListener('click', () => {
+      intentInput.value = promptText;
+      runAgentAction(promptText);
+    });
+    chipsContainer.appendChild(chip);
+  }
+  suggestionsBox.appendChild(chipsContainer);
+  panelA.appendChild(suggestionsBox);
+
+  // Input Container
+  const inputContainer = el('div', { class: 'agent-input-container' });
+  const intentInput = el('textarea', {
+    class: 'agent-input-box',
+    placeholder: 'Complete checkout using a valid card.'
+  });
+  intentInput.value = workspaceState.intentText;
+  intentInput.addEventListener('input', (e) => {
+    workspaceState.intentText = e.target.value;
+  });
+  intentInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      runAgentAction(intentInput.value);
+    }
+  });
+  inputContainer.appendChild(intentInput);
+
+  const actionRow = el('div', { class: 'agent-actions-row' });
+  actionRow.appendChild(el('span', { class: 'agent-state-label mono' }, `State: ${workspaceState.agentStatus}`));
+  const runBtn = el('button', { class: 'btn btn--primary btn--sm', type: 'button' }, '⚡ Run Agent');
+  runBtn.addEventListener('click', () => runAgentAction(intentInput.value));
+  actionRow.appendChild(runBtn);
+  inputContainer.appendChild(actionRow);
+  panelA.appendChild(inputContainer);
+  grid.appendChild(panelA);
+
+  function runAgentAction(intent) {
+    const text = (intent || 'Complete checkout using a valid card.').trim();
+    workspaceState.intentText = text;
+    workspaceState.agentStatus = 'Running';
+    workspaceState.activeStep = 2;
+    workspaceState.chatMessages.push({
+      sender: 'user',
+      time: new Date().toLocaleTimeString(),
+      text
+    });
+    workspaceState.chatMessages.push({
+      sender: 'agent',
+      time: new Date().toLocaleTimeString(),
+      text: 'Synthesizing test execution for intent... Checking baseline plan against target http://127.0.0.1:4102'
+    });
+    workspaceState.logs.push({
+      time: new Date().toLocaleTimeString(),
+      level: 'info',
+      msg: `Dispatched intent: "${text}"`
+    });
+    renderDashboardWorkspace();
+
+    setTimeout(() => {
+      workspaceState.activeStep = 4;
+      workspaceState.agentStatus = 'Healed';
+      workspaceState.chatMessages.push({
+        sender: 'agent',
+        time: new Date().toLocaleTimeString(),
+        text: 'UI Drift detected on shop-v2! Selector #add-to-cart replaced with #add-to-bag. Deterministic backend oracle verified order creation.',
+        healing: {
+          oldSelector: '#add-to-cart',
+          newSelector: '#add-to-bag',
+          score: '0.74',
+          provenance: 'text-similarity & role-button',
+          oracle: 'order-created ✓ | POST /api/orders 200 ✓'
+        }
+      });
+      workspaceState.logs.push(
+        { time: new Date().toLocaleTimeString(), level: 'heal', msg: 'Synthesized repair #add-to-bag (score 0.74)' },
+        { time: new Date().toLocaleTimeString(), level: 'pass', msg: 'Oracle PASS: order-created invariant satisfied' }
+      );
+      renderDashboardWorkspace();
+    }, 700);
+  }
+
+  // ==========================================
+  // PANEL B: PLAYWRIGHT OVERVIEW (Center, Wider)
+  // ==========================================
+  const panelB = el('div', { class: 'panel playwright-panel' });
+  const headerB = el('div', { class: 'panel-header' });
+  headerB.appendChild(el('h3', { class: 'panel-title' }, '🎭 Playwright Real-Time Overview'));
+  const connBadge = el('span', { class: 'chrome-badge mono' }, 'Chromium 124.0 Connected · Port 4102');
+  headerB.appendChild(connBadge);
+  panelB.appendChild(headerB);
+
+  // Test Meta Bar
+  const metaBar = el('div', { class: 'pw-test-meta-bar' });
+  const testInfo = el('div', {}, el('span', { class: 'pw-test-name mono' }, workspaceState.testName));
+  const stepInfo = el(
+    'span',
+    { class: 'pw-step-counter mono' },
+    `Step ${workspaceState.activeStep} of ${workspaceState.totalSteps}: Click #add-to-bag`
+  );
+  metaBar.appendChild(testInfo);
+  metaBar.appendChild(stepInfo);
+  panelB.appendChild(metaBar);
+
+  const progContainer = el('div', { class: 'pw-progress-container' });
+  const pct = Math.round((workspaceState.activeStep / workspaceState.totalSteps) * 100);
+  progContainer.appendChild(el('div', { class: 'pw-progress-bar', style: `width: ${pct}%;` }));
+  panelB.appendChild(progContainer);
+
+  // Large Browser Viewport Area
+  const viewportFrame = el('div', { class: 'pw-browser-viewport-frame' });
+  const chromeBar = el('div', { class: 'browser-chrome' });
+  const controls = el('div', { class: 'chrome-controls mono' }, '◀ ▶ ↺');
+  const urlBar = el('div', { class: 'chrome-url-bar mono' }, workspaceState.targetUrl);
+  const modeBadge = el('span', { class: 'chrome-badge' }, 'Viewport: 1280x800');
+  chromeBar.appendChild(controls);
+  chromeBar.appendChild(urlBar);
+  chromeBar.appendChild(modeBadge);
+  viewportFrame.appendChild(chromeBar);
+
+  // Live Screen Canvas
+  const liveCanvas = el('div', { class: 'browser-live-canvas' });
+  const storeHeader = el('div', { class: 'store-preview-header' });
+  storeHeader.appendChild(el('h4', {}, 'Gizmo Mini Store'));
+  storeHeader.appendChild(el('span', { class: 'badge badge--pass' }, 'Cart (1 item)'));
+  liveCanvas.appendChild(storeHeader);
+
+  const cartItem = el('div', { class: 'store-cart-item' });
+  cartItem.appendChild(el('span', { class: 'item-name' }, 'Gizmo Mini — Portable Speaker'));
+  cartItem.appendChild(el('span', { class: 'item-price mono' }, '$19.99 (Qty: 1)'));
+  liveCanvas.appendChild(cartItem);
+
+  // Prominent action zone with highlight box around healed element
+  const actionZone = el('div', { class: 'store-action-zone' });
+  actionZone.appendChild(el('span', { class: 'store-action-tag mono' }, 'Healed: #add-to-bag (Score 0.74)'));
+  actionZone.appendChild(el('button', { class: 'btn btn--primary' }, 'Add to bag'));
+  actionZone.appendChild(el('span', { class: 'mono', style: 'font-size: 0.8rem; font-weight: 600;' }, 'Subtotal: $19.99'));
+  liveCanvas.appendChild(actionZone);
+
+  // Oracle Toast
+  const oracleToast = el(
+    'div',
+    { class: 'sim-oracle-toast mono' },
+    'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS'
+  );
+  liveCanvas.appendChild(oracleToast);
+  viewportFrame.appendChild(liveCanvas);
+  panelB.appendChild(viewportFrame);
+
+  // Verdict Pills Bar
+  const pillsBar = el('div', { class: 'pw-verdict-pills' });
+  pillsBar.appendChild(el('span', { class: 'verdict-chip' }, 'Passed ✓'));
+  pillsBar.appendChild(el('span', { class: 'verdict-chip active-healed' }, 'Healed ↻ (Active)'));
+  pillsBar.appendChild(el('span', { class: 'verdict-chip' }, 'App Bug ✕'));
+  pillsBar.appendChild(el('span', { class: 'verdict-chip' }, 'Needs Review ?'));
+  panelB.appendChild(pillsBar);
+
+  // Expandable Logs Section
+  const logsSec = el('div', { class: 'pw-logs-section' });
+  const logsToggle = el('div', { class: 'pw-logs-toggle' });
+  logsToggle.appendChild(el('span', {}, `Execution Trace & Logs (${workspaceState.logs.length} entries)`));
+  logsToggle.appendChild(el('span', {}, '▾'));
+  logsSec.appendChild(logsToggle);
+
+  const logsContent = el('div', { class: 'pw-logs-content mono' });
+  for (const log of workspaceState.logs) {
+    const entry = el('div', { class: 'log-entry' });
+    entry.appendChild(el('span', { class: 'log-time' }, log.time));
+    entry.appendChild(el('span', { class: `log-level log-level--${log.level}` }, log.level.toUpperCase()));
+    entry.appendChild(el('span', { class: 'log-msg' }, log.msg));
+    logsContent.appendChild(entry);
+  }
+  logsSec.appendChild(logsContent);
+
+  let logsOpen = true;
+  logsToggle.addEventListener('click', () => {
+    logsOpen = !logsOpen;
+    logsContent.style.display = logsOpen ? 'flex' : 'none';
+  });
+
+  panelB.appendChild(logsSec);
+  grid.appendChild(panelB);
+
+  // ==========================================
+  // PANEL C: NOTES (Right)
+  // ==========================================
+  const panelC = el('div', { class: 'panel notes-panel' });
+  const headerC = el('div', { class: 'panel-header' });
+  const notes = getNotes();
+  headerC.appendChild(el('h3', { class: 'panel-title' }, '📝 Notes'));
+  const newNoteBtn = el('button', { class: 'btn btn--primary btn--sm', type: 'button' }, '+ New Note');
+  headerC.appendChild(newNoteBtn);
+  panelC.appendChild(headerC);
+
+  // Search Notes Field
+  const searchBar = el('div', { class: 'notes-search-bar' });
+  const searchInput = el('input', {
+    type: 'search',
+    class: 'notes-search-input',
+    placeholder: 'Search notes...'
+  });
+  searchInput.value = workspaceState.notesSearch;
+  searchInput.addEventListener('input', (e) => {
+    workspaceState.notesSearch = e.target.value.toLowerCase();
+    renderDashboardWorkspace();
+  });
+  searchBar.appendChild(searchInput);
+  panelC.appendChild(searchBar);
+
+  // Notes List
+  const notesList = el('div', { class: 'notes-list' });
+  const filteredNotes = notes.filter((n) => {
+    if (!workspaceState.notesSearch) return true;
+    return (
+      n.title.toLowerCase().includes(workspaceState.notesSearch) ||
+      n.body.toLowerCase().includes(workspaceState.notesSearch) ||
+      (n.tag && n.tag.toLowerCase().includes(workspaceState.notesSearch))
+    );
+  });
+
+  if (filteredNotes.length === 0) {
+    notesList.appendChild(
+      el('div', { class: 'empty-state', style: 'padding: calc(var(--gap) * 2); text-align: center;' }, 'No notes found.')
+    );
+  } else {
+    for (const note of filteredNotes) {
+      const item = el('div', {
+        class: `note-item ${note.id === workspaceState.activeNoteId ? 'active' : ''}`
+      });
+      const topRow = el('div', { class: 'note-item-header' });
+      topRow.appendChild(el('h4', { class: 'note-item-title' }, note.title));
+      topRow.appendChild(el('span', { class: 'note-item-time mono' }, note.updated));
+      item.appendChild(topRow);
+
+      item.appendChild(el('p', { class: 'note-item-preview' }, note.body));
+      if (note.tag) {
+        item.appendChild(el('span', { class: 'note-item-tag mono' }, note.tag));
+      }
+
+      item.addEventListener('click', () => {
+        workspaceState.activeNoteId = note.id;
+        renderDashboardWorkspace();
+      });
+      notesList.appendChild(item);
+    }
+  }
+  panelC.appendChild(notesList);
+
+  // Active Note Editor
+  const currentNote = notes.find((n) => n.id === workspaceState.activeNoteId) || filteredNotes[0] || null;
+  const editor = el('div', { class: 'note-editor' });
+
+  if (currentNote) {
+    const editTitle = el('input', { class: 'note-editor-title', value: currentNote.title });
+    const editTag = el('input', {
+      class: 'note-editor-title mono',
+      style: 'font-size: 0.75rem; font-weight: normal;',
+      placeholder: 'Tag (e.g. Checkout, Drift)',
+      value: currentNote.tag || ''
+    });
+    const editBody = el('textarea', { class: 'note-editor-body' });
+    editBody.value = currentNote.body;
+
+    const editorActions = el('div', { class: 'note-editor-actions' });
+    const saveNoteBtn = el('button', { class: 'btn btn--primary btn--sm', type: 'button' }, 'Save Note');
+    saveNoteBtn.addEventListener('click', () => {
+      currentNote.title = editTitle.value.trim() || 'Untitled Note';
+      currentNote.tag = editTag.value.trim();
+      currentNote.body = editBody.value;
+      currentNote.updated = 'Just now';
+      saveNotes(notes);
+      renderDashboardWorkspace();
+    });
+
+    const deleteNoteBtn = el('button', { class: 'btn btn--outline btn--sm', type: 'button' }, 'Delete');
+    deleteNoteBtn.addEventListener('click', () => {
+      const idx = notes.findIndex((n) => n.id === currentNote.id);
+      if (idx !== -1) {
+        notes.splice(idx, 1);
+        saveNotes(notes);
+        workspaceState.activeNoteId = notes[0]?.id || 0;
+        renderDashboardWorkspace();
+      }
+    });
+
+    editorActions.appendChild(saveNoteBtn);
+    editorActions.appendChild(deleteNoteBtn);
+
+    editor.appendChild(editTitle);
+    editor.appendChild(editTag);
+    editor.appendChild(editBody);
+    editor.appendChild(editorActions);
+  } else {
+    editor.appendChild(el('p', { class: 'empty-state' }, 'No note selected. Click "+ New Note" to write one.'));
+  }
+
+  newNoteBtn.addEventListener('click', () => {
+    const newId = Date.now();
+    const newNote = {
+      id: newId,
+      title: 'New Session Note',
+      tag: 'General',
+      updated: 'Just now',
+      body: 'Write test observations, selector drift notes, or oracle validation checks here.'
+    };
+    notes.unshift(newNote);
+    saveNotes(notes);
+    workspaceState.activeNoteId = newId;
+    renderDashboardWorkspace();
+  });
+
+  panelC.appendChild(editor);
+  grid.appendChild(panelC);
+
+  wrapper.appendChild(grid);
+  container.appendChild(wrapper);
+}
+
+/* ==========================================================================
+   3. SETTINGS PAGE
+   ========================================================================== */
+export function renderSettings() {
+  const container = document.getElementById('view-settings');
+  if (!container) return;
+  container.textContent = '';
+
+  const wrap = el('div', { class: 'settings-container' });
+
+  // Header
+  const hdr = el('div', { class: 'settings-header' });
+  hdr.appendChild(el('h2', {}, 'Workspace & Account Settings'));
+  hdr.appendChild(el('p', { class: 'section-desc', style: 'margin: 0;' }, 'Manage user profile, security policies, and HealTest runtime configuration.'));
+  wrap.appendChild(hdr);
+
+  // Settings feedback toast placeholder
+  const toastContainer = el('div', { id: 'settings-toast-container' });
+  wrap.appendChild(toastContainer);
+
+  let savedSettings = {};
+  try {
+    const raw = localStorage.getItem('healtest_settings');
+    if (raw) savedSettings = JSON.parse(raw);
+  } catch {
+    // Ignore error
+  }
+
+  // 1. Profile Information
+  const profCard = el('div', { class: 'card' });
+  profCard.appendChild(el('h3', {}, 'Profile Information'));
+  const avatarRow = el('div', { class: 'profile-avatar-row' });
+  avatarRow.appendChild(el('div', { class: 'avatar-circle' }, 'DL'));
+  const avatarMeta = el('div', {});
+  avatarMeta.appendChild(el('div', { style: 'font-weight: 700;' }, 'Demo Lead / QA Engineer'));
+  avatarMeta.appendChild(el('div', { style: 'font-size: 0.8rem; color: var(--text-secondary);' }, 'Organization: HealTest Core Workspace'));
+  avatarRow.appendChild(avatarMeta);
+  profCard.appendChild(avatarRow);
+
+  const nameGroup = el('div', { class: 'form-group' });
+  nameGroup.appendChild(el('label', { for: 'set-name' }, 'Display Name'));
+  const nameInput = el('input', { id: 'set-name', type: 'text', value: savedSettings.name || 'Demo Lead' });
+  nameGroup.appendChild(nameInput);
+  profCard.appendChild(nameGroup);
+
+  const emailGroup = el('div', { class: 'form-group' });
+  emailGroup.appendChild(el('label', { for: 'set-email' }, 'Work Email'));
+  const emailInput = el('input', { id: 'set-email', type: 'email', value: savedSettings.email || 'demo-lead@healtest.dev' });
+  emailGroup.appendChild(emailInput);
+  profCard.appendChild(emailGroup);
+  wrap.appendChild(profCard);
+
+  // 2. Security & Password
+  const secCard = el('div', { class: 'card' });
+  secCard.appendChild(el('h3', {}, 'Password & Security'));
+  const curPassGroup = el('div', { class: 'form-group' });
+  curPassGroup.appendChild(el('label', { for: 'set-cur-pass' }, 'Current Password'));
+  curPassGroup.appendChild(el('input', { id: 'set-cur-pass', type: 'password', placeholder: '••••••••••••' }));
+  secCard.appendChild(curPassGroup);
+
+  const newPassGroup = el('div', { class: 'form-group' });
+  newPassGroup.appendChild(el('label', { for: 'set-new-pass' }, 'New Password'));
+  newPassGroup.appendChild(el('input', { id: 'set-new-pass', type: 'password', placeholder: 'Enter new password' }));
+  secCard.appendChild(newPassGroup);
+  wrap.appendChild(secCard);
+
+  // 3. Notification Preferences
+  const notifCard = el('div', { class: 'card' });
+  notifCard.appendChild(el('h3', {}, 'Notification Preferences'));
+  const cb1 = el('input', { type: 'checkbox', checked: savedSettings.alertBug !== false });
+  notifCard.appendChild(el('label', { class: 'checkbox-label', style: 'margin-bottom: var(--gap);' }, cb1, ' Email alert when APP_BUG invariant violation is detected'));
+  const cb2 = el('input', { type: 'checkbox', checked: savedSettings.alertReview !== false });
+  notifCard.appendChild(el('label', { class: 'checkbox-label', style: 'margin-bottom: var(--gap);' }, cb2, ' Slack webhook notification when repair requires human review'));
+
+  const webhookGroup = el('div', { class: 'form-group', style: 'margin-top: var(--gap);' });
+  webhookGroup.appendChild(el('label', { for: 'set-webhook' }, 'Slack / Discord Webhook URL'));
+  const webhookInput = el('input', { id: 'set-webhook', type: 'text', placeholder: '127.0.0.1:4300/api/webhook/slack', value: savedSettings.webhook || '' });
+  webhookGroup.appendChild(webhookInput);
+  notifCard.appendChild(webhookGroup);
+  wrap.appendChild(notifCard);
+
+  // 4. Workspace Preferences
+  const wsCard = el('div', { class: 'card' });
+  wsCard.appendChild(el('h3', {}, 'Workspace Preferences'));
+  const timeoutGroup = el('div', { class: 'form-group' });
+  timeoutGroup.appendChild(el('label', { for: 'set-timeout' }, 'Default Execution Timeout (ms)'));
+  const timeoutInput = el('input', { id: 'set-timeout', type: 'number', value: savedSettings.timeout || 15000 });
+  timeoutGroup.appendChild(timeoutInput);
+  wsCard.appendChild(timeoutGroup);
+
+  const targetGroup = el('div', { class: 'form-group' });
+  targetGroup.appendChild(el('label', { for: 'set-target' }, 'Target Environment URL'));
+  const targetInput = el('input', { id: 'set-target', type: 'text', value: savedSettings.target || 'http://127.0.0.1:4102' });
+  targetGroup.appendChild(targetInput);
+  wsCard.appendChild(targetGroup);
+  wrap.appendChild(wsCard);
+
+  // Save Button
+  const saveBtn = el('button', { class: 'btn btn--primary', type: 'button', style: 'align-self: flex-start; min-height: 44px; padding: 0 24px;' }, 'Save Changes');
+  saveBtn.addEventListener('click', () => {
+    const toSave = {
+      name: nameInput.value.trim(),
+      email: emailInput.value.trim(),
+      alertBug: cb1.checked,
+      alertReview: cb2.checked,
+      webhook: webhookInput.value.trim(),
+      timeout: Number(timeoutInput.value),
+      target: targetInput.value.trim()
+    };
+    try {
+      localStorage.setItem('healtest_settings', JSON.stringify(toSave));
+    } catch {
+      // Ignore error
+    }
+    toastContainer.textContent = '';
+    const toast = el('div', { class: 'settings-toast' }, '✓ Settings saved successfully to workspace.');
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      toastContainer.textContent = '';
+    }, 4000);
+  });
+  wrap.appendChild(saveBtn);
+
+  container.appendChild(wrap);
+}
+
+/* ==========================================================================
+   4. BILLING PAGE
+   ========================================================================== */
+export function renderBilling() {
+  const container = document.getElementById('view-billing');
+  if (!container) return;
+  container.textContent = '';
+
+  const wrap = el('div', { class: 'billing-container' });
+
+  // Header
+  const hdr = el('div', { class: 'billing-header' });
+  hdr.appendChild(el('h2', {}, 'Simple, Transparent Pricing'));
+  hdr.appendChild(
+    el(
+      'p',
+      { class: 'section-desc' },
+      'Start free with core self-healing and Playwright integration. Upgrade to Pro for automated code fixes and developer review routing.'
+    )
+  );
+  wrap.appendChild(hdr);
+
+  // Plans Grid (Exactly 2 plans: FREE and PRO)
+  const grid = el('div', { class: 'plans-grid' });
+
+  // 1. FREE PLAN
+  const freeCard = el('div', { class: 'plan-card' });
+  freeCard.appendChild(el('h3', { class: 'plan-name' }, 'Free Plan'));
+  freeCard.appendChild(el('p', { class: 'plan-desc' }, 'Core intent-aware testing for individual engineers and open source repositories.'));
+  const freeCost = el('div', { class: 'plan-cost' });
+  freeCost.appendChild(document.createTextNode('Free '));
+  freeCost.appendChild(el('span', { class: 'plan-cost-period' }, '/ forever'));
+  freeCard.appendChild(freeCost);
+
+  const freeList = el('ul', { class: 'plan-features-list' });
+  const freeFeatures = [
+    'AI Agent natural language intent authoring',
+    'Playwright integration & Chromium execution',
+    'Notes panel & session persistence',
+    'Core test execution and self-healing functionality',
+    'Basic run history (last 50 runs)'
+  ];
+  for (const f of freeFeatures) {
+    const li = el('li', {});
+    li.appendChild(el('span', { class: 'check-icon' }, '✓'));
+    li.appendChild(el('span', {}, f));
+    freeList.appendChild(li);
+  }
+  freeCard.appendChild(freeList);
+  const curBtn = el('button', { class: 'btn btn--outline', disabled: '' }, 'Current Plan');
+  freeCard.appendChild(curBtn);
+  grid.appendChild(freeCard);
+
+  // 2. PRO PLAN
+  const proCard = el('div', { class: 'plan-card plan-pro' });
+  proCard.appendChild(el('span', { class: 'plan-badge' }, 'RECOMMENDED'));
+  proCard.appendChild(el('h3', { class: 'plan-name' }, 'Pro Plan'));
+  proCard.appendChild(
+    el('p', { class: 'plan-desc' }, 'Comprehensive testing governance and automated code repairs for high-velocity teams.')
+  );
+  const proCost = el('div', { class: 'plan-cost' });
+  proCost.appendChild(document.createTextNode('Contact us '));
+  proCost.appendChild(el('span', { class: 'plan-cost-period' }, '/ custom'));
+  proCard.appendChild(proCost);
+
+  const proList = el('ul', { class: 'plan-features-list' });
+  const proFeatures = [
+    'Everything in Free Plan included',
+    'Real-time code-change assistance',
+    'Automatically apply small, well-defined code fixes after appropriate validation',
+    'Route larger or risky changes to a developer for review',
+    'Show a clear review/approval state before risky modifications',
+    'Enterprise audit trail & SLA guarantees',
+    'Priority webhook integration & governance sign-off'
+  ];
+  for (const f of proFeatures) {
+    const li = el('li', {});
+    li.appendChild(el('span', { class: 'check-icon' }, '✓'));
+    li.appendChild(el('span', {}, f));
+    proList.appendChild(li);
+  }
+  proCard.appendChild(proList);
+  const upgradeBtn = el('button', { class: 'btn btn--primary', type: 'button' }, 'Upgrade to Pro');
+  upgradeBtn.addEventListener('click', () => {
+    alert('Thank you for your interest in HealTest Pro. Our engineering team will contact you shortly.');
+  });
+  proCard.appendChild(upgradeBtn);
+  grid.appendChild(proCard);
+
+  wrap.appendChild(grid);
+
+  // Comparison Matrix Card
+  const compCard = el('div', { class: 'card', style: 'margin-top: calc(var(--gap) * 3);' });
+  compCard.appendChild(el('h3', {}, 'Feature Comparison'));
+  const table = el('table', { class: 'table' });
+  table.appendChild(
+    el(
+      'thead',
+      {},
+      el(
+        'tr',
+        {},
+        el('th', {}, 'Feature & Capability'),
+        el('th', { style: 'text-align: center;' }, 'Free'),
+        el('th', { style: 'text-align: center;' }, 'Pro')
+      )
+    )
+  );
+  const matrix = [
+    ['AI Agent intent authoring', '✓ Included', '✓ Included'],
+    ['Playwright execution engine', '✓ Included', '✓ Included'],
+    ['Session notes panel', '✓ Included', '✓ Included'],
+    ['Self-healing test recovery', '✓ Included', '✓ Included'],
+    ['Real-time code-change assistance', '—', '✓ Included'],
+    ['Auto-apply small, validated fixes', '—', '✓ Included'],
+    ['Route risky changes to developer', '—', '✓ Included'],
+    ['Review & approval governance state', '—', '✓ Included']
+  ];
+  const tbody = el('tbody');
+  for (const [feat, freeVal, proVal] of matrix) {
+    tbody.appendChild(
+      el(
+        'tr',
+        {},
+        el('td', {}, feat),
+        el('td', { style: 'text-align: center;', class: freeVal.startsWith('✓') ? 'oracle-pass' : 'oracle-detail' }, freeVal),
+        el('td', { style: 'text-align: center;', class: 'oracle-pass' }, proVal)
+      )
+    );
+  }
+  table.appendChild(tbody);
+  compCard.appendChild(table);
+  wrap.appendChild(compCard);
+
+  container.appendChild(wrap);
+}
+
+/* ==========================================================================
+   5. AUTHENTICATION (LOGIN & SIGNUP)
+   ========================================================================== */
+export function renderAuth(initialMode = 'login') {
+  const container = document.getElementById('view-auth');
+  if (!container) return;
+  container.textContent = '';
+
+  let mode = initialMode; // 'login' | 'signup'
+
+  const wrap = el('div', { class: 'auth-wrapper' });
+
+  // Header
+  const hdr = el('div', { class: 'auth-header' });
+  hdr.appendChild(el('h2', {}, 'HealTest'));
+  hdr.appendChild(
+    el('p', {}, 'Sign in to access your self-healing testing workspace and execution governance.')
+  );
+  wrap.appendChild(hdr);
+
+  // Tabs
+  const tabs = el('div', { class: 'auth-tabs' });
+  const loginTab = el('button', { class: `auth-tab-btn ${mode === 'login' ? 'active' : ''}`, type: 'button' }, 'Sign In');
+  const signupTab = el('button', { class: `auth-tab-btn ${mode === 'signup' ? 'active' : ''}`, type: 'button' }, 'Create Account');
+  tabs.appendChild(loginTab);
+  tabs.appendChild(signupTab);
+  wrap.appendChild(tabs);
+
+  const formContainer = el('div', { class: 'auth-form-container' });
+  wrap.appendChild(formContainer);
+
+  function renderForm() {
+    formContainer.textContent = '';
+
+    const errorMsg = el('p', { class: 'error-msg', hidden: '' });
+    const successMsg = el('p', { class: 'settings-toast', hidden: '', style: 'margin-bottom: var(--gap);' });
+    formContainer.appendChild(errorMsg);
+    formContainer.appendChild(successMsg);
+
+    const form = el('form', { novalidate: '' });
+
+    if (mode === 'signup') {
+      const nameGroup = el('div', { class: 'form-group' });
+      nameGroup.appendChild(el('label', { for: 'auth-name' }, 'Full Name'));
+      const nameInput = el('input', { id: 'auth-name', type: 'text', required: '', placeholder: 'John Doe' });
+      nameGroup.appendChild(nameInput);
+      form.appendChild(nameGroup);
+    }
+
+    const emailGroup = el('div', { class: 'form-group' });
+    emailGroup.appendChild(el('label', { for: 'auth-email' }, 'Work Email'));
+    const emailInput = el('input', { id: 'auth-email', type: 'email', required: '', placeholder: 'engineer@company.com' });
+    emailGroup.appendChild(emailInput);
+    form.appendChild(emailGroup);
+
+    // Password field with show/hide toggle
+    const passGroup = el('div', { class: 'form-group' });
+    passGroup.appendChild(el('label', { for: 'auth-pass' }, 'Password'));
+    const passWrap = el('div', { class: 'password-input-wrapper' });
+    const passInput = el('input', { id: 'auth-pass', type: 'password', required: '', placeholder: '••••••••••••' });
+    const togglePassBtn = el('button', { type: 'button', class: 'pwd-toggle-btn' }, '👁');
+    togglePassBtn.addEventListener('click', () => {
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+      } else {
+        passInput.type = 'password';
+      }
+    });
+    passWrap.appendChild(passInput);
+    passWrap.appendChild(togglePassBtn);
+    passGroup.appendChild(passWrap);
+    form.appendChild(passGroup);
+
+    let confirmInput = null;
+    if (mode === 'signup') {
+      const confGroup = el('div', { class: 'form-group' });
+      confGroup.appendChild(el('label', { for: 'auth-conf-pass' }, 'Confirm Password'));
+      confirmInput = el('input', { id: 'auth-conf-pass', type: 'password', required: '', placeholder: '••••••••••••' });
+      confGroup.appendChild(confirmInput);
+      form.appendChild(confGroup);
+    }
+
+    const submitBtn = el(
+      'button',
+      { class: 'btn btn--primary', type: 'submit', style: 'width: 100%; min-height: 44px; margin-top: calc(var(--gap) * 2);' },
+      mode === 'login' ? 'Sign In' : 'Create Account'
+    );
+    form.appendChild(submitBtn);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      errorMsg.setAttribute('hidden', '');
+      successMsg.setAttribute('hidden', '');
+
+      const emailVal = emailInput.value.trim();
+      const passVal = passInput.value;
+
+      if (!emailVal || !emailVal.includes('@')) {
+        errorMsg.textContent = 'Please enter a valid email address.';
+        errorMsg.removeAttribute('hidden');
+        return;
+      }
+      if (!passVal || passVal.length < 6) {
+        errorMsg.textContent = 'Password must be at least 6 characters.';
+        errorMsg.removeAttribute('hidden');
+        return;
+      }
+      if (mode === 'signup' && confirmInput && confirmInput.value !== passVal) {
+        errorMsg.textContent = 'Passwords do not match.';
+        errorMsg.removeAttribute('hidden');
+        return;
+      }
+
+      // Demo login success
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Authenticating...';
+
+      setTimeout(() => {
+        try {
+          localStorage.setItem('healtest_user', JSON.stringify({ email: emailVal, loggedIn: true }));
+        } catch {
+          // Ignore
+        }
+
+        const navAuth = document.getElementById('nav-auth-btn');
+        if (navAuth) {
+          navAuth.textContent = 'Signed in (demo-lead)';
+        }
+
+        successMsg.textContent = '✓ Successfully authenticated! Redirecting to studio...';
+        successMsg.removeAttribute('hidden');
+
+        setTimeout(() => {
+          window.location.hash = '#/dashboard';
+        }, 600);
+      }, 500);
+    });
+
+    formContainer.appendChild(form);
+  }
+
+  loginTab.addEventListener('click', () => {
+    mode = 'login';
+    loginTab.classList.add('active');
+    signupTab.classList.remove('active');
+    renderForm();
+  });
+
+  signupTab.addEventListener('click', () => {
+    mode = 'signup';
+    signupTab.classList.add('active');
+    loginTab.classList.remove('active');
+    renderForm();
+  });
+
+  renderForm();
+  container.appendChild(wrap);
+}
+
+/* ==========================================================================
+   6. DEMO VIDEO MODAL DIALOG CONTROLLER
+   ========================================================================== */
+export function initDemoVideoModal() {
+  const dlg = document.getElementById('demo-video-dialog');
+  const closeBtn = document.getElementById('close-video-modal');
+  const playPauseBtn = document.getElementById('sim-play-pause-btn');
+  const fill = document.getElementById('sim-progress-fill');
+  const timeText = document.getElementById('sim-time-text');
+
+  if (closeBtn && dlg) {
+    closeBtn.addEventListener('click', () => dlg.close());
+  }
+
+  let isPlaying = false;
+  let progressPct = 35;
+  let timerId = null;
+
+  if (playPauseBtn && fill && timeText) {
+    playPauseBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        playPauseBtn.textContent = '❚❚ Pause';
+        timerId = setInterval(() => {
+          progressPct += 2;
+          if (progressPct > 100) progressPct = 0;
+          fill.style.width = `${progressPct}%`;
+          const sec = Math.round((progressPct / 100) * 42);
+          const secStr = sec < 10 ? `0${sec}` : `${sec}`;
+          timeText.textContent = `00:${secStr} / 00:42`;
+        }, 300);
+      } else {
+        playPauseBtn.textContent = '▶ Play';
+        if (timerId) clearInterval(timerId);
+      }
+    });
+  }
+}
+
+
 export function initTheme() {
   try {
     const saved = localStorage.getItem('healtest-theme');
@@ -1194,29 +2460,36 @@ if (typeof window !== 'undefined') {
     BADGE,
     badge,
     route,
+    renderLandingHero,
     renderOverview,
+    renderDashboardWorkspace,
     renderChanges,
     renderChange,
     renderRepair,
     renderAudit,
+    renderSettings,
+    renderBilling,
+    renderAuth,
     renderRepairPreview,
     renderActionsBar,
     openConfirmDialog,
     initConfirmDialog,
     initTheme,
+    initDemoVideoModal,
   };
   window.addEventListener('hashchange', route);
   if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        initTheme();
-        initConfirmDialog();
-        route();
-      });
-    } else {
+    const initApp = () => {
       initTheme();
       initConfirmDialog();
+      initDemoVideoModal();
       route();
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
     }
   }
 }
+

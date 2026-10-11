@@ -5,10 +5,21 @@
   --jade:#1F6B57; --jade-wash:#DDEEE6; --amber:#8A5A00; --gold-wash:#F4E7C2;
   --slate:#3B4A6B; --slate-wash:#E3E8F2;
   --line:#E4D9C3; --line-strong:#8C7B62; --focus:#B3202A; --gold-leaf:#C9A227;
-  --radius:4px; --gap:8px;
+  --radius:6px; --gap:8px;
   --font-serif:"Songti SC","Noto Serif SC","Source Han Serif SC","STSong","SimSun",Georgia,serif;
-  --font-sans:system-ui,-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",sans-serif;
-  --font-mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;
+  --font-sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;
+  --primary-charcoal:#111111;
+  --secondary-charcoal:#44403C;
+  --tertiary-gray:#78716C;
+  --bg-warm:#FBF7F2;
+  --violet-accent:#8171F0;
+  --violet-wash:#F2EFFD;
+  --violet-deep:#5B4AC4;
+  --light-surface:#FFFFFF;
+  --border:#E5E0DA;
+  --text-primary:#191817;
+  --text-secondary:#78716C;
 }
 /* @dark */
 @media (prefers-color-scheme: dark) {
@@ -19,6 +30,17 @@
     --jade:#5FBFA3; --jade-wash:#17302A; --amber:#E3A33B; --gold-wash:#3A2E14;
     --slate:#8FA6D6; --slate-wash:#1E2638;
     --line:#3A2F28; --line-strong:#7A6B5A; --focus:#E5646C; --gold-leaf:#E0B84A;
+    --primary-charcoal:#F5F3EF;
+    --secondary-charcoal:#D6D3D1;
+    --tertiary-gray:#A8A29E;
+    --bg-warm:#181615;
+    --violet-accent:#9B8DF5;
+    --violet-wash:#2B2547;
+    --violet-deep:#B5AAFA;
+    --light-surface:#221E1C;
+    --border:#3B3530;
+    --text-primary:#F5F3EF;
+    --text-secondary:#A8A29E;
   }
 }
 :root[data-theme="dark"] {
@@ -28,4 +50,15 @@
   --jade:#5FBFA3; --jade-wash:#17302A; --amber:#E3A33B; --gold-wash:#3A2E14;
   --slate:#8FA6D6; --slate-wash:#1E2638;
   --line:#3A2F28; --line-strong:#7A6B5A; --focus:#E5646C; --gold-leaf:#E0B84A;
+  --primary-charcoal:#F5F3EF;
+  --secondary-charcoal:#D6D3D1;
+  --tertiary-gray:#A8A29E;
+  --bg-warm:#181615;
+  --violet-accent:#9B8DF5;
+  --violet-wash:#2B2547;
+  --violet-deep:#B5AAFA;
+  --light-surface:#221E1C;
+  --border:#3B3530;
+  --text-primary:#F5F3EF;
+  --text-secondary:#A8A29E;
 }

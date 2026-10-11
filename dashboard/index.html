@@ -3,38 +3,111 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HealTest</title>
+  <title>HealTest — Intent-Aware Self-Healing E2E Testing</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <div class="band"></div>
-  <header>
-    <a href="#/" class="brand">HealTest</a>
-    <nav>
-      <a href="#/">Overview</a>
-      <a href="#/changes">Changes</a>
-      <a href="#/audit">Audit</a>
-    </nav>
-    <button id="theme-toggle" class="btn" aria-label="Toggle theme">◐</button>
+  <header class="app-header">
+    <div class="header-left">
+      <a href="#/" class="brand">HealTest</a>
+      <nav class="main-nav">
+        <a href="#/" id="nav-overview" class="nav-link">Overview</a>
+        <a href="#/dashboard" id="nav-dashboard" class="nav-link">Dashboard</a>
+        <a href="#/changes" id="nav-changes" class="nav-link">Changes</a>
+        <a href="#/audit" id="nav-audit" class="nav-link">Audit</a>
+        <a href="#/settings" id="nav-settings" class="nav-link">Settings</a>
+        <a href="#/billing" id="nav-billing" class="nav-link">Billing</a>
+      </nav>
+    </div>
+    <div class="header-right">
+      <a href="#/dashboard" class="btn btn--primary btn--sm header-cta">Open Studio</a>
+      <a href="#/login" id="nav-auth-btn" class="btn btn--outline btn--sm auth-nav-link">Sign In</a>
+      <button id="theme-toggle" class="btn btn--icon" aria-label="Toggle theme">◐</button>
+    </div>
   </header>
-  <main>
+
+  <main class="app-main">
+    <!-- 1. Landing & Monitored Overview (D1) -->
     <section id="view-overview"></section>
+
+    <!-- 2. Main 3-Panel Workspace: AI Agent | Playwright Overview | Notes -->
+    <section id="view-dashboard" hidden></section>
+
+    <!-- 3. Existing Governance Views (D2 - D7) -->
     <section id="view-changes" hidden></section>
     <section id="view-change" hidden></section>
     <section id="view-repair" hidden></section>
     <section id="view-audit" hidden></section>
+
+    <!-- 4. Settings Page -->
+    <section id="view-settings" hidden></section>
+
+    <!-- 5. Billing Page -->
+    <section id="view-billing" hidden></section>
+
+    <!-- 6. Authentication (Login & Signup) -->
+    <section id="view-auth" hidden></section>
   </main>
+
+  <!-- Interactive Demo Video Modal -->
+  <dialog id="demo-video-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>HealTest in Action: Intent-Aware Self-Healing</h3>
+        <button id="close-video-modal" class="btn btn--icon">✕</button>
+      </div>
+      <div class="modal-body video-simulation-body">
+        <div class="video-player-frame">
+          <div class="player-top-bar">
+            <span class="player-dot red"></span>
+            <span class="player-dot yellow"></span>
+            <span class="player-dot green"></span>
+            <span class="player-title mono">healtest-demo-v1-to-v2.mp4</span>
+          </div>
+          <div class="player-viewport">
+            <div id="sim-video-canvas" class="sim-viewport-canvas">
+              <div class="sim-step-badge mono">ACT 2 · Version B: Redesign Detected</div>
+              <div class="sim-browser-mockup">
+                <div class="sim-browser-bar mono">http://127.0.0.1:4102/cart.html</div>
+                <div class="sim-page-content">
+                  <h4>Shopping Bag</h4>
+                  <p class="sim-item">Gizmo Mini — $19.99</p>
+                  <div class="sim-action-highlight">
+                    <button class="btn btn--primary">Add to bag</button>
+                    <span class="sim-tag mono">Healed: #add-to-bag (Score 0.74)</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sim-oracle-toast mono">
+                Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS
+              </div>
+            </div>
+          </div>
+          <div class="player-controls">
+            <button id="sim-play-pause-btn" class="btn btn--sm btn--primary">❚❚ Pause</button>
+            <div class="player-scrubber">
+              <div id="sim-progress-fill" class="scrubber-fill"></div>
+            </div>
+            <span id="sim-time-text" class="player-time mono">00:14 / 00:42</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Governance Action Confirm Dialog (T19 D6) -->
   <dialog id="confirm-dialog">
     <form method="dialog">
       <h3>Confirm Action</h3>
       <div class="form-group">
         <label for="actor">Actor</label>
-        <input id="actor" name="actor" type="text" required>
+        <input id="actor" name="actor" type="text" required placeholder="e.g. demo-lead or tech-lead">
       </div>
       <div class="form-group">
         <label for="reason">Reason</label>
-        <input id="reason" name="reason" type="text" required>
+        <input id="reason" name="reason" type="text" required placeholder="e.g. Validated harmless redesign">
       </div>
       <div class="dialog-actions">
         <button value="cancel" class="btn">Cancel</button>
@@ -42,6 +115,10 @@
       </div>
     </form>
   </dialog>
+
+  <!-- Toast Notification Feedback -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
   <script src="app.js" type="module"></script>
 </body>
 </html>
