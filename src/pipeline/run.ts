@@ -10,11 +10,12 @@ import { captureSnapshot } from '../snapshot/capture.js';
 import { findPlanForRun } from '../governance/reuse.js';
 import { planAndExecute } from '../planner/plan.js';
 import { runOracles } from '../oracle/runner.js';
-import { decideVerdict } from '../classify/verdict.js';
+import { decideVerdict, type VerdictDecision } from '../classify/verdict.js';
 import { makeLlm } from '../llm/client.js';
 import { replayWithRepair } from '../repair/engine.js';
 import { loadPolicy } from '../governance/policy.js';
-import type { RunOutcome, Step } from '../types.js';
+import { runValidation, type ValidationOutcome } from '../validate/validation.js';
+import type { OracleResult, RunOutcome, Step } from '../types.js';
 
 export async function runIntent(
   intentPath: string,
@@ -100,6 +101,8 @@ export async function runIntent(
 
     let changeIds: number[] = [];
     let repairId: number | null = null;
+    let validationRunId: number | null = null;
+    let valResult: ValidationOutcome | null = null;
     let repaired = false;
     let replanned = false;
     let executionAppError = false;
@@ -159,24 +162,48 @@ export async function runIntent(
           oracleResults: [],
         };
       } else if (repaired) {
+        const renumberedSteps = replayResult.newSteps.map((s, idx) => ({
+          ...s,
+          stepId: `s${idx + 1}`,
+        }));
         const stepPlanId = repo.insertStepPlan(
           {
             intentId: intentRow.id,
             siteId: site.id,
-            steps: replayResult.newSteps,
+            steps: renumberedSteps,
             origin: 'repair',
             startHash: startSnap.contentHash,
           },
           'system:repair'
         );
+        const lastChangeId = changeIds[changeIds.length - 1];
+        const proposer =
+          renumberedSteps.some(s => s.provenance === 'llm') || replayResult.llmCalls > 0
+            ? 'llm'
+            : 'heuristic';
         repairId = repo.insertRepair({
-          changeId: replayResult.changeIds[0],
-          proposer: replayResult.llmCalls > 0 ? 'llm' : 'heuristic',
-          proposal: { steps: replayResult.newSteps, pendingChoice: null },
+          changeId: lastChangeId,
+          proposer,
+          proposal: { steps: renumberedSteps, pendingChoice: null },
           status: 'proposed',
           stepPlanId,
           explanation: 'Proposed repair',
         });
+
+        valResult = await runValidation(repo, repairId, {
+          target,
+          headless: opts?.headless ?? true,
+          policy: loadPolicy(),
+        });
+        validationRunId = valResult.validationRunId;
+
+        const isValidated = valResult.verdict === 'PASS' || valResult.verdict === 'HEALED_PASS';
+        repo.setRepairStatus(
+          repairId,
+          isValidated ? 'validated' : 'rejected',
+          'system:validator',
+          `Validation verdict: ${valResult.verdict}`
+        );
       }
     } else {
       // 6a. No plan (first run / baseline)
@@ -244,25 +271,48 @@ export async function runIntent(
       }
     }
 
-    const oracles = await runOracles(intent, targetOrigin, session.network, session.page);
+    let oracles: OracleResult[];
+    let verdictDecision: VerdictDecision;
 
-    const appError =
-      session.network.some(n => /^\/api\//.test(n.path) && n.status >= 500) ||
-      executionAppError ||
-      plannerStatus === 'app_error';
+    if (repaired && valResult) {
+      oracles = valResult.oracleResults;
+      const validationAppError =
+        valResult.verdict === 'APP_BUG' ||
+        valResult.oracleResults.some(r => !r.supportingOnly && !r.ok);
 
-    const verdictDecision = decideVerdict({
-      toolError: false,
-      appError,
-      oracleResults: oracles,
-      plannerStatus: plannerStatus === 'app_error' ? 'done' : plannerStatus,
-      guardViolation: session.violations.length > 0,
-      repaired,
-      replanned,
-      ambiguous: false,
-      reusedRepair: plan ? plan.repairId != null : false,
-      planIsKnownGood: plan ? plan.repairId == null : false,
-    });
+      verdictDecision = decideVerdict({
+        toolError: false,
+        appError: validationAppError || executionAppError,
+        oracleResults: valResult.oracleResults,
+        plannerStatus: valResult.verdict === 'FAIL_UNREPAIRABLE' ? 'stuck' : 'done',
+        guardViolation: session.violations.length > 0,
+        repaired: true,
+        replanned,
+        ambiguous: false,
+        reusedRepair: plan ? plan.repairId != null : false,
+        planIsKnownGood: false,
+      });
+    } else {
+      oracles = await runOracles(intent, targetOrigin, session.network, session.page);
+
+      const appError =
+        session.network.some(n => /^\/api\//.test(n.path) && n.status >= 500) ||
+        executionAppError ||
+        plannerStatus === 'app_error';
+
+      verdictDecision = decideVerdict({
+        toolError: false,
+        appError,
+        oracleResults: oracles,
+        plannerStatus: plannerStatus === 'app_error' ? 'done' : plannerStatus,
+        guardViolation: session.violations.length > 0,
+        repaired: false,
+        replanned: false,
+        ambiguous: false,
+        reusedRepair: plan ? plan.repairId != null : false,
+        planIsKnownGood: plan ? plan.repairId == null : false,
+      });
+    }
 
     if (!plan && verdictDecision.verdict === 'PASS') {
       const stepPlanId = repo.insertStepPlan(
@@ -287,7 +337,7 @@ export async function runIntent(
       verdict: verdictDecision.verdict,
       explanation,
       llmCalls: llm.calls,
-      evidence: [],
+      evidence: { changeIds },
       reusedRepairId: plan?.repairId ?? null,
     });
 
@@ -300,7 +350,7 @@ export async function runIntent(
       classification: verdictDecision.classification,
       changeIds,
       repairId,
-      validationRunId: null,
+      validationRunId,
       reusedRepairId: plan?.repairId ?? null,
       llmCalls: llm.calls,
       explanation,

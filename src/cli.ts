@@ -5,6 +5,8 @@ import { openDb } from './db/index.js';
 import { Repo } from './db/repo.js';
 import { diffSnapshots } from './diff/differ.js';
 import { runIntent } from './pipeline/run.js';
+import { runValidation } from './validate/validation.js';
+import { exitCodeFor } from './classify/verdict.js';
 import type { ElementRecord, PageSnapshot } from './types.js';
 
 export const program = new Command();
@@ -92,6 +94,24 @@ program
   });
 
 program
+  .command('validate <repairId>')
+  .description('Run validation on a repair proposal')
+  .option('--db <path>', 'Path to SQLite database')
+  .option('--target <url>', 'Target base URL')
+  .action(async (repairIdStr: string, opts: { db?: string; target?: string }) => {
+    try {
+      const repairId = parseInt(repairIdStr, 10);
+      const db = openDb(opts.db);
+      const repo = new Repo(db);
+      const outcome = await runValidation(repo, repairId, { target: opts.target });
+      process.exitCode = exitCodeFor(outcome.verdict);
+    } catch (err) {
+      console.error(err);
+      process.exitCode = 1;
+    }
+  });
+
+program
   .command('report <runId>')
   .description('Display execution report for a run')
   .option('--json', 'Output report as JSON')
@@ -131,4 +151,4 @@ program
     }
   });
 
-program.parseAsync(process.argv);
+await program.parseAsync(process.argv);

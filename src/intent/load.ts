@@ -55,18 +55,17 @@ function resolveTemplates(
 }
 
 /**
- * Load, validate, template-resolve, and deep-freeze an intent YAML file.
+ * Parse, validate, template-resolve, and deep-freeze an intent YAML string.
  *
- * @param path  Absolute or relative path to the `.intent.yaml` file.
+ * @param raw  YAML string of the intent file.
  * @returns `{ intent, sha256, raw }` — intent is immutable.
  */
-export function loadIntent(path: string): {
+export function parseIntent(raw: string): {
   intent: Readonly<Intent>;
   sha256: string;
   raw: string;
 } {
-  const raw = readFileSync(path, 'utf8');
-  const sha256 = createHash('sha256').update(readFileSync(path)).digest('hex');
+  const sha256 = createHash('sha256').update(Buffer.from(raw, 'utf8')).digest('hex');
 
   // Parse YAML then validate with zod (throws on unknown keys or wrong types)
   const obj = YAML.parse(raw) as unknown;
@@ -80,3 +79,19 @@ export function loadIntent(path: string): {
 
   return { intent: deepFreeze(resolved), sha256, raw };
 }
+
+/**
+ * Load, validate, template-resolve, and deep-freeze an intent YAML file.
+ *
+ * @param path  Absolute or relative path to the `.intent.yaml` file.
+ * @returns `{ intent, sha256, raw }` — intent is immutable.
+ */
+export function loadIntent(path: string): {
+  intent: Readonly<Intent>;
+  sha256: string;
+  raw: string;
+} {
+  const raw = readFileSync(path, 'utf8');
+  return parseIntent(raw);
+}
+

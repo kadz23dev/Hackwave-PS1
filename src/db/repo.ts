@@ -446,6 +446,118 @@ export class Repo {
     });
   }
 
+  getRepair(id: number, actor = 'system'): {
+    id: number;
+    change_id: number;
+    proposer: string;
+    proposal_json: string;
+    status: string;
+    explanation: string;
+    created_at: string;
+    step_plan_id: number | null;
+    proposal?: unknown;
+  } | null {
+    return this.tx(actor, 'repair.get', 'repairs', () => {
+      const row = this.db.prepare('SELECT * FROM repairs WHERE id = ?').get(id) as {
+        id: number;
+        change_id: number;
+        proposer: string;
+        proposal_json: string;
+        status: string;
+        explanation: string;
+        created_at: string;
+        step_plan_id: number | null;
+      } | undefined;
+      if (!row) return { id, payload: { id }, result: null };
+      return {
+        id,
+        payload: { id },
+        result: {
+          ...row,
+          proposal: tryParse(row.proposal_json),
+        },
+      };
+    });
+  }
+
+  getStepPlan(id: number, actor = 'system'): {
+    id: number;
+    intent_id: number;
+    site_id: number;
+    steps_json: string;
+    origin: string;
+    repair_id: number | null;
+    start_hash: string;
+    created_at: string;
+    steps?: unknown;
+  } | null {
+    return this.tx(actor, 'plan.get', 'step_plans', () => {
+      const row = this.db.prepare('SELECT * FROM step_plans WHERE id = ?').get(id) as {
+        id: number;
+        intent_id: number;
+        site_id: number;
+        steps_json: string;
+        origin: string;
+        repair_id: number | null;
+        start_hash: string;
+        created_at: string;
+      } | undefined;
+      if (!row) return { id, payload: { id }, result: null };
+      return {
+        id,
+        payload: { id },
+        result: {
+          ...row,
+          steps: tryParse(row.steps_json),
+        },
+      };
+    });
+  }
+
+  getIntent(id: number, actor = 'system'): {
+    id: number;
+    name: string;
+    sha256: string;
+    body: string;
+  } | null {
+    return this.tx(actor, 'intent.get', 'intents', () => {
+      const row = this.db.prepare('SELECT * FROM intents WHERE id = ?').get(id) as {
+        id: number;
+        name: string;
+        sha256: string;
+        body: string;
+      } | undefined;
+      if (!row) return { id, payload: { id }, result: null };
+      return { id, payload: { id }, result: row };
+    });
+  }
+
+  getSite(id: number, actor = 'system'): {
+    id: number;
+    name: string;
+    base_url: string;
+    allowlist_json: string;
+    allowlist?: unknown;
+  } | null {
+    return this.tx(actor, 'site.get', 'sites', () => {
+      const row = this.db.prepare('SELECT * FROM sites WHERE id = ?').get(id) as {
+        id: number;
+        name: string;
+        base_url: string;
+        allowlist_json: string;
+      } | undefined;
+      if (!row) return { id, payload: { id }, result: null };
+      return {
+        id,
+        payload: { id },
+        result: {
+          ...row,
+          allowlist: tryParse(row.allowlist_json),
+        },
+      };
+    });
+  }
+
   insertValidationRun(repairId: number, runId: number, verdict: string, oracleSummary: unknown, actor = 'system'): number {
     return this.tx(actor, 'validation_run.insert', 'validation_runs', () => {
       const summaryJson = typeof oracleSummary === 'string'
