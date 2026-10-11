@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kaizen AI — Intent-Aware Self-Healing E2E Testing</title>
-  <link rel="stylesheet" href="tokens.css">
-  <link rel="stylesheet" href="app.css">
+  <title>Kaizen AI</title>
+  <link rel="stylesheet" href="tokens.css?v=2">
+  <link rel="stylesheet" href="app.css?v=2">
 </head>
 <body>
   <div class="app-layout">
@@ -21,10 +21,6 @@
           <span class="nav-icon">⊞</span>
           <span class="nav-label">Dashboard</span>
           <span class="sr-only">Overview</span>
-        </a>
-        <a href="#/dashboard" class="nav-item">
-          <span class="nav-icon">⚡</span>
-          <span class="nav-label">Studio</span>
         </a>
         <a href="#/runs" class="nav-item">
           <span class="nav-icon">▶</span>
@@ -59,14 +55,6 @@
           <span class="nav-label">Settings</span>
           <span class="sr-only">Audit</span>
         </a>
-        <a href="#/settings" class="nav-item">
-          <span class="nav-icon">🔧</span>
-          <span class="nav-label">Config</span>
-        </a>
-        <a href="#/billing" class="nav-item">
-          <span class="nav-icon">💳</span>
-          <span class="nav-label">Billing</span>
-        </a>
       </nav>
       <div class="sidebar-wave-art" aria-hidden="true">
         <svg viewBox="0 0 200 45" class="wave-art-svg">
@@ -88,12 +76,10 @@
     <div class="app-main-column">
       <div class="top-utility-actions">
         <button id="theme-toggle" class="btn btn-icon-round" aria-label="Toggle theme" title="Toggle theme">◐</button>
-        <button id="open-demo-video-btn" class="btn btn--outline btn--sm" title="Watch Demo">▶ Demo Video</button>
         <button class="btn btn-icon-round" aria-label="Notifications" title="Notifications">🔔</button>
       </div>
       <main>
         <section id="view-overview"></section>
-        <section id="view-dashboard" hidden></section>
         <section id="view-runs" hidden></section>
         <section id="view-changes" hidden></section>
         <section id="view-change" hidden></section>
@@ -104,70 +90,19 @@
         <section id="view-analytics" hidden></section>
         <section id="view-storage" hidden></section>
         <section id="view-audit" hidden></section>
-        <section id="view-settings" hidden></section>
-        <section id="view-billing" hidden></section>
-        <section id="view-auth" hidden></section>
       </main>
     </div>
   </div>
-
-  <!-- Interactive Demo Video Modal -->
-  <dialog id="demo-video-dialog" class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Kaizen AI in Action: Intent-Aware Self-Healing</h3>
-        <button id="close-video-modal" class="btn btn--icon">✕</button>
-      </div>
-      <div class="modal-body video-simulation-body">
-        <div class="video-player-frame">
-          <div class="player-top-bar">
-            <span class="player-dot red"></span>
-            <span class="player-dot yellow"></span>
-            <span class="player-dot green"></span>
-            <span class="player-title mono">kaizen-ai-demo-v1-to-v2.mp4</span>
-          </div>
-          <div class="player-viewport">
-            <div id="sim-video-canvas" class="sim-viewport-canvas">
-              <div class="sim-step-badge mono">ACT 2 · Version B: Redesign Detected</div>
-              <div class="sim-browser-mockup">
-                <div class="sim-browser-bar mono">http://127.0.0.1:4102/cart.html</div>
-                <div class="sim-page-content">
-                  <h4>Shopping Bag</h4>
-                  <p class="sim-item">Gizmo Mini — $19.99</p>
-                  <div class="sim-action-highlight">
-                    <button class="btn btn--primary">Add to bag</button>
-                    <span class="sim-tag mono">Healed: #add-to-bag (Score 0.74)</span>
-                  </div>
-                </div>
-              </div>
-              <div class="sim-oracle-toast mono">
-                Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS
-              </div>
-            </div>
-          </div>
-          <div class="player-controls">
-            <button id="sim-play-pause-btn" class="btn btn--sm btn--primary">❚❚ Pause</button>
-            <div class="player-scrubber">
-              <div id="sim-progress-fill" class="scrubber-fill"></div>
-            </div>
-            <span id="sim-time-text" class="player-time mono">00:14 / 00:42</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- Governance Action Confirm Dialog (T19 D6) -->
   <dialog id="confirm-dialog">
     <form method="dialog">
       <h3>Confirm Action</h3>
       <div class="form-group">
         <label for="actor">Actor</label>
-        <input id="actor" name="actor" type="text" required placeholder="e.g. demo-lead or tech-lead">
+        <input id="actor" name="actor" type="text" required>
       </div>
       <div class="form-group">
         <label for="reason">Reason</label>
-        <input id="reason" name="reason" type="text" required placeholder="e.g. Validated harmless redesign">
+        <input id="reason" name="reason" type="text" required>
       </div>
       <div class="dialog-actions">
         <button value="cancel" class="btn">Cancel</button>
@@ -175,10 +110,6 @@
       </div>
     </form>
   </dialog>
-
-  <!-- Toast Notification Feedback -->
-  <div id="toast-container" class="toast-container" aria-live="polite"></div>
-
   <!-- Floating AI Assistant Chat Bot Powered by Sarvam 105B -->
   <div id="ai-chat-drawer" class="chat-drawer" hidden>
     <div class="chat-header">

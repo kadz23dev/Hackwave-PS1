@@ -28,9 +28,11 @@ export class SarvamClient implements LlmClient {
     this.calls++;
 
     const messages = [
-      ...(system ? [{ role: 'system', content: system }] : []),
-      { role: 'user', content: `${user}\n\nIMPORTANT: Return valid JSON only without markdown code blocks or additional text.` },
+      ...(system ? [{ role: 'system', content: `${system}\n\nIMPORTANT: Return valid JSON only without markdown formatting.` }] : []),
+      { role: 'user', content: `${user}\n\nReturn ONLY a raw JSON object.` },
     ];
+
+    const modelToUse = this.model.includes('conversations') ? this.model : 'sarvam-105b-conversations';
 
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
@@ -39,9 +41,10 @@ export class SarvamClient implements LlmClient {
         'api-subscription-key': this.apiKey,
       },
       body: JSON.stringify({
-        model: this.model,
+        model: modelToUse,
         messages,
-        temperature: 0,
+        max_tokens: 1500,
+        temperature: 0.1,
       }),
     });
 
@@ -68,11 +71,19 @@ export class SarvamClient implements LlmClient {
     if (clean.endsWith('```')) {
       clean = clean.slice(0, -3);
     }
+    clean = clean.trim();
+
+    // Find JSON boundary if surrounded by extraneous text
+    const firstBrace = clean.indexOf('{');
+    const lastBrace = clean.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      clean = clean.substring(firstBrace, lastBrace + 1);
+    }
 
     try {
-      return JSON.parse(clean.trim());
+      return JSON.parse(clean);
     } catch {
-      return { reply: clean.trim() };
+      return { reply: text.trim() };
     }
   }
 

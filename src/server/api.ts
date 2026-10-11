@@ -11,8 +11,6 @@ import {
   InvalidTransition,
 } from '../governance/approvals.js';
 import type { ElementRecord } from '../types.js';
-import { signUpUser, signInUser, getCurrentUser } from './firebase.js';
-import { FIREBASE_CONFIG } from '../config.js';
 
 export function fmtId(prefix: string, n: number | string): string {
   const num = typeof n === 'number' ? n : parseInt(String(n), 10);
@@ -618,346 +616,7 @@ export function buildRoutes(repo: Repo): Route[] {
       },
     },
 
-    // 13. POST /api/auth/signup
-    {
-      method: 'POST',
-      pattern: /^\/api\/auth\/signup$/,
-      handler: async ({ res, body }) => {
-        if (!body?.email || !body?.password) {
-          fail(res, 400, 'BAD_REQUEST', 'Email and password are required');
-          return;
-        }
-        try {
-          const user = await signUpUser(repo, {
-            email: String(body.email),
-            password: String(body.password),
-            name: body.name ? String(body.name) : undefined,
-          });
-          json(res, 200, { ok: true, user });
-        } catch (err) {
-          fail(res, 400, 'AUTH_ERROR', err instanceof Error ? err.message : String(err));
-        }
-      },
-    },
-
-    // 14. POST /api/auth/login
-    {
-      method: 'POST',
-      pattern: /^\/api\/auth\/login$/,
-      handler: async ({ res, body }) => {
-        if (!body?.email || !body?.password) {
-          fail(res, 400, 'BAD_REQUEST', 'Email and password are required');
-          return;
-        }
-        try {
-          const user = await signInUser(repo, {
-            email: String(body.email),
-            password: String(body.password),
-          });
-          json(res, 200, { ok: true, user });
-        } catch (err) {
-          fail(res, 401, 'AUTH_FAILED', err instanceof Error ? err.message : 'Invalid email or password');
-        }
-      },
-    },
-
-    // 15. GET /api/auth/me
-    {
-      method: 'GET',
-      pattern: /^\/api\/auth\/me$/,
-      handler: async ({ res }) => {
-        const user = getCurrentUser(repo);
-        json(res, 200, { ok: true, user });
-      },
-    },
-
-    // 16. POST /api/auth/logout
-    {
-      method: 'POST',
-      pattern: /^\/api\/auth\/logout$/,
-      handler: async ({ res }) => {
-        json(res, 200, { ok: true, message: 'Logged out successfully' });
-      },
-    },
-
-    // 17. GET /api/auth/config
-    {
-      method: 'GET',
-      pattern: /^\/api\/auth\/config$/,
-      handler: async ({ res }) => {
-        json(res, 200, {
-          authDomain: FIREBASE_CONFIG.authDomain,
-          projectId: FIREBASE_CONFIG.projectId,
-          apiKeyConfigured: Boolean(FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('AIzaSyDummy')),
-        });
-      },
-    },
-
-    // 18. GET /api/notes
-    {
-      method: 'GET',
-      pattern: /^\/api\/notes$/,
-      handler: async ({ res, query }) => {
-        const q = query.get('q')?.toLowerCase() ?? '';
-        const rows = repo.db
-          .prepare('SELECT id, title, tag, body, created_at, updated_at FROM notes ORDER BY id DESC')
-          .all() as Array<{
-            id: number;
-            title: string;
-            tag: string | null;
-            body: string;
-            created_at: string;
-            updated_at: string;
-          }>;
-
-        const filtered = q
-          ? rows.filter(
-              (r) =>
-                r.title.toLowerCase().includes(q) ||
-                r.body.toLowerCase().includes(q) ||
-                (r.tag && r.tag.toLowerCase().includes(q))
-            )
-          : rows;
-
-        const result = filtered.map((r) => ({
-          id: r.id,
-          title: r.title,
-          tag: r.tag || 'General',
-          body: r.body,
-          updated: r.updated_at ? new Date(r.updated_at).toLocaleTimeString() : 'Just now',
-          createdAt: r.created_at,
-        }));
-
-        json(res, 200, result);
-      },
-    },
-
-    // 19. POST /api/notes
-    {
-      method: 'POST',
-      pattern: /^\/api\/notes$/,
-      handler: async ({ res, body }) => {
-        const title = String(body?.title || 'New Note').trim();
-        const tag = String(body?.tag || 'General').trim();
-        const noteBody = String(body?.body || '').trim();
-        const info = repo.db
-          .prepare('INSERT INTO notes (title, tag, body, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)')
-          .run(title, tag, noteBody);
-        const newId = Number(info.lastInsertRowid);
-        json(res, 201, {
-          ok: true,
-          note: {
-            id: newId,
-            title,
-            tag,
-            body: noteBody,
-            updated: 'Just now',
-          },
-        });
-      },
-    },
-
-    // 20. PUT & POST /api/notes/:id (Update Note)
-    {
-      method: 'PUT',
-      pattern: /^\/api\/notes\/(\d+)$/,
-      handler: async ({ res, params, body }) => {
-        const noteId = parseInt(params[0], 10);
-        const title = String(body?.title || 'Untitled Note').trim();
-        const tag = String(body?.tag || 'General').trim();
-        const noteBody = String(body?.body || '').trim();
-        repo.db
-          .prepare('UPDATE notes SET title = ?, tag = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-          .run(title, tag, noteBody, noteId);
-        json(res, 200, {
-          ok: true,
-          note: {
-            id: noteId,
-            title,
-            tag,
-            body: noteBody,
-            updated: 'Just now',
-          },
-        });
-      },
-    },
-    {
-      method: 'POST',
-      pattern: /^\/api\/notes\/(\d+)$/,
-      handler: async ({ res, params, body }) => {
-        const noteId = parseInt(params[0], 10);
-        const title = String(body?.title || 'Untitled Note').trim();
-        const tag = String(body?.tag || 'General').trim();
-        const noteBody = String(body?.body || '').trim();
-        repo.db
-          .prepare('UPDATE notes SET title = ?, tag = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-          .run(title, tag, noteBody, noteId);
-        json(res, 200, {
-          ok: true,
-          note: {
-            id: noteId,
-            title,
-            tag,
-            body: noteBody,
-            updated: 'Just now',
-          },
-        });
-      },
-    },
-
-    // 21. DELETE & POST /api/notes/:id/delete
-    {
-      method: 'DELETE',
-      pattern: /^\/api\/notes\/(\d+)$/,
-      handler: async ({ res, params }) => {
-        const noteId = parseInt(params[0], 10);
-        repo.db.prepare('DELETE FROM notes WHERE id = ?').run(noteId);
-        json(res, 200, { ok: true, id: noteId });
-      },
-    },
-    {
-      method: 'POST',
-      pattern: /^\/api\/notes\/(\d+)\/delete$/,
-      handler: async ({ res, params }) => {
-        const noteId = parseInt(params[0], 10);
-        repo.db.prepare('DELETE FROM notes WHERE id = ?').run(noteId);
-        json(res, 200, { ok: true, id: noteId });
-      },
-    },
-
-    // 22. GET /api/settings
-    {
-      method: 'GET',
-      pattern: /^\/api\/settings$/,
-      handler: async ({ res }) => {
-        const row = repo.db
-          .prepare("SELECT value_json FROM settings WHERE key = 'workspace'")
-          .get() as { value_json: string } | undefined;
-        let data = {
-          name: 'Demo Lead',
-          email: 'demo-lead@healtest.dev',
-          alertBug: true,
-          alertReview: true,
-          webhook: '127.0.0.1:4300/api/webhook/slack',
-          timeout: 15000,
-          target: 'http://127.0.0.1:4102',
-        };
-        if (row?.value_json) {
-          try {
-            data = { ...data, ...JSON.parse(row.value_json) };
-          } catch {
-            // Use defaults
-          }
-        }
-        json(res, 200, data);
-      },
-    },
-
-    // 23. POST /api/settings
-    {
-      method: 'POST',
-      pattern: /^\/api\/settings$/,
-      handler: async ({ res, body }) => {
-        const valJson = JSON.stringify(body ?? {});
-        repo.db
-          .prepare(
-            "INSERT INTO settings (key, value_json, updated_at) VALUES ('workspace', ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at = CURRENT_TIMESTAMP"
-          )
-          .run(valJson);
-        json(res, 200, { ok: true, settings: body });
-      },
-    },
-
-    // 24. GET /api/billing
-    {
-      method: 'GET',
-      pattern: /^\/api\/billing$/,
-      handler: async ({ res }) => {
-        const row = repo.db
-          .prepare("SELECT value_json FROM settings WHERE key = 'billing'")
-          .get() as { value_json: string } | undefined;
-        let billData = { currentPlan: 'FREE', runsCount: 0, healsCount: 0 };
-        if (row?.value_json) {
-          try {
-            billData = { ...billData, ...JSON.parse(row.value_json) };
-          } catch {
-            // Use defaults
-          }
-        }
-        const runsCountRow = repo.db.prepare('SELECT count(*) as cnt FROM runs').get() as
-          | { cnt: number }
-          | undefined;
-        const healsCountRow = repo.db
-          .prepare("SELECT count(*) as cnt FROM runs WHERE verdict = 'HEALED_PASS'")
-          .get() as { cnt: number } | undefined;
-
-        json(res, 200, {
-          ok: true,
-          currentPlan: billData.currentPlan || 'FREE',
-          runsCount: Math.max(Number(runsCountRow?.cnt ?? 0), Number(billData.runsCount || 0)),
-          healsCount: Math.max(Number(healsCountRow?.cnt ?? 0), Number(billData.healsCount || 0)),
-          planLimits: {
-            runs: billData.currentPlan === 'PRO' ? 10000 : 50,
-            selfHealing: true,
-            automatedFixes: billData.currentPlan === 'PRO',
-          },
-        });
-      },
-    },
-
-    // 25. POST /api/billing/upgrade
-    {
-      method: 'POST',
-      pattern: /^\/api\/billing\/upgrade$/,
-      handler: async ({ res, body }) => {
-        const plan = String(body?.plan || 'PRO');
-        const valJson = JSON.stringify({ currentPlan: plan, updatedAt: new Date().toISOString() });
-        repo.db
-          .prepare(
-            "INSERT INTO settings (key, value_json, updated_at) VALUES ('billing', ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at = CURRENT_TIMESTAMP"
-          )
-          .run(valJson);
-        json(res, 200, { ok: true, currentPlan: plan });
-      },
-    },
-
-    // 26. POST /api/agent/run
-    {
-      method: 'POST',
-      pattern: /^\/api\/agent\/run$/,
-      handler: async ({ res, body }) => {
-        const intentText = String(body?.intentText || 'Complete checkout using a valid card.').trim();
-        const targetUrl = String(body?.targetUrl || 'http://127.0.0.1:4102').trim();
-
-        const timeStr = new Date().toLocaleTimeString();
-        const result = {
-          ok: true,
-          verdict: 'HEALED_PASS',
-          activeStep: 4,
-          totalSteps: 5,
-          targetUrl,
-          intentText,
-          healing: {
-            oldSelector: '#add-to-cart',
-            newSelector: '#add-to-bag',
-            score: '0.74',
-            provenance: 'text-similarity & role-button',
-            oracle: 'order-created ✓ | POST /api/orders 200 ✓',
-          },
-          logs: [
-            { time: timeStr, level: 'info', msg: `Dispatched intent: "${intentText}"` },
-            { time: timeStr, level: 'info', msg: `Connected to Chromium 124.0 on target ${targetUrl}` },
-            { time: timeStr, level: 'warn', msg: 'Step 3: Element "#add-to-cart" drifted in redesigned DOM' },
-            { time: timeStr, level: 'heal', msg: 'UI Drift detected: synthesized replacement "#add-to-bag" (score 0.74)' },
-            { time: timeStr, level: 'pass', msg: 'Backend Oracle validated: order-created invariant matched with status 200' },
-          ],
-        };
-
-        json(res, 200, result);
-      },
-    },
-
-    // 27. POST /api/chat (Interactive AI Assistant via Sarvam 105B)
+    // 12. POST /api/chat (Interactive AI Assistant via Sarvam 105B)
     {
       method: 'POST',
       pattern: /^\/api\/chat$/,
@@ -972,23 +631,72 @@ export function buildRoutes(repo: Repo): Route[] {
         const runs = repo.db.prepare('SELECT id, verdict, started_at, explanation FROM runs ORDER BY id DESC LIMIT 5').all();
         const changes = repo.db.prepare('SELECT id, kind, severity, classification, explanation FROM changes ORDER BY id DESC LIMIT 5').all();
 
-        const systemPrompt = `You are KaizenAI, an elite AI Test Healing Agent built for Playwright automated tests.
-You are powered by Sarvam AI 105B parameter model.
-Here is the current live system context from the database:
+        const systemPrompt = `You are KaizenAI Assistant, an AI expert on this self-healing Playwright testing application.
+You are powered in real-time by the Sarvam AI 105B parameter model.
+Live system state from repository SQLite database:
 - Recent Test Runs: ${JSON.stringify(runs)}
 - Detected Changes: ${JSON.stringify(changes)}
 
-Answer questions about Playwright test runs, broken selectors, repairs, and healing recommendations succinctly, clearly, and insightfully using markdown formatting.`;
+Answer the user's questions about this application, test runs, Playwright self-healing, DOM changes, and reports succinctly and clearly using rich markdown.`;
 
         try {
           const { SarvamClient } = await import('../llm/sarvam.js');
           const client = new SarvamClient();
           const reply = await client.completeChat(systemPrompt, userMsg);
           json(res, 200, { reply });
-        } catch {
-          json(res, 200, {
-            reply: `**KaizenAI Agent (Local Fallback)**: Test runs and DOM snapshots are actively monitored. Regarding: "${userMsg}" — recent runs show ${runs.length} test records and ${changes.length} interface changes detected. Need help inspecting a specific selector?`
-          });
+        } catch (err) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          fail(res, 502, 'AI_SERVICE_ERROR', `Sarvam AI 105B Error: ${errorMsg}`);
+        }
+      },
+    },
+
+    // 13. POST /api/agent/diagnose (Real-time Autonomous AI Healing Agent via Sarvam 105B)
+    {
+      method: 'POST',
+      pattern: /^\/api\/agent\/diagnose$/,
+      handler: async ({ res, body }) => {
+        const testName = body?.testName || 'Checkout flow';
+        const step = body?.step || 'Click on Sign in button';
+        const failedSelector = body?.failedSelector || 'button[data-testid="signin"]';
+        const error = body?.error || 'Element not found';
+
+        const systemPrompt = `You are KaizenAI Autonomous Healing Agent, powered by Sarvam AI 105B.
+Analyze this Playwright test failure and generate self-healing selector recommendations:
+- Test: ${testName}
+- Failed Step: ${step}
+- Original Failed Selector: ${failedSelector}
+- Error: ${error}
+
+Diagnose why this selector failed in modern web interfaces, provide key checklist findings, a confidence score (0-100), and 3-5 ranked alternative selectors with confidence percentages and stability analysis.
+Return valid JSON matching this schema:
+{
+  "diagnosis": "The button selector failed because...",
+  "explanationChecklist": [
+    "The button structure has changed",
+    "New data attribute detected",
+    "Text and position remain consistent",
+    "Recommended selector is most stable"
+  ],
+  "confidence": 92,
+  "originalSelector": "${failedSelector}",
+  "candidates": [
+    { "selector": "button[data-testid=\\"auth-signin\\"]", "confidence": 92, "stable": true },
+    { "selector": ".nav-menu .signin-btn", "confidence": 78, "stable": true },
+    { "selector": "text=\\"Sign in\\"", "confidence": 65, "stable": false },
+    { "selector": "a[href=\\"/login\\"]", "confidence": 42, "stable": false },
+    { "selector": ".header-right button", "confidence": 38, "stable": false }
+  ]
+}`;
+
+        try {
+          const { SarvamClient } = await import('../llm/sarvam.js');
+          const client = new SarvamClient();
+          const result = await client.completeJson(systemPrompt, `Diagnose and heal failed selector: ${failedSelector}`);
+          json(res, 200, result);
+        } catch (err) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          fail(res, 502, 'AI_AGENT_ERROR', `Sarvam AI 105B Agent Error: ${errorMsg}`);
         }
       },
     },
