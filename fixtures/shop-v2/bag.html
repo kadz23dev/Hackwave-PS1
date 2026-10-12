@@ -2,44 +2,277 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your bag</title>
   <style>
-    body { font-family: sans-serif; margin: 2rem; display: flex; gap: 2rem; }
-    nav { width: 180px; border-right: 1px solid #ccc; padding-right: 1rem; }
-    main { flex: 1; }
-    ul { list-style: none; padding: 0; }
-    li { margin: 0.5rem 0; }
-    .total { font-weight: bold; margin: 1rem 0; font-size: 1.2rem; }
-    button { cursor: pointer; padding: 0.5rem 1rem; }
+    :root {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-border: #1f293d;
+      --surface-hover: #172238;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #10b981;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    nav button[aria-label="Shopping bag"] {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(31, 41, 61, 0.7);
+      border: 1px solid var(--surface-border);
+      color: #f9fafb;
+      padding: 0.55rem 1.15rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .count {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .nav-back {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .nav-back:hover { color: var(--primary); }
+    .bag-container {
+      max-width: 900px;
+      margin: 2.5rem auto;
+      padding: 0 2rem;
+      width: 100%;
+      flex: 1;
+    }
+    .bag-header {
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+    .bag-subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .bag-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    button.btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #ffffff;
+      border: none;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 16px var(--primary-glow);
+      transition: all 0.2s ease;
+    }
+    button.btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      box-shadow: 0 6px 22px rgba(99, 102, 241, 0.45);
+      transform: translateY(-2px);
+    }
+    button.btn-primary:active {
+      transform: scale(0.99);
+    }
+    ul#bag-items {
+      list-style: none;
+      padding: 0;
+      margin-top: 1.5rem;
+      margin-bottom: 1.75rem;
+    }
+    ul#bag-items li {
+      padding: 1rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    ul#bag-items li:last-child {
+      border-bottom: none;
+    }
+    .empty-bag-msg {
+      color: var(--text-dim);
+      font-style: italic;
+      padding: 1.5rem 0;
+      text-align: center;
+    }
+    .total-divider {
+      border-top: 2px solid var(--surface-border);
+      padding-top: 1.25rem;
+      margin-top: 1rem;
+    }
+    .total {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #10b981;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .trust-footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--surface-border);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
-  <nav>
-    <button aria-label="Shopping bag" onclick="location.href='/bag'">🛍 <span class="count" id="bag-count">0</span></button>
-  </nav>
-  <main>
-    <h1>Your bag</h1>
-    <div style="margin-bottom: 1.5rem;">
-      <button class="btn-primary" onclick="location.href='/checkout/details'">Proceed to payment</button>
+  <header>
+    <a href="/" class="brand-wrap">
+      <div class="brand-logo-icon">✨</div>
+      <div class="brand-title">Gizmo Shop v2</div>
+    </a>
+    <nav>
+      <a href="/" class="nav-back">← Continue Shopping</a>
+      <button aria-label="Shopping bag" onclick="location.href='/bag'">
+        🛍 <span class="count" id="bag-count">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <main class="bag-container">
+    <div class="bag-header">
+      <h1>Your bag</h1>
+      <p class="bag-subtitle">Version B redesigned checkout bag workflow.</p>
     </div>
-    <ul id="bag-items"></ul>
-    <div class="total" id="bag-total">Total: $0.00</div>
+
+    <div class="bag-card">
+      <div style="margin-bottom: 1.5rem;">
+        <button class="btn-primary" onclick="location.href='/checkout/details'">Proceed to payment</button>
+      </div>
+
+      <ul id="bag-items">
+        <li class="empty-bag-msg">Loading shopping bag items...</li>
+      </ul>
+
+      <div class="total-divider">
+        <div class="total" id="bag-total">Total: $0.00</div>
+      </div>
+
+      <div class="trust-footer">
+        <span>🔒 256-Bit SSL Encryption</span>
+        <span>⚡ Instant Order Dispatch</span>
+        <span>✓ 30-Day Money Back</span>
+      </div>
+    </div>
   </main>
+
+  <footer>
+    <p>Gizmo Shop (Version B Redesign) · Kaizen AI Autonomous Self-Healing Pipeline Testbed</p>
+  </footer>
+
   <script>
     async function loadBag() {
-      const res = await fetch('/api/cart');
-      const data = await res.json();
-      const count = data.items ? data.items.length : 0;
-      document.getElementById('bag-count').textContent = count;
+      try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        const count = data.items ? data.items.length : 0;
+        document.getElementById('bag-count').textContent = count;
 
-      const list = document.getElementById('bag-items');
-      list.innerHTML = '';
-      (data.items || []).forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `${item.name} - $${(item.priceCents / 100).toFixed(2)}`;
-        list.appendChild(li);
-      });
-      document.getElementById('bag-total').textContent = `Total: $${((data.totalCents || 0) / 100).toFixed(2)}`;
+        const list = document.getElementById('bag-items');
+        list.innerHTML = '';
+        if (!data.items || data.items.length === 0) {
+          list.innerHTML = '<li class="empty-bag-msg">Your shopping bag is currently empty.</li>';
+        } else {
+          data.items.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span><strong>${item.name}</strong></span> <span>$${(item.priceCents / 100).toFixed(2)}</span>`;
+            list.appendChild(li);
+          });
+        }
+        document.getElementById('bag-total').textContent = `Total: $${((data.totalCents || 0) / 100).toFixed(2)}`;
+      } catch (err) {}
     }
     loadBag();
   </script>

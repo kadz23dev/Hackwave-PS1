@@ -225,15 +225,25 @@ describe('KaizenAI MCP Server — Unit Tests', () => {
     const explicit = 'D:\\custom\\test.sqlite';
     expect(resolveDbPath(explicit)).toBe(explicit);
 
-    const oldEnv = process.env.HEALTEST_DB_PATH;
+    const oldDbPathEnv = process.env.HEALTEST_DB_PATH;
+    const oldHomeEnv = process.env.HEALTEST_HOME;
     try {
       process.env.HEALTEST_DB_PATH = 'E:\\env-path\\healtest.sqlite';
       expect(resolveDbPath()).toBe('E:\\env-path\\healtest.sqlite');
+
+      delete process.env.HEALTEST_DB_PATH;
+      process.env.HEALTEST_HOME = 'F:\\healtest-home';
+      expect(resolveDbPath()).toBe('F:\\healtest-home\\healtest.sqlite');
     } finally {
-      if (oldEnv !== undefined) {
-        process.env.HEALTEST_DB_PATH = oldEnv;
+      if (oldDbPathEnv !== undefined) {
+        process.env.HEALTEST_DB_PATH = oldDbPathEnv;
       } else {
         delete process.env.HEALTEST_DB_PATH;
+      }
+      if (oldHomeEnv !== undefined) {
+        process.env.HEALTEST_HOME = oldHomeEnv;
+      } else {
+        delete process.env.HEALTEST_HOME;
       }
     }
   });

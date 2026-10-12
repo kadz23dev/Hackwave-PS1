@@ -234,7 +234,12 @@ export async function runActs(
         if (act2RepairId) {
           const db = openDb(mainDb);
           const repo = new Repo(db);
-          approve(repo, act2RepairId, 'demo-lead', 'approved in demo');
+          const repair = repo.getRepair(act2RepairId);
+          if (repair?.status === 'validated') {
+            try {
+              approve(repo, act2RepairId, 'demo-lead', 'approved in demo');
+            } catch {}
+          }
         }
 
         const res = await runIntent(intentPath, 'http://127.0.0.1:4102', {
@@ -337,7 +342,12 @@ export async function runActs(
               'demo-lead',
               { target: 'http://127.0.0.1:4104', headless }
             );
-            approve(repo, act6RepairId, 'demo-lead', 'resolved in demo');
+            const repair = repo.getRepair(act6RepairId);
+            if (repair?.status === 'validated') {
+              try {
+                approve(repo, act6RepairId, 'demo-lead', 'resolved in demo');
+              } catch {}
+            }
             valVerdict =
               valOutcome.verdict === 'PASS' || valOutcome.verdict === 'HEALED_PASS'
                 ? 'HEALED_PASS'

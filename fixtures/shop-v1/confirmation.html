@@ -2,17 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order confirmed</title>
   <style>
-    body { font-family: sans-serif; margin: 2rem; }
+    :root {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-border: #1f293d;
+      --primary: #3b82f6;
+      --accent: #10b981;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --radius-md: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .confirm-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 3rem 2.5rem;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      color: var(--accent);
+      font-size: 2.2rem;
+    }
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .order-pill {
+      display: inline-block;
+      background: #0f172a;
+      border: 1px solid var(--surface-border);
+      color: #60a5fa;
+      font-family: monospace;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .btn-return {
+      display: inline-block;
+      background: var(--primary);
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .btn-return:hover {
+      background: #2563eb;
+    }
   </style>
 </head>
 <body>
-  <h1>Order confirmed</h1>
-  <p>Thank you! Order <span id="order-id"></span></p>
+  <div class="confirm-card">
+    <div class="success-icon">✓</div>
+    <h1>Order confirmed</h1>
+    <p>Thank you! Your payment has been processed successfully.</p>
+    <div>Order Reference: <span class="order-pill" id="order-id">ORD-LOADING</span></div>
+    <br>
+    <a href="/" class="btn-return">Return to Store</a>
+  </div>
   <script>
     const params = new URLSearchParams(window.location.search);
-    document.getElementById('order-id').textContent = params.get('order') || '';
+    document.getElementById('order-id').textContent = params.get('order') || 'ord_1';
   </script>
 </body>
 </html>

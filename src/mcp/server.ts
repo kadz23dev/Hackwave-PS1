@@ -3,7 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import type Database from 'better-sqlite3';
 import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, resolve, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from '../db/index.js';
 import { Repo, type StoredSite } from '../db/repo.js';
@@ -122,8 +122,10 @@ export function formatSitesAsText(sites: SanitizedSite[]): string {
  * 5. Project root's .healtest/healtest.sqlite (relative to this module, so working directory doesn't divert it)
  */
 export function resolveDbPath(explicitPath?: string): string {
-  const isWindowsAbsolutePath = (candidate: string): boolean =>
-    /^[A-Za-z]:[\\/]/.test(candidate) || candidate.startsWith('\\\\');
+
+const isWindowsAbsolutePath = (value: string): boolean =>
+  /^[A-Za-z]:[\\/]/.test(value) || value.startsWith('\\\\');
+ main
 
   if (explicitPath) {
     if (isWindowsAbsolutePath(explicitPath)) {
@@ -138,9 +140,15 @@ export function resolveDbPath(explicitPath?: string): string {
     return resolve(process.env.HEALTEST_DB_PATH);
   }
   if (process.env.HEALTEST_HOME) {
+    if (isWindowsAbsolutePath(process.env.HEALTEST_HOME)) {
+      return win32.join(process.env.HEALTEST_HOME, 'healtest.sqlite');
+    }
     return resolve(process.env.HEALTEST_HOME, 'healtest.sqlite');
   }
   if (HOME !== '.healtest') {
+    if (isWindowsAbsolutePath(HOME)) {
+      return win32.join(HOME, 'healtest.sqlite');
+    }
     return resolve(HOME, 'healtest.sqlite');
   }
   // Anchor to the repository root relative to import.meta.url

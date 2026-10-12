@@ -4150,6 +4150,9 @@ export async function renderSimulationView() {
     if (url === 'demo.html' || url === '/demo.html' || url === 'demo' || url === '/demo') {
       url = 'http' + '://127.0.0.1:4300/demo.html';
     }
+    if (url === 'ecommerce.html' || url === '/ecommerce.html' || url === 'ecommerce' || url === '/ecommerce' || url === 'store' || url === 'shop') {
+      url = 'http' + '://127.0.0.1:4300/ecommerce.html';
+    }
     const pPrefix = 'http' + '://';
     const psPrefix = 'https' + '://';
     if (!url.startsWith(pPrefix) && !url.startsWith(psPrefix)) {
@@ -4167,7 +4170,12 @@ export async function renderSimulationView() {
       const port = parsed.port;
       const pathname = parsed.pathname;
 
-      if (pathname.includes('demo.html') || pathname === '/demo') {
+      if (pathname.includes('ecommerce.html') || pathname === '/ecommerce' || pathname === '/store') {
+        label = 'Interactive E-Commerce Store';
+        badgeClass = 'badge--pass';
+        isLocal = true;
+        isDemo = true;
+      } else if (pathname.includes('demo.html') || pathname === '/demo') {
         label = 'Local Demo: Nexora (demo.html)';
         badgeClass = 'badge--pass';
         isLocal = true;
@@ -4284,14 +4292,16 @@ export async function renderSimulationView() {
 
   // Quick Action Suggestion Chips
   let chipList;
-  if (rec.isDemo) {
+  if (rec.url.includes('ecommerce.html')) {
+    chipList = ['✦ select product and checkout', '✦ click on Add to cart', '✦ click on Checkout', '✦ click on Proceed to payment'];
+  } else if (rec.isDemo) {
     chipList = ['✦ click on Get Started', '✦ click on Features', '✦ click on Learn More', '✦ click on Contact', '✦ click on Contact Us'];
   } else if (workspaceState.scenario === 'baseline' || rec.url.includes('4101')) {
-    chipList = ['✦ click on Checkout', '✦ click on Add to cart', '✦ click on Cart'];
+    chipList = ['✦ select product and checkout', '✦ click on Checkout', '✦ click on Add to cart', '✦ click on Cart'];
   } else if (workspaceState.scenario === 'drift' || rec.url.includes('4102')) {
-    chipList = ['✦ click on Checkout (Traditional)', '✦ click on Proceed to payment', '✦ click on Add to bag'];
+    chipList = ['✦ select product and checkout', '✦ click on Checkout (Traditional)', '✦ click on Proceed to payment', '✦ click on Add to bag'];
   } else {
-    chipList = ['✦ click on Checkout', '✦ click on Add to bag', '✦ click on Sign In', '✦ proceed to checkout'];
+    chipList = ['✦ select product and checkout', '✦ click on Checkout', '✦ click on Add to bag', '✦ proceed to checkout'];
   }
 
   const quickChips = el('div', { class: 'pw-quick-chips' });
@@ -4305,8 +4315,9 @@ export async function renderSimulationView() {
   const scenariosStrip = el('div', { class: 'pw-scenarios-strip' });
   scenariosStrip.appendChild(el('span', { class: 'pw-scenarios-label' }, 'Preset Scenarios:'));
   const scenarios = [
-    { key: 'baseline', label: 'Version A Store (v1)', url: 'http' + '://127.0.0.1:4101/cart', defaultIntent: 'click on Checkout' },
-    { key: 'drift', label: 'Version B Redesign (v2)', url: 'http' + '://127.0.0.1:4102/bag', defaultIntent: 'click on Checkout' },
+    { key: 'baseline', label: 'Version A Store (v1)', url: 'http' + '://127.0.0.1:4101/', defaultIntent: 'select product and checkout' },
+    { key: 'drift', label: 'Version B Redesign (v2)', url: 'http' + '://127.0.0.1:4102/', defaultIntent: 'select product and checkout' },
+    { key: 'ecom', label: 'Interactive Store (ecommerce.html)', url: 'http' + '://127.0.0.1:4300/ecommerce.html', defaultIntent: 'select product and checkout' },
     { key: 'bug', label: 'Version B Server 500 Bug (v2-bug)', url: 'http' + '://127.0.0.1:4103/', defaultIntent: 'click on Checkout' },
     { key: 'ambiguous', label: 'Version B Ambiguous (v2-amb)', url: 'http' + '://127.0.0.1:4104/', defaultIntent: 'click on Checkout' },
     { key: 'demo', label: 'Nexora Demo (demo.html)', url: 'http' + '://127.0.0.1:4300/demo.html', defaultIntent: 'click on Get Started' }

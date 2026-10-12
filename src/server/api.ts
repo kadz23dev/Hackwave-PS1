@@ -1764,29 +1764,30 @@ export function buildRoutes(repo: Repo): Route[] {
         const targetElement = clickMatch ? clickMatch[2].trim() : (actionMessage.trim() || 'target element');
         const isCustomClick = Boolean(clickMatch);
 
+        const isEcommerceIntent = /select.*product|checkout|proceed|bag|cart/i.test(actionMessage);
         let steps;
-        if (scenario === 'baseline' && !isCustomClick) {
+        if ((scenario === 'baseline' && !isCustomClick) || (scenario === 'baseline' && isEcommerceIntent)) {
           steps = [
             {
               num: 1,
+              title: 'Landing Page & Product Selection',
+              desc: `page.goto('${targetUrl}') · Playwright selected product 'Gizmo Mini' via locator('#add-GZ-MINI').click() · Cart count incremented`,
+              status: 'pass',
+              badge: 'Product Selected'
+            },
+            {
+              num: 2,
               title: 'Version A: Traditional Fixed Selector Check',
-              desc: `page.goto('${targetUrl}') · Traditional fixed selector locator('#checkout-button') resolved directly`,
+              desc: `page.goto('/cart') · Traditional fixed selector locator('#checkout-button') resolved directly in DOM tree`,
               status: 'pass',
               badge: 'Fixed Selector Match'
             },
             {
-              num: 2,
+              num: 3,
               title: 'Dispatch Action via Playwright Engine',
-              desc: `await page.click('#checkout-button') executed · Successfully navigated to /checkout`,
+              desc: `await page.click('#checkout-button') executed · Traditional selector matched with 1.0 confidence · Zero drift · 0 LLM calls`,
               status: 'pass',
               badge: 'Action Executed'
-            },
-            {
-              num: 3,
-              title: 'Heuristic Drift Evaluation',
-              desc: 'Traditional selector matched with 1.0 confidence · Zero drift detected · Heuristic bypass active (0 LLM calls)',
-              status: 'pass',
-              badge: 'Baseline Plan OK'
             },
             {
               num: 4,
@@ -1796,33 +1797,33 @@ export function buildRoutes(repo: Repo): Route[] {
               badge: 'Invariant Pass'
             }
           ];
-        } else if (scenario === 'drift' && !isCustomClick) {
+        } else if ((scenario === 'drift' && !isCustomClick) || (scenario === 'drift' && isEcommerceIntent)) {
           steps = [
             {
               num: 1,
+              title: 'Landing Page & Product Selection',
+              desc: `page.goto('${targetUrl}') · Playwright selected product 'Gizmo Mini' via locator('.btn[data-action="add"]').click() · Shopping bag updated`,
+              status: 'pass',
+              badge: 'Product Selected'
+            },
+            {
+              num: 2,
               title: 'Version B: Traditional Fixed Selector Check (Fails)',
-              desc: `page.goto('${targetUrl}') · Traditional selector locator('#checkout-button') absent in DOM tree (Relocated/Renamed)`,
+              desc: `page.goto('/bag') · Traditional selector locator('#checkout-button') absent in DOM tree (Relocated to top / Renamed to 'Proceed to payment')`,
               status: 'fail',
               badge: 'Selector Drift'
             },
             {
-              num: 2,
-              title: '4-Step Method (1 & 2): Semantic & Context-Aware Matching',
-              desc: 'Semantic element matching found candidate ".btn-primary" ("Proceed to payment") · Evaluated surrounding layout and container hierarchy',
-              status: 'pass',
-              badge: 'Semantic Match'
-            },
-            {
               num: 3,
-              title: '4-Step Method (3 & 4): Confidence Scoring & Deterministic Recovery',
-              desc: 'Confidence score calculated: 0.94 >= 0.60 threshold · Auto-healed selector without AI (0 LLM calls)',
+              title: '4-Step Method (1-3): Semantic & Context Matching + Scoring',
+              desc: 'Semantic element matching found candidate ".btn-primary" ("Proceed to payment") · Context matching anchored to "Your bag" · Confidence score: 0.94 >= 0.60 threshold (0 LLM calls)',
               status: 'heal',
               badge: 'Score: 0.94 (Healed)'
             },
             {
               num: 4,
-              title: 'Playwright Execution & Backend Oracle Validation',
-              desc: 'Executed healed Playwright step · Order-created invariant satisfied · Test recovered cleanly',
+              title: 'Playwright Healed Execution & Oracle Validation',
+              desc: 'await page.locator(\'.btn-primary:has-text("Proceed to payment")\').click() · Order-created invariant satisfied · Test recovered cleanly',
               status: 'pass',
               badge: 'HEALED_PASS'
             }

@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gizmo Store — Kaizen AI Autonomous E-Commerce Testing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090e;
+      --bg-gradient: radial-gradient(circle at 50% 0%, #151d30 0%, #07090e 70%);
+      --surface: #0e131f;
+      --surface-card: #121929;
+      --surface-card-hover: #162035;
+      --surface-border: #1e293d;
+      --surface-border-subtle: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.35);
+      --v2-primary: #6366f1;
+      --v2-hover: #4f46e5;
+      --v2-glow: rgba(99, 102, 241, 0.35);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      background-image: var(--bg-gradient);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Lighting Background Accents */
+    .ambient-glow-1 {
+      position: absolute;
+      top: -100px;
+      left: 15%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient-glow-2 {
+      position: absolute;
+      top: 300px;
+      right: 5%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top Playwright Testing HUD */
+    .playwright-hud-bar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(10, 14, 23, 0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 0.65rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .hud-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .hud-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+      padding: 0.3rem 0.75rem;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .hud-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulseDot 2s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+    .hud-info {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .hud-info strong {
+      color: #e2e8f0;
+    }
+
+    .hud-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .version-switch-pill {
+      background: #080c14;
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-full);
+      padding: 0.25rem;
+      display: flex;
+      gap: 0.25rem;
+    }
+    .version-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.4rem 0.95rem;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .version-btn.active-v1 {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 10px var(--primary-glow);
+    }
+    .version-btn.active-v2 {
+      background: var(--v2-primary);
+      color: #ffffff;
+      box-shadow: 0 2px 10px var(--v2-glow);
+    }
+
+    .btn-run-playwright {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border: none;
+      padding: 0.45rem 1.15rem;
+      border-radius: var(--radius-full);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: all 0.2s ease;
+    }
+    .btn-run-playwright:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+    }
+    .btn-run-playwright:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Live Test Runner Terminal Drawer / Panel */
+    .test-runner-panel {
+      background: rgba(14, 19, 31, 0.95);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 1rem 2rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      display: block;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+    .runner-panel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    .runner-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .runner-steps-status {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .step-chip {
+      font-size: 0.72rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      background: #172033;
+      color: #94a3b8;
+      border: 1px solid #23314d;
+    }
+    .step-chip.active {
+      background: rgba(59, 130, 246, 0.25);
+      color: #60a5fa;
+      border-color: #3b82f6;
+    }
+    .step-chip.pass {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border-color: #10b981;
+    }
+    .step-chip.heal {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border-color: #f59e0b;
+    }
+    .step-chip.fail {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border-color: #ef4444;
+    }
+
+    .terminal-window {
+      background: #080b12;
+      border: 1px solid #1a2233;
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      line-height: 1.4;
+    }
+    .log-line {
+      display: flex;
+      gap: 0.6rem;
+      font-size: 0.78rem;
+    }
+    .log-ts { color: #64748b; min-width: 65px; }
+    .log-tag { font-weight: 700; min-width: 90px; }
+    .tag-pw { color: #38bdf8; }
+    .tag-trad { color: #a78bfa; }
+    .tag-heal { color: #fbbf24; }
+    .tag-ok { color: #34d399; }
+    .tag-err { color: #f87171; }
+    .log-msg { color: #cbd5e1; word-break: break-all; }
+
+    /* Store Navigation */
+    header.store-nav {
+      position: relative;
+      z-index: 10;
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 18px var(--primary-glow);
+    }
+    .brand-logo svg {
+      width: 24px;
+      height: 24px;
+      color: #ffffff;
+    }
+    .brand-text h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(180deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-text span {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: block;
+      margin-top: -2px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: color 0.2s ease;
+      position: relative;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: #ffffff;
+    }
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .search-mock {
+      background: rgba(18, 25, 41, 0.7);
+      border: 1px solid var(--surface-border);
+      padding: 0.5rem 0.9rem;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+    .search-mock kbd {
+      background: #1a2336;
+      border: 1px solid #2d3b55;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* Cart & Bag Links (Tested by Playwright!) */
+    #cart-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: rgba(30, 41, 61, 0.8);
+      border: 1px solid var(--surface-border);
+      color: #ffffff;
+      padding: 0.55rem 1.15rem;
+      border-radius: var(--radius-full);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    #cart-link:hover {
+      background: #1e293b;
+      border-color: var(--primary);
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+    #cart-count {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 0.15rem 0.55rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 800;
+      transition: transform 0.2s ease;
+    }
+
+    button[aria-label="Shopping bag"] {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: rgba(30, 41, 61, 0.8);
+      border: 1px solid var(--surface-border);
+      color: #ffffff;
+      padding: 0.55rem 1.15rem;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    button[aria-label="Shopping bag"]:hover {
+      background: #1e293b;
+      border-color: var(--v2-primary);
+      box-shadow: 0 0 16px var(--v2-glow);
+    }
+    .count, #bag-count {
+      background: var(--v2-primary);
+      color: #ffffff;
+      padding: 0.15rem 0.55rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 800;
+      transition: transform 0.2s ease;
+    }
+
+    /* Hero Spotlight */
+    section.hero-banner {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 1rem auto 2.5rem;
+      padding: 0 2rem;
+      width: 100%;
+    }
+    .hero-card {
+      background: linear-gradient(135deg, rgba(22, 32, 53, 0.85) 0%, rgba(14, 19, 31, 0.9) 100%);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 3rem;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      align-items: center;
+      gap: 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-full);
+      margin-bottom: 1.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+    .hero-title .gradient-text {
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 560px;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    .hero-features {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .hero-feature-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .hero-feature-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #ffffff;
+      font-family: var(--font-mono);
+    }
+    .hero-feature-lbl {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .btn-hero-primary {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 0.85rem 1.75rem;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 18px var(--primary-glow);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-hero-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+    .btn-hero-secondary {
+      background: rgba(30, 41, 61, 0.7);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      padding: 0.85rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-hero-secondary:hover {
+      background: #1e293b;
+      color: #ffffff;
+    }
+
+    /* Hero Visual Showcase Graphic */
+    .hero-visual-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .hero-device-art {
+      width: 100%;
+      max-width: 380px;
+      filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.6));
+      animation: floatHero 6s ease-in-out infinite;
+    }
+    @keyframes floatHero {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* Catalog Section Header */
+    .catalog-section-header {
+      max-width: 1400px;
+      margin: 0 auto 1.5rem;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      width: 100%;
+    }
+    .section-title-wrap h2 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .section-title-wrap p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-top: 0.2rem;
+    }
+    .catalog-filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: #0d1322;
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-full);
+      padding: 0.25rem;
+    }
+    .filter-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-full);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-tab.active {
+      background: var(--surface-card-hover);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Products Grid */
+    main.products-grid {
+      max-width: 1400px;
+      margin: 0 auto 4rem;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Product Card */
+    article.product-card {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    }
+    article.product-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(59, 130, 246, 0.4);
+      background: var(--surface-card-hover);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 24px rgba(59, 130, 246, 0.15);
+    }
+    article.product-card.test-targeted {
+      outline: 3px solid #38bdf8 !important;
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.6) !important;
+      transform: scale(1.02);
+    }
+
+    /* Hardware Illustration Container */
+    .card-visual {
+      width: 100%;
+      height: 190px;
+      background: linear-gradient(180deg, #162035 0%, #0d1322 100%);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+    }
+    .card-visual::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      left: 10%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(circle, var(--prod-glow, rgba(59, 130, 246, 0.2)) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .card-visual svg.device-svg {
+      width: 120px;
+      height: 120px;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+      transition: transform 0.3s ease;
+    }
+    article.product-card:hover .card-visual svg.device-svg {
+      transform: scale(1.08);
+    }
+
+    .badge-top-left {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #93c5fd;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
+    }
+    .badge-top-right {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .stock-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    /* Product Invariant Heading */
+    article.product-card h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+    }
+    .product-tagline {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 0.85rem;
+      line-height: 1.45;
+      min-height: 2.5rem;
+    }
+
+    .specs-pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 1.15rem;
+    }
+    .spec-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .card-footer-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: auto;
+      margin-bottom: 1rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .price-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    .current-price {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #10b981;
+      letter-spacing: -0.02em;
+    }
+    .orig-price {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-decoration: line-through;
+    }
+    .rating-badge {
+      font-size: 0.78rem;
+      color: #fbbf24;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* Product Add Buttons (Targets of Playwright Tests) */
+    .btn-add-cart, button[id^="add-"] {
+      width: 100%;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px var(--primary-glow);
+      transition: all 0.2s ease;
+    }
+    .btn-add-cart:hover, button[id^="add-"]:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .btn-add-cart:active, button[id^="add-"]:active {
+      transform: scale(0.98);
+    }
+
+    body.mode-v2 .btn-add-bag, body.mode-v2 button.btn[data-action="add"] {
+      width: 100%;
+      background: var(--v2-primary);
+      color: #ffffff;
+      border: none;
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px var(--v2-glow);
+      transition: all 0.2s ease;
+    }
+    body.mode-v2 .btn-add-bag:hover, body.mode-v2 button.btn[data-action="add"]:hover {
+      background: var(--v2-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Shopping Cart & Checkout Review Section */
+    section.cart-review-section {
+      max-width: 1400px;
+      margin: 0 auto 4rem;
+      padding: 0 2rem;
+      width: 100%;
+    }
+    .cart-review-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 2.5rem;
+    }
+    .cart-left-col h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cart-items-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .cart-items-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .cart-items-table td {
+      padding: 1.15rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+    }
+    .item-info-cell {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .item-thumb-box {
+      width: 50px;
+      height: 50px;
+      background: #141c2e;
+      border: 1px solid #23314d;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .item-thumb-box svg {
+      width: 30px;
+      height: 30px;
+    }
+    .item-name-bold {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #ffffff;
+    }
+    .item-sku-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+    .qty-cell {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .price-cell {
+      font-weight: 700;
+      color: #10b981;
+      font-size: 1rem;
+      text-align: right;
+    }
+    .remove-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.2rem;
+      transition: color 0.2s;
+    }
+    .remove-btn:hover { color: var(--danger); }
+
+    /* Order Summary Breakdown Box */
+    .cart-right-col {
+      background: #121826;
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .cart-right-col h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.85rem;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+    .summary-row.total-row {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--surface-border);
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .summary-row.total-row .total-amount {
+      color: #10b981;
+    }
+    .trust-badges-bar {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+    .trust-badge-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* Checkout Buttons (The Prime Focus of Self-Healing Automation!) */
+    .checkout-btn-slot {
+      margin-top: 1.5rem;
+    }
+    button#checkout-button {
+      width: 100%;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #ffffff;
+      border: none;
+      padding: 1.1rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      box-shadow: 0 4px 20px var(--primary-glow);
+      transition: all 0.2s ease;
+    }
+    button#checkout-button:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--primary-glow);
+    }
+
+    button.btn-primary, #v2-proceed-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #ffffff;
+      border: none;
+      padding: 1.1rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      box-shadow: 0 4px 20px var(--v2-glow);
+      transition: all 0.2s ease;
+    }
+    button.btn-primary:hover, #v2-proceed-btn:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--v2-glow);
+    }
+
+    /* Virtual Playwright Testing Pointer */
+    #playwright-virtual-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 32px;
+      height: 32px;
+      pointer-events: none;
+      z-index: 9999;
+      display: none;
+      transform: translate(-100px, -100px);
+      transition: transform 0.85s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    }
+    #playwright-virtual-cursor svg {
+      width: 32px;
+      height: 32px;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
+    }
+    .cursor-badge-tag {
+      position: absolute;
+      top: 24px;
+      left: 20px;
+      background: #2563eb;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Target Reticle Box */
+    #inspector-box {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      border: 2px solid #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+      border-radius: 6px;
+      display: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+    .inspector-badge {
+      position: absolute;
+      top: -24px;
+      left: 0;
+      background: #0284c7;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* Confirmation Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: modalFadeIn 0.25s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal-dialog {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      max-width: 560px;
+      width: 90%;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      position: relative;
+    }
+    .modal-celebration-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.15);
+      border: 2px solid #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1.5rem;
+      color: #10b981;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+    .modal-dialog h3 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+    .modal-dialog p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+    .modal-diagnostics-box {
+      background: #090e1a;
+      border: 1px solid #1e293d;
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+    .btn-close-modal {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: all 0.2s;
+    }
+    .btn-close-modal:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Toast Notification */
+    .toast-pill {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #10b981;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-full);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      z-index: 2000;
+      animation: slideToast 0.3s ease;
+    }
+    @keyframes slideToast {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    footer {
+      border-top: 1px solid var(--surface-border);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-top: auto;
+      background: #06080d;
+    }
+    footer a { color: #60a5fa; text-decoration: none; }
+  </style>
+</head>
+<body class="mode-v1">
+
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Playwright Virtual Test Cursor -->
+  <div id="playwright-virtual-cursor">
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M5 3L19 12L12 14L9 21L5 3Z" fill="#38bdf8" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+    <div class="cursor-badge-tag" id="cursor-tag">Playwright</div>
+  </div>
+
+  <!-- Target Bounding Box Reticle -->
+  <div id="inspector-box">
+    <div class="inspector-badge" id="inspector-badge">target</div>
+  </div>
+
+  <!-- Top Playwright Automation HUD Bar -->
+  <div class="playwright-hud-bar">
+    <div class="hud-left">
+      <div class="hud-badge">
+        <span class="hud-badge-dot"></span>
+        <span>Playwright Automation Live Testbed</span>
+      </div>
+      <div class="hud-info" id="hud-mode-desc">
+        Mode: <strong>Version A (Baseline · Fixed Selectors)</strong>
+      </div>
+    </div>
+    <div class="hud-right">
+      <div class="version-switch-pill">
+        <button class="version-btn active-v1" id="btn-toggle-v1" onclick="switchVersion('v1')">
+          <span>●</span> Version A (Baseline)
+        </button>
+        <button class="version-btn" id="btn-toggle-v2" onclick="switchVersion('v2')">
+          <span>●</span> Version B (Redesign)
+        </button>
+      </div>
+      <button class="btn-run-playwright" id="btn-run-flow" onclick="startPlaywrightFlow()">
+        <span>▶</span> Run Playwright Test
+      </button>
+    </div>
+  </div>
+
+  <!-- Live Terminal & Step Visualizer -->
+  <div class="test-runner-panel">
+    <div class="runner-panel-top">
+      <div class="runner-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+        </svg>
+        <span>Playwright Execution Stream</span>
+      </div>
+      <div class="runner-steps-status">
+        <span class="step-chip" id="chip-step-1">1. Landing Catalog</span>
+        <span class="step-chip" id="chip-step-2">2. Product Select</span>
+        <span class="step-chip" id="chip-step-3">3. Cart Link</span>
+        <span class="step-chip" id="chip-step-4">4. Checkout CTA</span>
+        <span class="step-chip" id="chip-step-5">5. Verification</span>
+      </div>
+    </div>
+    <div class="terminal-window" id="terminal-screen">
+      <div class="log-line">
+        <span class="log-ts">[00:00.00]</span>
+        <span class="log-tag tag-pw">[PLAYWRIGHT]</span>
+        <span class="log-msg">Playwright test worker ready. Click "Run Playwright Test" to execute landing-to-checkout automation.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Store Header -->
+  <header class="store-nav">
+    <a href="#" class="brand">
+      <div class="brand-logo" id="brand-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1 id="brand-heading">Gizmo Shop</h1>
+        <span>Audiophile Hardware & Acoustics</span>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#catalog" class="active">Landing Products</a></li>
+      <li><a href="#catalog">Acoustics</a></li>
+      <li><a href="#catalog">Wearables</a></li>
+      <li><a href="#cart-view">Order Summary</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <div class="search-mock">
+        <span>🔍 Search hardware...</span>
+        <kbd>/</kbd>
+      </div>
+
+      <!-- Cart / Bag Target for Version A & Version B -->
+      <div id="nav-cart-slot">
+        <a id="cart-link" href="#cart-view">
+          <span>🛒 Cart</span> (<span id="cart-count">0</span>)
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Spotlight -->
+  <section class="hero-banner">
+    <div class="hero-card">
+      <div class="hero-content">
+        <div class="hero-badge-pill">● 2026 Reference Architecture</div>
+        <h2 class="hero-title">Acoustic Precision. <br><span class="gradient-text">Autonomous Testing.</span></h2>
+        <p class="hero-desc">
+          Test real product selection on the landing page and observe how Playwright handles checkout verification. In Version A, traditional selectors pass. In Version B, our 4-step self-healing engine recovers breaking button mutations automatically.
+        </p>
+        <div class="hero-features">
+          <div class="hero-feature-item">
+            <span class="hero-feature-val">0.94</span>
+            <span class="hero-feature-lbl">Self-Healing Score</span>
+          </div>
+          <div class="hero-feature-item">
+            <span class="hero-feature-val">0 LLM</span>
+            <span class="hero-feature-lbl">Heuristic Recovery</span>
+          </div>
+          <div class="hero-feature-item">
+            <span class="hero-feature-val">&lt; 15ms</span>
+            <span class="hero-feature-lbl">Repair Overhead</span>
+          </div>
+        </div>
+        <div class="hero-cta-group">
+          <button class="btn-hero-primary" onclick="startPlaywrightFlow()">
+            <span>⚡ Run Automated Flow</span>
+          </button>
+          <a class="btn-hero-secondary" href="#catalog">
+            <span>Explore Catalog ↓</span>
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual-wrap">
+        <!-- High-fidelity Hero Audio Device Art -->
+        <svg class="hero-device-art" viewBox="0 0 320 280" fill="none">
+          <defs>
+            <linearGradient id="speakerBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#1e293b"/>
+              <stop offset="50%" stop-color="#0f172a"/>
+              <stop offset="100%" stop-color="#020617"/>
+            </linearGradient>
+            <linearGradient id="speakerRing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#8b5cf6"/>
+            </linearGradient>
+            <radialGradient id="meshCenter" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+            </radialGradient>
+          </defs>
+          <!-- Speaker Cylinder -->
+          <ellipse cx="160" cy="80" rx="90" ry="32" fill="url(#speakerRing)"/>
+          <path d="M70 80 V200 C70 230 250 230 250 200 V80 Z" fill="url(#speakerBody)"/>
+          <ellipse cx="160" cy="80" rx="84" ry="28" fill="#0f172a"/>
+          <!-- Woofer Membrane -->
+          <ellipse cx="160" cy="80" rx="55" ry="18" fill="url(#meshCenter)"/>
+          <circle cx="160" cy="80" r="10" fill="#3b82f6"/>
+          <!-- LED Acoustic Ring -->
+          <ellipse cx="160" cy="200" rx="90" ry="30" stroke="#38bdf8" stroke-width="3" stroke-dasharray="8 6"/>
+          <!-- Sound waves -->
+          <path d="M40 70 Q 20 80 40 90" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+          <path d="M25 60 Q 5 80 25 100" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+          <path d="M280 70 Q 300 80 280 90" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+          <path d="M295 60 Q 315 80 295 100" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Catalog Section Heading -->
+  <div class="catalog-section-header" id="catalog">
+    <div class="section-title-wrap">
+      <h2>Hardware Catalog</h2>
+      <p>Select products on the landing page below to test Playwright selector execution.</p>
+    </div>
+    <div class="catalog-filter-tabs">
+      <button class="filter-tab active" onclick="filterCatalog('all', this)">All Hardware (6)</button>
+      <button class="filter-tab" onclick="filterCatalog('audio', this)">Acoustics</button>
+      <button class="filter-tab" onclick="filterCatalog('wearable', this)">Wearables</button>
+    </div>
+  </div>
+
+  <!-- Landing Page Product Catalog Grid -->
+  <main class="products-grid" id="products-catalog-container">
+    <!-- Rendered dynamically to maintain exact fixture IDs and semantic invariants -->
+  </main>
+
+  <!-- Cart Review Section (Target of checkout button test!) -->
+  <section class="cart-review-section" id="cart-view">
+    <div class="cart-review-card">
+      <div class="cart-left-col">
+        <h2 id="cart-header-title">
+          <span>Your cart</span>
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-dim);" id="cart-items-count-badge">0 item(s) selected</span>
+        </h2>
+
+        <table class="cart-items-table">
+          <thead>
+            <tr>
+              <th>Selected Product</th>
+              <th>Qty</th>
+              <th style="text-align: right;">Price</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cart-table-body">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 2.5rem 0; font-style: italic;">
+                Your cart is currently empty. Click "Add to cart" on any product above or run the automated Playwright test.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cart-right-col">
+        <h3>Order Summary</h3>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="summary-subtotal">$0.00</span>
+        </div>
+        <div class="summary-row">
+          <span>Estimated Shipping</span>
+          <span style="color: #10b981; font-weight: 600;">FREE</span>
+        </div>
+        <div class="summary-row">
+          <span>Tax (8%)</span>
+          <span id="summary-tax">$0.00</span>
+        </div>
+        <div class="summary-row total-row">
+          <span>Total</span>
+          <span class="total-amount" id="summary-total">$0.00</span>
+        </div>
+
+        <!-- The Target Button Slot -->
+        <div class="checkout-btn-slot" id="checkout-action-slot">
+          <!-- Rendered dynamically based on Version A or Version B -->
+        </div>
+
+        <div class="trust-badges-bar">
+          <div class="trust-badge-item">
+            <span>🔒</span> 256-Bit SSL
+          </div>
+          <div class="trust-badge-item">
+            <span>🛡️</span> Kaizen Oracle Verified
+          </div>
+          <div class="trust-badge-item">
+            <span>⚡</span> Sub-15ms Repair
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Success Celebration Modal -->
+  <div class="modal-overlay" id="checkout-modal">
+    <div class="modal-dialog">
+      <div class="modal-celebration-icon">✓</div>
+      <h3 id="modal-heading">Checkout Action Verified!</h3>
+      <p id="modal-desc">Playwright successfully clicked and validated the target button. Backend state verified with 0 error codes.</p>
+      <div class="modal-diagnostics-box" id="modal-diagnostics">
+        [DIAGNOSTICS] Status: 200 OK<br>
+        Target: #checkout-button<br>
+        Resolution: Deterministic (0 LLM Calls)<br>
+        Oracle: backend_state verified count=1, totalCents=1999
+      </div>
+      <button class="btn-close-modal" onclick="closeModal()">Dismiss & Reset Test</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-pill" id="toast-notify">
+    <span>✓</span>
+    <span id="toast-text">Item added to cart!</span>
+  </div>
+
+  <footer>
+    <p>Kaizen AI Autonomous Playwright Testing Framework · 4-Step Self-Healing Pipeline Demonstration</p>
+    <p style="margin-top: 0.5rem; font-size: 0.78rem;">Designed for Hackwave 3.0 · Supports Chromium Headed & Headless Execution</p>
+  </footer>
+
+  <script>
+    // Exact product data conforming to server.mjs backend invariants
+    const PRODUCTS = [
+      {
+        sku: 'GZ-MINI',
+        name: 'Gizmo Mini',
+        category: 'audio',
+        price: '$19.99',
+        priceCents: 1999,
+        origPrice: '$29.99',
+        badge: 'Best Seller',
+        stock: 'In Stock · Ready',
+        tagline: 'Ultra-compact 360° wireless Bluetooth speaker with 16h battery and IPX7 rating.',
+        specs: ['Bluetooth 5.4', '16h Battery', 'IPX7 Waterproof'],
+        rating: '4.9 (1.2k)',
+        glowColor: 'rgba(59, 130, 246, 0.35)',
+        svg: `<circle cx="60" cy="60" r="44" fill="#1e293b" stroke="#3b82f6" stroke-width="4"/><circle cx="60" cy="60" r="28" fill="#0f172a" stroke="#60a5fa" stroke-width="2"/><circle cx="60" cy="60" r="10" fill="#3b82f6"/><ellipse cx="60" cy="60" rx="36" ry="12" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="4 3"/>`
+      },
+      {
+        sku: 'GZ-PRO',
+        name: 'Gizmo Pro',
+        category: 'audio',
+        price: '$29.99',
+        priceCents: 2999,
+        origPrice: '$39.99',
+        badge: 'Pro Series',
+        stock: 'In Stock',
+        tagline: 'Active noise-canceling studio over-ear headphones with spatial lossless audio.',
+        specs: ['Spatial Audio', '40h ANC', 'Memory Foam'],
+        rating: '4.8 (890)',
+        glowColor: 'rgba(139, 92, 246, 0.35)',
+        svg: `<path d="M30 65 C30 35 90 35 90 65" stroke="#8b5cf6" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="20" y="60" width="16" height="32" rx="8" fill="#1e293b" stroke="#a78bfa" stroke-width="2"/><rect x="84" y="60" width="16" height="32" rx="8" fill="#1e293b" stroke="#a78bfa" stroke-width="2"/><circle cx="28" cy="76" r="4" fill="#8b5cf6"/><circle cx="92" cy="76" r="4" fill="#8b5cf6"/>`
+      },
+      {
+        sku: 'GZ-ULTRA',
+        name: 'Gizmo Ultra Soundbar',
+        category: 'audio',
+        price: '$59.99',
+        priceCents: 5999,
+        origPrice: '$79.99',
+        badge: 'Flagship',
+        stock: 'Low Stock (4 left)',
+        tagline: 'Dolby Atmos multi-driver television soundbar with wireless subwoofer.',
+        specs: ['Dolby Atmos', '7.1.4 Surround', 'HDMI eARC'],
+        rating: '5.0 (420)',
+        glowColor: 'rgba(16, 185, 129, 0.35)',
+        svg: `<rect x="15" y="48" width="90" height="24" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="3"/><circle cx="32" cy="60" r="7" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/><circle cx="50" cy="60" r="7" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/><circle cx="70" cy="60" r="7" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/><circle cx="88" cy="60" r="7" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/><line x1="20" y1="60" x2="100" y2="60" stroke="#34d399" stroke-width="0.75" stroke-dasharray="2 2"/>`
+      },
+      {
+        sku: 'GZ-WATCH',
+        name: 'Gizmo Pulse Watch',
+        category: 'wearable',
+        price: '$89.99',
+        priceCents: 8999,
+        origPrice: '$119.99',
+        badge: 'Titanium',
+        stock: 'In Stock',
+        tagline: 'Titanium smartwatch with continuous ECG health metrics, GPS, and AMOLED display.',
+        specs: ['AMOLED 120Hz', 'ECG Pulse', 'Sapphire Glass'],
+        rating: '4.9 (650)',
+        glowColor: 'rgba(236, 72, 153, 0.35)',
+        svg: `<rect x="42" y="16" width="36" height="88" rx="6" fill="#1e293b"/><rect x="36" y="36" width="48" height="48" rx="14" fill="#0f172a" stroke="#ec4899" stroke-width="3"/><circle cx="60" cy="60" r="18" fill="#111827"/><path d="M48 60 L54 60 L57 52 L62 68 L66 60 L72 60" stroke="#f472b6" stroke-width="2" fill="none" stroke-linejoin="round"/>`
+      },
+      {
+        sku: 'GZ-BUDS',
+        name: 'Gizmo Buds ANC',
+        category: 'audio',
+        price: '$34.99',
+        priceCents: 3499,
+        origPrice: '$49.99',
+        badge: 'New Arrival',
+        stock: 'In Stock',
+        tagline: 'Ceramic lightweight true wireless earbuds with active transparency mode.',
+        specs: ['Hybrid ANC', '32h Total', 'Qi Wireless'],
+        rating: '4.7 (310)',
+        glowColor: 'rgba(56, 189, 248, 0.35)',
+        svg: `<ellipse cx="60" cy="60" rx="38" ry="26" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/><circle cx="48" cy="58" r="8" fill="#0f172a" stroke="#7dd3fc" stroke-width="1.5"/><circle cx="72" cy="58" r="8" fill="#0f172a" stroke="#7dd3fc" stroke-width="1.5"/><circle cx="60" cy="72" r="3" fill="#38bdf8"/>`
+      },
+      {
+        sku: 'GZ-MECH',
+        name: 'Gizmo Mech Rapid',
+        category: 'wearable',
+        price: '$44.99',
+        priceCents: 4499,
+        origPrice: '$64.99',
+        badge: 'Hall Effect',
+        stock: 'In Stock',
+        tagline: 'Magnetic rapid-trigger 75% hot-swappable keyboard with RGB underglow.',
+        specs: ['0.1mm Trigger', '8000Hz Polling', 'Gasket Mount'],
+        rating: '4.9 (540)',
+        glowColor: 'rgba(245, 158, 11, 0.35)',
+        svg: `<rect x="20" y="38" width="80" height="44" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/><rect x="26" y="44" width="10" height="8" rx="2" fill="#334155"/><rect x="39" y="44" width="10" height="8" rx="2" fill="#334155"/><rect x="52" y="44" width="10" height="8" rx="2" fill="#334155"/><rect x="65" y="44" width="10" height="8" rx="2" fill="#334155"/><rect x="78" y="44" width="10" height="8" rx="2" fill="#334155"/><rect x="36" y="68" width="48" height="8" rx="2" fill="#f59e0b"/>`
+      }
+    ];
+
+    let currentVersion = 'v1';
+    let currentFilter = 'all';
+    let cart = []; // items with sku, name, price, priceCents
+
+    function switchVersion(ver) {
+      currentVersion = ver;
+      document.body.className = ver === 'v1' ? 'mode-v1' : 'mode-v2';
+
+      const btnV1 = document.getElementById('btn-toggle-v1');
+      const btnV2 = document.getElementById('btn-toggle-v2');
+      if (ver === 'v1') {
+        btnV1.className = 'version-btn active-v1';
+        btnV2.className = 'version-btn';
+        document.getElementById('hud-mode-desc').innerHTML = 'Mode: <strong>Version A (Baseline · Fixed Selectors)</strong>';
+        document.getElementById('brand-heading').textContent = 'Gizmo Shop';
+        document.getElementById('cart-header-title').children[0].textContent = 'Your cart';
+      } else {
+        btnV1.className = 'version-btn';
+        btnV2.className = 'version-btn active-v2';
+        document.getElementById('hud-mode-desc').innerHTML = 'Mode: <strong>Version B (Redesigned Flow · 4-Step Self-Healing)</strong>';
+        document.getElementById('brand-heading').textContent = 'Gizmo Shop v2';
+        document.getElementById('cart-header-title').children[0].textContent = 'Your bag';
+      }
+
+      renderNavCart();
+      renderCatalog();
+      renderCartTable();
+      log('SWITCH', `Active environment switched to ${ver === 'v1' ? 'Version A (Baseline with #checkout-button)' : 'Version B (Redesign with .btn-primary Proceed to payment)'}`);
+    }
+
+    function renderNavCart() {
+      const slot = document.getElementById('nav-cart-slot');
+      if (currentVersion === 'v1') {
+        slot.innerHTML = `
+          <a id="cart-link" href="#cart-view">
+            <span>🛒 Cart</span> (<span id="cart-count">${cart.length}</span>)
+          </a>
+        `;
+      } else {
+        slot.innerHTML = `
+          <button aria-label="Shopping bag" onclick="location.hash='#cart-view'">
+            <span>🛍️ Bag</span> (<span id="bag-count" class="count">${cart.length}</span>)
+          </button>
+        `;
+      }
+    }
+
+    function renderCatalog() {
+      const container = document.getElementById('products-catalog-container');
+      container.innerHTML = '';
+
+      const items = currentFilter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === currentFilter);
+
+      items.forEach(p => {
+        const article = document.createElement('article');
+        article.className = 'product-card';
+        article.id = `card-${p.sku}`;
+        article.style.setProperty('--prod-glow', p.glowColor);
+
+        // Required attribute for Version B differ tests
+        if (currentVersion === 'v2') {
+          article.setAttribute('data-sku', p.sku);
+        }
+
+        // Action button conforms exactly to fixtures
+        const actionBtnHtml = currentVersion === 'v1'
+          ? `<button id="add-${p.sku}" class="btn-add-cart" onclick="addToCart('${p.sku}')">
+               <span>Add to cart</span>
+             </button>`
+          : `<button class="btn btn-add-bag" data-action="add" onclick="addToCart('${p.sku}')">
+               <span>Add to bag</span>
+             </button>`;
+
+        article.innerHTML = `
+          <div class="card-visual">
+            <span class="badge-top-left">${p.badge}</span>
+            <span class="badge-top-right"><span class="stock-dot"></span>${p.stock}</span>
+            <svg class="device-svg" viewBox="0 0 120 120" fill="none">
+              ${p.svg}
+            </svg>
+          </div>
+          <h3>${p.name}</h3>
+          <p class="product-tagline">${p.tagline}</p>
+          <div class="specs-pill-group">
+            ${p.specs.map(s => `<span class="spec-pill">${s}</span>`).join('')}
+          </div>
+          <div class="card-footer-meta">
+            <div class="price-wrap">
+              <span class="current-price">${p.price}</span>
+              <span class="origPrice orig-price">${p.origPrice}</span>
+            </div>
+            <div class="rating-badge">★ ${p.rating}</div>
+          </div>
+          ${actionBtnHtml}
+        `;
+
+        container.appendChild(article);
+      });
+    }
+
+    function renderCartTable() {
+      const tbody = document.getElementById('cart-table-body');
+      const badge = document.getElementById('cart-items-count-badge');
+      const subtotalEl = document.getElementById('summary-subtotal');
+      const taxEl = document.getElementById('summary-tax');
+      const totalEl = document.getElementById('summary-total');
+      const actionSlot = document.getElementById('checkout-action-slot');
+
+      badge.textContent = `${cart.length} item(s) selected`;
+
+      if (cart.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 2.5rem 0; font-style: italic;">
+              Your cart is currently empty. Click "Add to cart" on any product above or run the automated Playwright test.
+            </td>
+          </tr>
+        `;
+        subtotalEl.textContent = '$0.00';
+        taxEl.textContent = '$0.00';
+        totalEl.textContent = '$0.00';
+      } else {
+        tbody.innerHTML = '';
+        let totalCents = 0;
+
+        cart.forEach((item, idx) => {
+          totalCents += item.priceCents;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>
+              <div class="item-info-cell">
+                <div class="item-thumb-box">
+                  <svg viewBox="0 0 120 120" fill="none">${item.svg}</svg>
+                </div>
+                <div>
+                  <div class="item-name-bold">${item.name}</div>
+                  <div class="item-sku-sub">SKU: ${item.sku}</div>
+                </div>
+              </div>
+            </td>
+            <td class="qty-cell">1</td>
+            <td class="price-cell">${item.price}</td>
+            <td style="text-align: right;">
+              <button class="remove-btn" onclick="removeFromCart(${idx})" title="Remove item">✕</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        const subtotal = totalCents / 100;
+        const tax = Math.round(subtotal * 0.08 * 100) / 100;
+        const finalTotal = subtotal + tax;
+
+        subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+        taxEl.textContent = `$${tax.toFixed(2)}`;
+        totalEl.textContent = `$${finalTotal.toFixed(2)}`;
+      }
+
+      // Render Target Button Slot
+      // In Version A: exactly #checkout-button
+      // In Version B: exactly .btn-primary "Proceed to payment"
+      if (currentVersion === 'v1') {
+        actionSlot.innerHTML = `
+          <button id="checkout-button" onclick="handleCheckoutClick()">
+            <span>Checkout</span> <span>→</span>
+          </button>
+        `;
+      } else {
+        actionSlot.innerHTML = `
+          <button class="btn btn-primary" id="v2-proceed-btn" onclick="handleCheckoutClick()">
+            <span>Proceed to payment</span> <span>→</span>
+          </button>
+        `;
+      }
+    }
+
+    function addToCart(sku, silent = false) {
+      const prod = PRODUCTS.find(p => p.sku === sku);
+      if (!prod) return;
+
+      cart.push(prod);
+      renderNavCart();
+      renderCartTable();
+
+      if (!silent) {
+        showToast(`Added ${prod.name} to cart!`);
+        log('USER', `Product added: ${prod.name} (${prod.sku}) · Cart size: ${cart.length}`);
+      }
+    }
+
+    function removeFromCart(index) {
+      const removed = cart.splice(index, 1);
+      renderNavCart();
+      renderCartTable();
+      log('USER', `Removed item from cart · Cart size: ${cart.length}`);
+    }
+
+    function filterCatalog(cat, el) {
+      currentFilter = cat;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      renderCatalog();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-notify');
+      document.getElementById('toast-text').textContent = msg;
+      toast.style.display = 'flex';
+      setTimeout(() => { toast.style.display = 'none'; }, 2400);
+    }
+
+    function log(tag, msg, type = 'info') {
+      const screen = document.getElementById('terminal-screen');
+      const now = new Date();
+      const ts = `[${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(Math.floor(now.getMilliseconds() / 10)).padStart(2, '0')}]`;
+
+      const line = document.createElement('div');
+      line.className = 'log-line';
+
+      let tagClass = 'tag-pw';
+      if (tag === 'TRADITIONAL') tagClass = 'tag-trad';
+      if (tag === 'HEAL') tagClass = 'tag-heal';
+      if (tag === 'PASS' || tag === 'ORACLE') tagClass = 'tag-ok';
+      if (tag === 'FAIL') tagClass = 'tag-err';
+
+      line.innerHTML = `
+        <span class="log-ts">${ts}</span>
+        <span class="log-tag ${tagClass}">[${tag}]</span>
+        <span class="log-msg">${msg}</span>
+      `;
+      screen.appendChild(line);
+      screen.scrollTop = screen.scrollHeight;
+    }
+
+    function updateStepChip(id, status) {
+      const chip = document.getElementById(id);
+      if (!chip) return;
+      chip.className = `step-chip ${status}`;
+    }
+
+    /* Automated Playwright Simulation Engine with Virtual Cursor & Reticle */
+    async function startPlaywrightFlow() {
+      const btn = document.getElementById('btn-run-flow');
+      btn.disabled = true;
+
+      const cursor = document.getElementById('playwright-virtual-cursor');
+      const inspector = document.getElementById('inspector-box');
+      const inspectorBadge = document.getElementById('inspector-badge');
+      cursor.style.display = 'block';
+
+      log('PLAYWRIGHT', `Starting autonomous test run on target origin: ${window.location.origin}`);
+      log('PLAYWRIGHT', `Environment mode: ${currentVersion === 'v1' ? 'Version A (Baseline)' : 'Version B (Redesigned Button)'}`);
+
+      updateStepChip('chip-step-1', 'active');
+      await sleep(900);
+      updateStepChip('chip-step-1', 'pass');
+
+      // Step 2: Playwright selects products on landing page
+      updateStepChip('chip-step-2', 'active');
+      log('PLAYWRIGHT', 'Locating products on landing page via intent target rules...');
+
+      // Find Gizmo Mini Add button
+      const miniCard = document.getElementById('card-GZ-MINI');
+      const miniBtn = miniCard ? miniCard.querySelector('button') : null;
+
+      if (miniBtn) {
+        await moveCursorTo(miniBtn, 'Locating: Gizmo Mini');
+        highlightReticle(miniBtn, currentVersion === 'v1' ? '#add-GZ-MINI' : '.btn[data-action="add"]');
+        await sleep(1100);
+
+        miniBtn.click();
+        log('PLAYWRIGHT', `✓ Selected product 'Gizmo Mini' (${currentVersion === 'v1' ? 'id=#add-GZ-MINI' : 'data-action="add"'})`);
+        await sleep(900);
+      }
+
+      // Find Gizmo Pro Add button
+      const proCard = document.getElementById('card-GZ-PRO');
+      const proBtn = proCard ? proCard.querySelector('button') : null;
+
+      if (proBtn) {
+        await moveCursorTo(proBtn, 'Locating: Gizmo Pro');
+        highlightReticle(proBtn, currentVersion === 'v1' ? '#add-GZ-PRO' : '.btn[data-action="add"]');
+        await sleep(1100);
+
+        proBtn.click();
+        log('PLAYWRIGHT', `✓ Selected product 'Gizmo Pro' (${currentVersion === 'v1' ? 'id=#add-GZ-PRO' : 'data-action="add"'})`);
+        await sleep(900);
+      }
+
+      updateStepChip('chip-step-2', 'pass');
+
+      // Step 3: Navigating to cart review
+      updateStepChip('chip-step-3', 'active');
+      const cartLink = currentVersion === 'v1' ? document.getElementById('cart-link') : document.querySelector('button[aria-label="Shopping bag"]');
+
+      if (cartLink) {
+        await moveCursorTo(cartLink, 'Navigating to Cart');
+        highlightReticle(cartLink, currentVersion === 'v1' ? '#cart-link' : 'button[aria-label="Shopping bag"]');
+        await sleep(900);
+
+        document.getElementById('cart-view').scrollIntoView({ behavior: 'smooth' });
+        log('PLAYWRIGHT', `✓ Cart review opened. Total items in cart: ${cart.length}`);
+      }
+      updateStepChip('chip-step-3', 'pass');
+      await sleep(1000);
+
+      // Step 4: Playwright checks Proceed / Checkout Button
+      updateStepChip('chip-step-4', 'active');
+
+      if (currentVersion === 'v1') {
+        // Traditional method passes
+        log('TRADITIONAL', "Evaluating fixed selector: '#checkout-button'...");
+        await sleep(900);
+
+        const checkoutBtn = document.getElementById('checkout-button');
+        if (checkoutBtn) {
+          await moveCursorTo(checkoutBtn, 'Evaluating #checkout-button');
+          highlightReticle(checkoutBtn, '#checkout-button');
+          await sleep(1200);
+
+          log('PASS', '✓ Selector #checkout-button found with 100% confidence. Traditional test PASSED.');
+          updateStepChip('chip-step-4', 'pass');
+          updateStepChip('chip-step-5', 'pass');
+
+          checkoutBtn.click();
+        }
+      } else {
+        // Traditional method FAILS -> 4-Step Self-Healing triggers
+        log('TRADITIONAL', "Evaluating fixed selector '#checkout-button' in Version B...");
+        await sleep(1000);
+
+        log('FAIL', "❌ Selector '#checkout-button' NOT FOUND in DOM! Traditional Playwright test broken.");
+        updateStepChip('chip-step-4', 'fail');
+        await sleep(900);
+
+        log('HEAL', '⚡ Triggering Kaizen AI 4-Step Self-Healing Pipeline:');
+        await sleep(800);
+
+        log('HEAL', '  [1/4 Semantic Match]: Synonym embedding matches "checkout" -> "proceed to payment" (similarity: 0.88)');
+        await sleep(800);
+
+        log('HEAL', '  [2/4 Context-Aware]: Verified ancestor ".cart-review-card" under heading "Your bag" (score: 0.96)');
+        await sleep(800);
+
+        log('HEAL', '  [3/4 Confidence Scoring]: Combined candidate score: 0.94 >= 0.60 threshold. ACCEPTED.');
+        await sleep(800);
+
+        const healedBtn = document.getElementById('v2-proceed-btn') || document.querySelector('.btn-primary');
+        if (healedBtn) {
+          await moveCursorTo(healedBtn, 'Healed: .btn-primary');
+          highlightReticle(healedBtn, 'button.btn-primary (score 0.94)');
+          await sleep(1200);
+
+          log('HEAL', '  [4/4 Heuristic Execution]: Auto-executing recovered target "button.btn-primary". 0 LLM calls!');
+          updateStepChip('chip-step-4', 'heal');
+          updateStepChip('chip-step-5', 'pass');
+
+          healedBtn.click();
+        }
+      }
+
+      // Hide cursor & reticle
+      await sleep(1200);
+      cursor.style.display = 'none';
+      inspector.style.display = 'none';
+      btn.disabled = false;
+    }
+
+    function moveCursorTo(el, tagText) {
+      return new Promise(resolve => {
+        const cursor = document.getElementById('playwright-virtual-cursor');
+        const tag = document.getElementById('cursor-tag');
+        tag.textContent = tagText || 'Playwright';
+
+        const rect = el.getBoundingClientRect();
+        const targetX = rect.left + rect.width / 2;
+        const targetY = rect.top + rect.height / 2;
+
+        cursor.style.transform = `translate(${targetX}px, ${targetY}px)`;
+        setTimeout(resolve, 850);
+      });
+    }
+
+    function highlightReticle(el, label) {
+      const box = document.getElementById('inspector-box');
+      const badge = document.getElementById('inspector-badge');
+      const rect = el.getBoundingClientRect();
+
+      badge.textContent = label;
+      box.style.display = 'block';
+      box.style.top = `${rect.top}px`;
+      box.style.left = `${rect.left}px`;
+      box.style.width = `${rect.width}px`;
+      box.style.height = `${rect.height}px`;
+    }
+
+    function handleCheckoutClick() {
+      const modal = document.getElementById('checkout-modal');
+      const heading = document.getElementById('modal-heading');
+      const desc = document.getElementById('modal-desc');
+      const diag = document.getElementById('modal-diagnostics');
+
+      if (currentVersion === 'v1') {
+        heading.textContent = 'Version A: Traditional Checkout Verified!';
+        desc.textContent = 'Fixed selector #checkout-button was found directly in the DOM. Order validated against backend state.';
+        diag.innerHTML = `
+          [STAGE] Baseline Verification<br>
+          Selector: #checkout-button (Match: 1.00)<br>
+          Backend API: /api/orders (Status: 200 OK)<br>
+          Oracle Assertion: status=PAID, totalCents=1999 (PASS)
+        `;
+      } else {
+        heading.textContent = 'Version B: Autonomous Self-Healing Success!';
+        desc.textContent = 'The button rename and relocation caused traditional tests to fail, but Kaizen AI successfully healed to .btn-primary.';
+        diag.innerHTML = `
+          [STAGE] Self-Healing Recovery<br>
+          Original Selector: #checkout-button (FAILED: 0 elements)<br>
+          1. Semantic Embedding: "checkout" ≈ "proceed to payment" (0.88)<br>
+          2. Context DOM Tree: Ancestor .cart-review-card / Your bag<br>
+          3. Confidence Score: 0.94 &ge; 0.60 threshold<br>
+          4. Recovery: button.btn-primary clicked (0 LLM Calls · 12ms overhead)<br>
+          Verdict: HEALED_PASS
+        `;
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('checkout-modal').style.display = 'none';
+      log('PLAYWRIGHT', 'Test run complete. State ready for next execution.');
+    }
+
+    function sleep(ms) {
+      return new Promise(res => setTimeout(res, ms));
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      renderNavCart();
+      renderCatalog();
+      renderCartTable();
+    });
+  </script>
+</body>
+</html>

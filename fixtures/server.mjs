@@ -9,6 +9,8 @@ const __dirname = path.dirname(__filename);
 const PRODUCTS = {
   'GZ-MINI': { sku: 'GZ-MINI', name: 'Gizmo Mini', priceCents: 1999 },
   'GZ-PRO': { sku: 'GZ-PRO', name: 'Gizmo Pro', priceCents: 2999 },
+  'GZ-ULTRA': { sku: 'GZ-ULTRA', name: 'Gizmo Ultra Soundbar', priceCents: 5999 },
+  'GZ-WATCH': { sku: 'GZ-WATCH', name: 'Gizmo Pulse Watch', priceCents: 8999 },
 };
 
 function luhnCheck(numStr) {
