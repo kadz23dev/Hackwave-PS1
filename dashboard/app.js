@@ -4283,9 +4283,16 @@ export async function renderSimulationView() {
   cmdBox.appendChild(inputsRow);
 
   // Quick Action Suggestion Chips
-  const chipList = rec.isDemo
-    ? ['✦ click on Get Started', '✦ click on Features', '✦ click on Learn More', '✦ click on Contact', '✦ click on Contact Us']
-    : ['✦ click on get started', '✦ click on Add to bag', '✦ click on Sign In', '✦ proceed to checkout'];
+  let chipList;
+  if (rec.isDemo) {
+    chipList = ['✦ click on Get Started', '✦ click on Features', '✦ click on Learn More', '✦ click on Contact', '✦ click on Contact Us'];
+  } else if (workspaceState.scenario === 'baseline' || rec.url.includes('4101')) {
+    chipList = ['✦ click on Checkout', '✦ click on Add to cart', '✦ click on Cart'];
+  } else if (workspaceState.scenario === 'drift' || rec.url.includes('4102')) {
+    chipList = ['✦ click on Checkout (Traditional)', '✦ click on Proceed to payment', '✦ click on Add to bag'];
+  } else {
+    chipList = ['✦ click on Checkout', '✦ click on Add to bag', '✦ click on Sign In', '✦ proceed to checkout'];
+  }
 
   const quickChips = el('div', { class: 'pw-quick-chips' });
   quickChips.appendChild(el('span', { style: 'font-size: 0.75rem; color: var(--ink-2); font-weight: 500;' }, 'Quick Actions:'));
@@ -4298,11 +4305,11 @@ export async function renderSimulationView() {
   const scenariosStrip = el('div', { class: 'pw-scenarios-strip' });
   scenariosStrip.appendChild(el('span', { class: 'pw-scenarios-label' }, 'Preset Scenarios:'));
   const scenarios = [
-    { key: 'demo', label: 'Nexora Demo (demo.html)', url: 'http' + '://127.0.0.1:4300/demo.html' },
-    { key: 'drift', label: 'Redesign Drift (v2)', url: 'http' + '://127.0.0.1:4102/cart.html' },
-    { key: 'bug', label: 'Server 500 Bug (v2-bug)', url: 'http' + '://127.0.0.1:4103/checkout.html' },
-    { key: 'ambiguous', label: 'Ambiguous Choices (v2-amb)', url: 'http' + '://127.0.0.1:4104/payment.html' },
-    { key: 'baseline', label: 'Baseline (v1)', url: 'http' + '://127.0.0.1:4101/cart.html' }
+    { key: 'baseline', label: 'Version A Store (v1)', url: 'http' + '://127.0.0.1:4101/cart', defaultIntent: 'click on Checkout' },
+    { key: 'drift', label: 'Version B Redesign (v2)', url: 'http' + '://127.0.0.1:4102/bag', defaultIntent: 'click on Checkout' },
+    { key: 'bug', label: 'Version B Server 500 Bug (v2-bug)', url: 'http' + '://127.0.0.1:4103/', defaultIntent: 'click on Checkout' },
+    { key: 'ambiguous', label: 'Version B Ambiguous (v2-amb)', url: 'http' + '://127.0.0.1:4104/', defaultIntent: 'click on Checkout' },
+    { key: 'demo', label: 'Nexora Demo (demo.html)', url: 'http' + '://127.0.0.1:4300/demo.html', defaultIntent: 'click on Get Started' }
   ];
   for (const sc of scenarios) {
     const isAct = (workspaceState.scenario === sc.key) || (sc.key === 'demo' && workspaceState.targetUrl?.includes('demo.html'));
@@ -4310,6 +4317,7 @@ export async function renderSimulationView() {
     pill.addEventListener('click', () => {
       workspaceState.scenario = sc.key;
       workspaceState.targetUrl = sc.url;
+      if (sc.defaultIntent) workspaceState.intentText = sc.defaultIntent;
       renderSimulationView();
     });
     scenariosStrip.appendChild(pill);

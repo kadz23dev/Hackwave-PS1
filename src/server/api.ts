@@ -1764,44 +1764,109 @@ export function buildRoutes(repo: Repo): Route[] {
         const targetElement = clickMatch ? clickMatch[2].trim() : (actionMessage.trim() || 'target element');
         const isCustomClick = Boolean(clickMatch);
 
-        const steps = [
-          {
-            num: 1,
-            title: 'Recognize & Navigate to Target Endpoint',
-            desc: `page.goto('${targetUrl}')`,
-            status: 'pass',
-            badge: 'HTTP 200'
-          },
-          { 
-            num: 2, 
-            title: isCustomClick ? `AI Intent: Target "${targetElement}"` : 'Inspect DOM & Detect Selector Drift', 
-            desc: isCustomClick
-              ? `Synthesized resilient locator: button:has-text("${targetElement}") / a:has-text("${targetElement}")`
-              : (scenario === 'drift' ? "locator('#add-to-cart') absent in DOM tree" : "locator resolved"),
-            status: (scenario === 'drift' && !isCustomClick) ? 'fail' : 'pass', 
-            badge: isCustomClick ? 'AI Intent' : (scenario === 'drift' ? 'Drift' : 'Matched') 
-          },
-          { 
-            num: 3, 
-            title: isCustomClick ? `Dispatch Action & Observe Load` : 'AI Healing & Selector Synthesis', 
-            desc: isCustomClick
-              ? `Executed click on "${targetElement}" · Observed website loading & network idle`
-              : (scenario === 'drift' ? 'Synthesized #add-to-bag with 94% confidence score' : 'No healing needed'), 
-            status: isCustomClick ? 'pass' : (scenario === 'drift' ? 'heal' : 'pass'), 
-            badge: isCustomClick ? 'Action Executed' : (scenario === 'drift' ? 'Synthesized' : 'Skipped') 
-          },
-          { 
-            num: 4, 
-            title: 'Backend Oracle Validation', 
-            desc: scenario === 'bug'
-              ? 'POST /api/orders returned 500 error'
-              : (isCustomClick ? `Navigation invariant satisfied · Target "${targetElement}" loaded successfully` : 'POST /api/orders invariant passed & SQLite updated'), 
-            status: scenario === 'bug' ? 'fail' : 'pass', 
-            badge: scenario === 'bug' ? 'Error 500' : 'Invariant Pass' 
-          },
-        ];
+        let steps;
+        if (scenario === 'baseline' && !isCustomClick) {
+          steps = [
+            {
+              num: 1,
+              title: 'Version A: Traditional Fixed Selector Check',
+              desc: `page.goto('${targetUrl}') · Traditional fixed selector locator('#checkout-button') resolved directly`,
+              status: 'pass',
+              badge: 'Fixed Selector Match'
+            },
+            {
+              num: 2,
+              title: 'Dispatch Action via Playwright Engine',
+              desc: `await page.click('#checkout-button') executed · Successfully navigated to /checkout`,
+              status: 'pass',
+              badge: 'Action Executed'
+            },
+            {
+              num: 3,
+              title: 'Heuristic Drift Evaluation',
+              desc: 'Traditional selector matched with 1.0 confidence · Zero drift detected · Heuristic bypass active (0 LLM calls)',
+              status: 'pass',
+              badge: 'Baseline Plan OK'
+            },
+            {
+              num: 4,
+              title: 'Backend Oracle & State Validation',
+              desc: 'Order-created invariant passed · POST /api/orders 201 Created · Baseline test PASS',
+              status: 'pass',
+              badge: 'Invariant Pass'
+            }
+          ];
+        } else if (scenario === 'drift' && !isCustomClick) {
+          steps = [
+            {
+              num: 1,
+              title: 'Version B: Traditional Fixed Selector Check (Fails)',
+              desc: `page.goto('${targetUrl}') · Traditional selector locator('#checkout-button') absent in DOM tree (Relocated/Renamed)`,
+              status: 'fail',
+              badge: 'Selector Drift'
+            },
+            {
+              num: 2,
+              title: '4-Step Method (1 & 2): Semantic & Context-Aware Matching',
+              desc: 'Semantic element matching found candidate ".btn-primary" ("Proceed to payment") · Evaluated surrounding layout and container hierarchy',
+              status: 'pass',
+              badge: 'Semantic Match'
+            },
+            {
+              num: 3,
+              title: '4-Step Method (3 & 4): Confidence Scoring & Deterministic Recovery',
+              desc: 'Confidence score calculated: 0.94 >= 0.60 threshold · Auto-healed selector without AI (0 LLM calls)',
+              status: 'heal',
+              badge: 'Score: 0.94 (Healed)'
+            },
+            {
+              num: 4,
+              title: 'Playwright Execution & Backend Oracle Validation',
+              desc: 'Executed healed Playwright step · Order-created invariant satisfied · Test recovered cleanly',
+              status: 'pass',
+              badge: 'HEALED_PASS'
+            }
+          ];
+        } else {
+          steps = [
+            {
+              num: 1,
+              title: 'Recognize & Navigate to Target Endpoint',
+              desc: `page.goto('${targetUrl}')`,
+              status: 'pass',
+              badge: 'HTTP 200'
+            },
+            { 
+              num: 2, 
+              title: isCustomClick ? `AI Intent: Target "${targetElement}"` : 'Inspect DOM & Detect Selector Drift', 
+              desc: isCustomClick
+                ? `Synthesized resilient locator: button:has-text("${targetElement}") / a:has-text("${targetElement}")`
+                : (scenario === 'drift' ? "locator('#checkout-button') absent in DOM tree" : "locator resolved"),
+              status: (scenario === 'drift' && !isCustomClick) ? 'fail' : 'pass', 
+              badge: isCustomClick ? 'AI Intent' : (scenario === 'drift' ? 'Drift' : 'Matched') 
+            },
+            { 
+              num: 3, 
+              title: isCustomClick ? `Dispatch Action & Observe Load` : 'AI Healing & Selector Synthesis', 
+              desc: isCustomClick
+                ? `Executed click on "${targetElement}" · Observed website loading & network idle`
+                : (scenario === 'drift' ? 'Synthesized #add-to-bag with 94% confidence score' : 'No healing needed'), 
+              status: isCustomClick ? 'pass' : (scenario === 'drift' ? 'heal' : 'pass'), 
+              badge: isCustomClick ? 'Action Executed' : (scenario === 'drift' ? 'Synthesized' : 'Skipped') 
+            },
+            { 
+              num: 4, 
+              title: 'Backend Oracle Validation', 
+              desc: scenario === 'bug'
+                ? 'POST /api/orders returned 500 error'
+                : (isCustomClick ? `Navigation invariant satisfied · Target "${targetElement}" loaded successfully` : 'POST /api/orders invariant passed & SQLite updated'), 
+              status: scenario === 'bug' ? 'fail' : 'pass', 
+              badge: scenario === 'bug' ? 'Error 500' : 'Invariant Pass' 
+            },
+          ];
+        }
 
-        const verdict = scenario === 'bug' ? 'APP_BUG' : 'HEALED_PASS';
+        const verdict = scenario === 'bug' ? 'APP_BUG' : (scenario === 'baseline' && !isCustomClick ? 'PASS' : 'HEALED_PASS');
 
         const intent = repo.db.prepare('SELECT id, name, sha256 FROM intents LIMIT 1').get() as { id: number; name: string; sha256: string } | undefined;
         if (intent) {
@@ -1816,7 +1881,9 @@ export function buildRoutes(repo: Repo): Route[] {
           ? (isDemoSite
             ? `await page.locator('a:has-text("${targetElement}"), button:has-text("${targetElement}")').click();\nawait page.waitForLoadState('domcontentloaded');`
             : `await page.locator('text="${targetElement}", button:has-text("${targetElement}")').click();`)
-          : `await page.locator('#add-to-bag').click();`;
+          : (scenario === 'drift'
+            ? `// Step 1: Traditional locator('#checkout-button') failed (404/Not Found)\n// 4-Step Self-Healing: Semantic + Context-Aware Matching (Score: 0.94)\nawait page.locator('.btn-primary:has-text("Proceed to payment")').click();`
+            : `await page.locator('#checkout-button').click();`);
 
         json(res, 200, {
           ok: true,

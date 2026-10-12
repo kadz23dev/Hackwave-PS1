@@ -386,9 +386,10 @@ export async function main() {
   const args = process.argv.slice(2);
   const interactive = args.includes('--interactive');
   const serve = args.includes('--serve');
+  const headed = args.includes('--headed');
 
   const acts = [1, 2, 3, 4, 5, 6, 7, 8];
-  await runActs(acts, { interactive, serve });
+  await runActs(acts, { interactive, serve, headless: !headed });
 }
 
 const isDirectRun =
