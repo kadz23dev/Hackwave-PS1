@@ -1,0 +1,10 @@
+node_modules
+dist
+client/dist
+.git
+.github
+*.log
+.env
+.env.local
+coverage
+demo-home/*.sqlite-journal

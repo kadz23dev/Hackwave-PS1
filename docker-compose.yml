@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  kaizen-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kaizen-ai-app
+    restart: unless-stopped
+    ports:
+      - "4300:4300"
+    environment:
+      - PORT=4300
+      - HOST=0.0.0.0
+      - NODE_ENV=production
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - kaizen-db:/app/demo-home
+
+volumes:
+  kaizen-db:
+    driver: local
