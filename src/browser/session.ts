@@ -12,9 +12,10 @@ export interface Session {
   close(): Promise<void>;
 }
 
-export async function openSession(opts?: { headless?: boolean; intent?: Intent }): Promise<Session> {
+export async function openSession(opts?: { headless?: boolean; intent?: Intent; slowMo?: number }): Promise<Session> {
   const headless = opts?.headless ?? true;
-  const browser = await chromium.launch({ headless });
+  const slowMo = opts?.slowMo ?? (process.env.SLOWMO ? parseInt(process.env.SLOWMO, 10) : (headless ? 0 : 800));
+  const browser = await chromium.launch({ headless, slowMo });
   const context = await browser.newContext({ viewport: VIEWPORT });
 
   context.setDefaultTimeout(ACTION_TIMEOUT_MS);

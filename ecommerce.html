@@ -1064,7 +1064,7 @@
       z-index: 9999;
       display: none;
       transform: translate(-100px, -100px);
-      transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+      transition: transform 0.85s cubic-bezier(0.2, 0.9, 0.3, 1.2);
     }
     #playwright-virtual-cursor svg {
       width: 32px;
@@ -1863,7 +1863,7 @@
       log('PLAYWRIGHT', `Environment mode: ${currentVersion === 'v1' ? 'Version A (Baseline)' : 'Version B (Redesigned Button)'}`);
 
       updateStepChip('chip-step-1', 'active');
-      await sleep(600);
+      await sleep(900);
       updateStepChip('chip-step-1', 'pass');
 
       // Step 2: Playwright selects products on landing page
@@ -1877,11 +1877,11 @@
       if (miniBtn) {
         await moveCursorTo(miniBtn, 'Locating: Gizmo Mini');
         highlightReticle(miniBtn, currentVersion === 'v1' ? '#add-GZ-MINI' : '.btn[data-action="add"]');
-        await sleep(500);
+        await sleep(1100);
 
         miniBtn.click();
         log('PLAYWRIGHT', `✓ Selected product 'Gizmo Mini' (${currentVersion === 'v1' ? 'id=#add-GZ-MINI' : 'data-action="add"'})`);
-        await sleep(400);
+        await sleep(900);
       }
 
       // Find Gizmo Pro Add button
@@ -1891,11 +1891,11 @@
       if (proBtn) {
         await moveCursorTo(proBtn, 'Locating: Gizmo Pro');
         highlightReticle(proBtn, currentVersion === 'v1' ? '#add-GZ-PRO' : '.btn[data-action="add"]');
-        await sleep(500);
+        await sleep(1100);
 
         proBtn.click();
         log('PLAYWRIGHT', `✓ Selected product 'Gizmo Pro' (${currentVersion === 'v1' ? 'id=#add-GZ-PRO' : 'data-action="add"'})`);
-        await sleep(400);
+        await sleep(900);
       }
 
       updateStepChip('chip-step-2', 'pass');
@@ -1907,13 +1907,13 @@
       if (cartLink) {
         await moveCursorTo(cartLink, 'Navigating to Cart');
         highlightReticle(cartLink, currentVersion === 'v1' ? '#cart-link' : 'button[aria-label="Shopping bag"]');
-        await sleep(400);
+        await sleep(900);
 
         document.getElementById('cart-view').scrollIntoView({ behavior: 'smooth' });
         log('PLAYWRIGHT', `✓ Cart review opened. Total items in cart: ${cart.length}`);
       }
       updateStepChip('chip-step-3', 'pass');
-      await sleep(600);
+      await sleep(1000);
 
       // Step 4: Playwright checks Proceed / Checkout Button
       updateStepChip('chip-step-4', 'active');
@@ -1921,13 +1921,13 @@
       if (currentVersion === 'v1') {
         // Traditional method passes
         log('TRADITIONAL', "Evaluating fixed selector: '#checkout-button'...");
-        await sleep(500);
+        await sleep(900);
 
         const checkoutBtn = document.getElementById('checkout-button');
         if (checkoutBtn) {
           await moveCursorTo(checkoutBtn, 'Evaluating #checkout-button');
           highlightReticle(checkoutBtn, '#checkout-button');
-          await sleep(600);
+          await sleep(1200);
 
           log('PASS', '✓ Selector #checkout-button found with 100% confidence. Traditional test PASSED.');
           updateStepChip('chip-step-4', 'pass');
@@ -1938,29 +1938,29 @@
       } else {
         // Traditional method FAILS -> 4-Step Self-Healing triggers
         log('TRADITIONAL', "Evaluating fixed selector '#checkout-button' in Version B...");
-        await sleep(600);
+        await sleep(1000);
 
         log('FAIL', "❌ Selector '#checkout-button' NOT FOUND in DOM! Traditional Playwright test broken.");
         updateStepChip('chip-step-4', 'fail');
-        await sleep(500);
+        await sleep(900);
 
         log('HEAL', '⚡ Triggering Kaizen AI 4-Step Self-Healing Pipeline:');
-        await sleep(400);
+        await sleep(800);
 
         log('HEAL', '  [1/4 Semantic Match]: Synonym embedding matches "checkout" -> "proceed to payment" (similarity: 0.88)');
-        await sleep(400);
+        await sleep(800);
 
         log('HEAL', '  [2/4 Context-Aware]: Verified ancestor ".cart-review-card" under heading "Your bag" (score: 0.96)');
-        await sleep(400);
+        await sleep(800);
 
         log('HEAL', '  [3/4 Confidence Scoring]: Combined candidate score: 0.94 >= 0.60 threshold. ACCEPTED.');
-        await sleep(400);
+        await sleep(800);
 
         const healedBtn = document.getElementById('v2-proceed-btn') || document.querySelector('.btn-primary');
         if (healedBtn) {
           await moveCursorTo(healedBtn, 'Healed: .btn-primary');
           highlightReticle(healedBtn, 'button.btn-primary (score 0.94)');
-          await sleep(600);
+          await sleep(1200);
 
           log('HEAL', '  [4/4 Heuristic Execution]: Auto-executing recovered target "button.btn-primary". 0 LLM calls!');
           updateStepChip('chip-step-4', 'heal');
@@ -1971,7 +1971,7 @@
       }
 
       // Hide cursor & reticle
-      await sleep(1000);
+      await sleep(1200);
       cursor.style.display = 'none';
       inspector.style.display = 'none';
       btn.disabled = false;
@@ -1988,7 +1988,7 @@
         const targetY = rect.top + rect.height / 2;
 
         cursor.style.transform = `translate(${targetX}px, ${targetY}px)`;
-        setTimeout(resolve, 500);
+        setTimeout(resolve, 850);
       });
     }
 
