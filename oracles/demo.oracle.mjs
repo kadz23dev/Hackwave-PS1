@@ -36,22 +36,20 @@ function cli(args, db) {
   return {
     status: res.status,
     stdout: res.stdout || '',
-    stderr: res.stderr || '',
   };
 }
 
 function report(runId, db) {
-  const res = cli(['report', String(runId), '--json'], db);
-  return JSON.parse(res.stdout);
+  return JSON.parse(cli(['report', String(runId), '--json'], db).stdout);
 }
 
-function sql(dbPath, query, ...params) {
-  const db = new Database(dbPath, { readonly: true });
+function sql(db, query, ...params) {
+  const dbConn = new Database(db, { readonly: true });
   try {
-    const stmt = db.prepare(query);
+    const stmt = dbConn.prepare(query);
     return stmt.all(...params);
   } finally {
-    db.close();
+    dbConn.close();
   }
 }
 
@@ -62,10 +60,7 @@ function getMaxRunId(db) {
 
 function startFixtures() {
   return new Promise((resolve, reject) => {
-    const proc = spawn('node', ['fixtures/server.mjs', '--all'], {
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
+    const proc = spawn('node', ['fixtures/server.mjs', '--all']);
     let listeningCount = 0;
     let buffer = '';
 
@@ -108,7 +103,7 @@ async function waitForServer(url, timeoutMs = 5000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: { connection: 'close' } });
       if (res.ok || res.status === 200) {
         return;
       }
@@ -136,8 +131,8 @@ async function run() {
       let rep = null;
       try {
         if (runId != null) rep = report(runId, mainDb);
-      } catch (e) {
-        // failed to parse report
+      } catch {
+        // report failed or not found
       }
       const snapshots = sql(mainDb, 'SELECT count(*) AS cnt FROM snapshots');
       const runRow = runId != null ? sql(mainDb, 'SELECT intent_sha256 FROM runs WHERE id = ?', runId)[0] : null;
@@ -160,8 +155,8 @@ async function run() {
       let rep = null;
       try {
         if (runId != null) rep = report(runId, mainDb);
-      } catch (e) {
-        // failed to parse report
+      } catch {
+        // report failed or not found
       }
 
       const changes = sql(
@@ -176,7 +171,7 @@ async function run() {
 
       let orderCount = 0;
       try {
-        const stateRes = await fetch('http://127.0.0.1:4102/__state');
+        const stateRes = await fetch('http://127.0.0.1:4102/__state', { headers: { connection: 'close' } });
         const state = await stateRes.json();
         orderCount = Array.isArray(state?.orders) ? state.orders.length : 0;
       } catch {
@@ -243,8 +238,8 @@ async function run() {
       let repBug = null;
       try {
         if (runIdBug != null) repBug = report(runIdBug, bugDb);
-      } catch (e) {
-        // failed to parse report
+      } catch {
+        // report failed or not found
       }
 
       const bugRepairs = sql(bugDb, 'SELECT id, status FROM repairs ORDER BY id DESC LIMIT 1');
@@ -308,13 +303,13 @@ async function run() {
       check('[R-F4-07] DELETE FROM audit_log throws due to append-only trigger', deleteThrew, deleteThrew ? '' : 'DELETE did not throw');
     }
 
-    // Assertion 8: [R-F5-01]...[R-F5-07]
+    // Assertion 8: [R-F5-01] [R-F5-02] [R-F5-03] [R-F5-04] [R-F5-05] [R-F5-06] [R-F5-07]
     {
       const repairRow = sql(mainDb, 'SELECT id FROM repairs LIMIT 1')[0];
       const repairId = repairRow?.id ?? 1;
 
       const serveProc = spawn('node', ['dist/cli.js', 'serve', '--port', '4399', '--db', mainDb], {
-        stdio: 'pipe',
+        stdio: 'ignore',
       });
 
       let serveOk = false;
@@ -323,25 +318,25 @@ async function run() {
       try {
         await waitForServer('http://127.0.0.1:4399/', 5000);
 
-        const indexRes = await fetch('http://127.0.0.1:4399/');
+        const indexRes = await fetch('http://127.0.0.1:4399/', { headers: { connection: 'close' } });
         const indexHtml = await indexRes.text();
 
         const requiredIds = ['view-overview', 'view-changes', 'view-change', 'view-repair', 'view-audit'];
         const hasDomIds = requiredIds.every(id => indexHtml.includes(id));
 
-        const sitesRes = await fetch('http://127.0.0.1:4399/api/sites');
+        const sitesRes = await fetch('http://127.0.0.1:4399/api/sites', { headers: { connection: 'close' } });
         const sitesJson = await sitesRes.json();
         const sitesOk = sitesRes.status === 200 && (Array.isArray(sitesJson) ? sitesJson.length > 0 : Object.keys(sitesJson).length > 0);
 
-        const changesRes = await fetch('http://127.0.0.1:4399/api/changes');
+        const changesRes = await fetch('http://127.0.0.1:4399/api/changes', { headers: { connection: 'close' } });
         const changesJson = await changesRes.json();
         const changesOk = changesRes.status === 200 && (Array.isArray(changesJson) ? changesJson.length > 0 : Object.keys(changesJson).length > 0);
 
-        const repairRes = await fetch(`http://127.0.0.1:4399/api/repairs/${repairId}`);
+        const repairRes = await fetch(`http://127.0.0.1:4399/api/repairs/${repairId}`, { headers: { connection: 'close' } });
         const repairJson = await repairRes.json();
         const repairOk = repairRes.status === 200 && (Array.isArray(repairJson) ? repairJson.length > 0 : Object.keys(repairJson).length > 0);
 
-        const auditRes = await fetch('http://127.0.0.1:4399/api/audit');
+        const auditRes = await fetch('http://127.0.0.1:4399/api/audit', { headers: { connection: 'close' } });
         const auditJson = await auditRes.json();
         const auditOk = auditRes.status === 200 && (Array.isArray(auditJson) ? auditJson.length > 0 : Object.keys(auditJson).length > 0);
 
@@ -353,15 +348,17 @@ async function run() {
         serveReason = err instanceof Error ? err.message : String(err);
       } finally {
         serveProc.kill();
+        await new Promise(r => setTimeout(r, 200));
       }
 
-      check('[R-F5-01]...[R-F5-07] healtest serve responds 200 on all endpoints and index.html satisfies DOM contract', serveOk, serveReason);
+      check('[R-F5-01] [R-F5-02] [R-F5-03] [R-F5-04] [R-F5-05] [R-F5-06] [R-F5-07] healtest serve responds 200 on all endpoints and index.html satisfies DOM contract', serveOk, serveReason);
     }
   } catch (err) {
     console.error('Fatal oracle execution error:', err);
   } finally {
     if (fixturesProc) {
       fixturesProc.kill();
+      await new Promise(r => setTimeout(r, 200));
     }
     const allPass = results.length === 8 && results.every(r => r.ok);
     process.exit(allPass ? 0 : 1);
