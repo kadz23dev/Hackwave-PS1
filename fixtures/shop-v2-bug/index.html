@@ -2,46 +2,342 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Gizmo Shop v2 (Bug Variant)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gizmo Shop v2</title>
   <style>
-    body { font-family: sans-serif; margin: 2rem; display: flex; gap: 2rem; }
-    nav { width: 180px; border-right: 1px solid #ccc; padding-right: 1rem; }
-    .products { display: flex; gap: 2rem; flex: 1; }
-    article { border: 1px solid #ddd; padding: 1rem; border-radius: 4px; width: 200px; }
-    .price { font-weight: bold; margin: 0.5rem 0; }
-    button { cursor: pointer; padding: 0.5rem 1rem; }
+    :root {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-border: #1f293d;
+      --surface-hover: #172238;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #10b981;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(180deg, #ffffff, #d1d5db);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .version-pill {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    nav button[aria-label="Shopping bag"] {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(31, 41, 61, 0.7);
+      border: 1px solid var(--surface-border);
+      color: #f9fafb;
+      padding: 0.55rem 1.15rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    nav button[aria-label="Shopping bag"]:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+    }
+    .count {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .hero {
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(99, 102, 241, 0.12);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+    }
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 600px;
+      margin: 0 auto 1.5rem;
+    }
+    main.products {
+      max-width: 1200px;
+      margin: 1rem auto 3rem;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.75rem;
+      width: 100%;
+    }
+    article {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      overflow: hidden;
+    }
+    article:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+    }
+    .product-visual {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(180deg, #182236, #0e1422);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      position: relative;
+    }
+    .product-visual svg {
+      width: 72px;
+      height: 72px;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+    }
+    .product-tag {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #c7d2fe;
+      border: 1px solid rgba(199, 210, 254, 0.2);
+    }
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.01em;
+    }
+    .product-desc {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      min-height: 2.6rem;
+    }
+    .product-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: auto;
+      margin-bottom: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .price {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #10b981;
+      letter-spacing: -0.02em;
+    }
+    .rating {
+      font-size: 0.78rem;
+      color: #fbbf24;
+      font-weight: 600;
+    }
+    button.btn {
+      width: 100%;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    button.btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--surface-border);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
-  <nav>
-    <button aria-label="Shopping bag" onclick="location.href='/bag'">🛍 <span class="count" id="bag-count">0</span></button>
-  </nav>
+  <header>
+    <div class="brand-wrap">
+      <div class="brand-logo-icon">✨</div>
+      <h1>Gizmo Shop</h1>
+      <span class="version-pill">Buggy Invariant Test</span>
+    </div>
+    <nav>
+      <button aria-label="Shopping bag" onclick="location.href='/bag'">
+        🛍 <span class="count" id="bag-count">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-badge">● Silent Failure Trap Testbed</div>
+    <h2 class="hero-title">High-Fidelity Audio & Wearables</h2>
+    <p class="hero-sub">Evaluates oracles that intercept hidden 500 payment exceptions.</p>
+  </section>
+
   <main class="products">
     <article data-sku="GZ-MINI">
+      <div class="product-visual">
+        <span class="product-tag">Best Seller</span>
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="32" cy="32" r="28" fill="#1e293b" stroke="#6366f1" stroke-width="3"/>
+          <circle cx="32" cy="32" r="16" fill="#0f172a" stroke="#a5b4fc" stroke-width="2"/>
+          <circle cx="32" cy="32" r="6" fill="#6366f1"/>
+        </svg>
+      </div>
       <h3>Gizmo Mini</h3>
-      <div class="price">$19.99</div>
+      <p class="product-desc">Ultra-compact 360° wireless Bluetooth speaker with 16h battery and IPX7 rating.</p>
+      <div class="product-meta">
+        <div class="price">$19.99</div>
+        <div class="rating">★★★★★ 4.9 (1.2k)</div>
+      </div>
       <button class="btn" data-action="add" onclick="addToBag('GZ-MINI')">Add to bag</button>
     </article>
+
     <article data-sku="GZ-PRO">
+      <div class="product-visual">
+        <span class="product-tag">Pro Series</span>
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 34C16 23.5066 23.1634 15 32 15C40.8366 15 48 23.5066 48 34" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <rect x="12" y="32" width="10" height="18" rx="5" fill="#6366f1"/>
+          <rect x="42" y="32" width="10" height="18" rx="5" fill="#6366f1"/>
+        </svg>
+      </div>
       <h3>Gizmo Pro</h3>
-      <div class="price">$29.99</div>
+      <p class="product-desc">Active noise-canceling studio over-ear headphones with spatial lossless audio.</p>
+      <div class="product-meta">
+        <div class="price">$29.99</div>
+        <div class="rating">★★★★★ 4.8 (890)</div>
+      </div>
       <button class="btn" data-action="add" onclick="addToBag('GZ-PRO')">Add to bag</button>
     </article>
   </main>
+
+  <footer>
+    <p>Gizmo Shop (v2 Buggy Variant) · Kaizen AI Autonomous Self-Healing Pipeline Testbed</p>
+  </footer>
+
   <script>
     async function updateBag() {
-      const res = await fetch('/api/cart');
-      const data = await res.json();
-      document.getElementById('bag-count').textContent = data.items ? data.items.length : 0;
+      try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        document.getElementById('bag-count').textContent = data.items ? data.items.length : 0;
+      } catch (err) {}
     }
     async function addToBag(sku) {
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sku })
-      });
-      const data = await res.json();
-      document.getElementById('bag-count').textContent = data.count;
+      try {
+        const res = await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sku })
+        });
+        const data = await res.json();
+        document.getElementById('bag-count').textContent = data.count;
+      } catch (err) {}
     }
     updateBag();
   </script>

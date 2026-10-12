@@ -2,40 +2,228 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Payment</title>
   <style>
-    body { font-family: sans-serif; margin: 2rem; }
-    form { display: flex; flex-direction: column; width: 300px; gap: 0.8rem; }
-    label { font-weight: 500; font-size: 0.9rem; }
-    input { padding: 0.4rem; }
-    .terms-group { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
-    button { cursor: pointer; padding: 0.6rem; margin-top: 1rem; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    [role="alert"] { color: red; margin-top: 1rem; font-weight: bold; }
+    :root {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-border: #1f293d;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #10b981;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .brand-title { font-size: 1.25rem; font-weight: 700; }
+    .nav-back { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+    .wrap {
+      max-width: 540px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+      width: 100%;
+      flex: 1;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; }
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    form#payment-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input[type="text"] {
+      background: #0d121f;
+      border: 1px solid var(--surface-border);
+      color: #ffffff;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .terms-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      padding: 0.5rem 0;
+    }
+    .terms-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .terms-group label {
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 0.92rem;
+      color: var(--text);
+      cursor: pointer;
+    }
+    button#place {
+      margin-top: 1rem;
+      width: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border: none;
+      padding: 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s ease;
+    }
+    button#place:hover:not(:disabled) {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-2px);
+    }
+    button#place:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    [role="alert"] {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      margin-top: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--surface-border);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Payment</h1>
-  <form id="payment-form" onsubmit="handlePlaceOrder(event)">
-    <div>
-      <label for="cc">Card no.</label>
-      <input id="cc" type="text" required>
+  <header>
+    <a href="/" class="brand-wrap">
+      <div class="brand-logo-icon">✨</div>
+      <div class="brand-title">Gizmo Shop v2</div>
+    </a>
+    <a href="/checkout/details" class="nav-back">← Back to Details</a>
+  </header>
+
+  <main class="wrap">
+    <h1>Payment</h1>
+    <p class="subtitle">Step 2 of 2 · Complete transaction with credit card</p>
+
+    <div class="form-card">
+      <form id="payment-form" onsubmit="handlePlaceOrder(event)">
+        <div class="form-group">
+          <label for="cc">Card no.</label>
+          <input id="cc" type="text" required placeholder="4242 4242 4242 4242">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="exp">Expiry date</label>
+            <input id="exp" type="text" required placeholder="12/30">
+          </div>
+          <div class="form-group">
+            <label for="sec">Security code</label>
+            <input id="sec" type="text" required placeholder="123">
+          </div>
+        </div>
+        <div class="terms-group">
+          <input type="checkbox" id="terms" onchange="togglePlaceButton()">
+          <label for="terms">I agree to the terms</label>
+        </div>
+        <button type="submit" id="place" disabled>Place order</button>
+      </form>
+      <div id="alert-container"></div>
     </div>
-    <div>
-      <label for="exp">Expiry date</label>
-      <input id="exp" type="text" required>
-    </div>
-    <div>
-      <label for="sec">Security code</label>
-      <input id="sec" type="text" required>
-    </div>
-    <div class="terms-group">
-      <input type="checkbox" id="terms" onchange="togglePlaceButton()">
-      <label for="terms">I agree to the terms</label>
-    </div>
-    <button type="submit" id="place" disabled>Place order</button>
-  </form>
-  <div id="alert-container"></div>
+  </main>
+
+  <footer>
+    <p>Gizmo Shop (Version B Redesign) · Kaizen AI Autonomous Self-Healing Pipeline Testbed</p>
+  </footer>
+
   <script>
     function togglePlaceButton() {
       const terms = document.getElementById('terms');

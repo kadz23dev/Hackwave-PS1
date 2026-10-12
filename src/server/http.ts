@@ -162,6 +162,19 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
           resolvedFile = candidate;
         }
       } else if (
+        pathname === '/ecommerce.html' ||
+        pathname === '/ecommerce' ||
+        pathname === '/store.html' ||
+        pathname === '/store' ||
+        pathname === '/shop.html' ||
+        pathname === '/shop'
+      ) {
+        // Interactive E-Commerce Testing Website
+        const candidate = resolve(rootDir, 'ecommerce.html');
+        if (existsSync(candidate)) {
+          resolvedFile = candidate;
+        }
+      } else if (
         pathname === '/dashboard' ||
         pathname === '/dashboard/' ||
         pathname === '/dashboard/index.html' ||

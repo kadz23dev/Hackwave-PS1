@@ -2,49 +2,412 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gizmo Shop</title>
   <style>
-    body { font-family: sans-serif; margin: 2rem; }
-    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 1rem; margin-bottom: 2rem; }
-    .products { display: flex; gap: 2rem; }
-    article { border: 1px solid #ddd; padding: 1rem; border-radius: 4px; width: 200px; }
-    .price { font-weight: bold; margin: 0.5rem 0; }
-    button { cursor: pointer; padding: 0.5rem 1rem; }
+    :root {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-border: #1f293d;
+      --surface-hover: #172238;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #10b981;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(180deg, #ffffff, #d1d5db);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .version-pill {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    #cart-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(31, 41, 61, 0.7);
+      border: 1px solid var(--surface-border);
+      color: #f9fafb;
+      padding: 0.55rem 1.15rem;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    #cart-link:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+    #cart-count {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .hero {
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+    }
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 600px;
+      margin: 0 auto 1.5rem;
+    }
+    main.products {
+      max-width: 1200px;
+      margin: 1rem auto 3rem;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.75rem;
+      width: 100%;
+    }
+    article {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      overflow: hidden;
+    }
+    article:hover {
+      transform: translateY(-4px);
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px var(--primary-glow);
+    }
+    .product-visual {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(180deg, #182236, #0e1422);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      position: relative;
+    }
+    .product-visual svg {
+      width: 72px;
+      height: 72px;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+    }
+    .product-tag {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #93c5fd;
+      border: 1px solid rgba(147, 197, 253, 0.2);
+    }
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.01em;
+    }
+    .product-desc {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      min-height: 2.6rem;
+    }
+    .product-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: auto;
+      margin-bottom: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .price {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #10b981;
+      letter-spacing: -0.02em;
+    }
+    .rating {
+      font-size: 0.78rem;
+      color: #fbbf24;
+      font-weight: 600;
+    }
+    button.add-btn {
+      width: 100%;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    button.add-btn:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 18px rgba(59, 130, 246, 0.45);
+      transform: translateY(-1px);
+    }
+    button.add-btn:active {
+      transform: scale(0.98);
+    }
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #10b981;
+      color: #ffffff;
+      font-weight: 600;
+      padding: 0.85rem 1.4rem;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: none;
+      animation: fadeIn 0.3s ease;
+      z-index: 100;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--surface-border);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Gizmo Shop</h1>
-    <div>
-      <a id="cart-link" href="/cart">Cart (<span id="cart-count">0</span>)</a>
+    <div class="brand-wrap">
+      <div class="brand-logo-icon">⚡</div>
+      <h1>Gizmo Shop</h1>
+      <span class="version-pill">Version A · Baseline</span>
+    </div>
+    <div class="header-actions">
+      <a id="cart-link" href="/cart">
+        <span>Cart</span> (<span id="cart-count">0</span>)
+      </a>
     </div>
   </header>
+
+  <section class="hero">
+    <div class="hero-badge">● Precision E-Commerce Testbed</div>
+    <h2 class="hero-title">High-Fidelity Audio & Tech Gear</h2>
+    <p class="hero-sub">Select products below to verify autonomous Playwright shopping bag and checkout workflows.</p>
+  </section>
+
   <main class="products">
     <article>
+      <div class="product-visual">
+        <span class="product-tag">Best Seller</span>
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="32" cy="32" r="28" fill="#1e293b" stroke="#3b82f6" stroke-width="3"/>
+          <circle cx="32" cy="32" r="16" fill="#0f172a" stroke="#60a5fa" stroke-width="2"/>
+          <circle cx="32" cy="32" r="6" fill="#3b82f6"/>
+        </svg>
+      </div>
       <h3>Gizmo Mini</h3>
-      <div class="price">$19.99</div>
+      <p class="product-desc">Ultra-compact 360° wireless Bluetooth speaker with 16h battery and IPX7 rating.</p>
+      <div class="product-meta">
+        <div class="price">$19.99</div>
+        <div class="rating">★★★★★ 4.9 (1.2k)</div>
+      </div>
       <button id="add-GZ-MINI" class="add-btn" onclick="addToCart('GZ-MINI')">Add to cart</button>
     </article>
+
     <article>
+      <div class="product-visual">
+        <span class="product-tag">Pro Series</span>
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 34C16 23.5066 23.1634 15 32 15C40.8366 15 48 23.5066 48 34" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <rect x="12" y="32" width="10" height="18" rx="5" fill="#3b82f6"/>
+          <rect x="42" y="32" width="10" height="18" rx="5" fill="#3b82f6"/>
+        </svg>
+      </div>
       <h3>Gizmo Pro</h3>
-      <div class="price">$29.99</div>
+      <p class="product-desc">Active noise-canceling studio over-ear headphones with spatial lossless audio.</p>
+      <div class="product-meta">
+        <div class="price">$29.99</div>
+        <div class="rating">★★★★★ 4.8 (890)</div>
+      </div>
       <button id="add-GZ-PRO" class="add-btn" onclick="addToCart('GZ-PRO')">Add to cart</button>
     </article>
+
+    <article>
+      <div class="product-visual">
+        <span class="product-tag">Flagship</span>
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="24" width="44" height="16" rx="4" fill="#1e293b" stroke="#10b981" stroke-width="3"/>
+          <circle cx="20" cy="32" r="4" fill="#10b981"/>
+          <circle cx="32" cy="32" r="4" fill="#34d399"/>
+          <circle cx="44" cy="32" r="4" fill="#10b981"/>
+        </svg>
+      </div>
+      <h3>Gizmo Ultra</h3>
+      <p class="product-desc">Dolby Atmos multi-driver smart television soundbar with wireless subwoofer.</p>
+      <div class="product-meta">
+        <div class="price">$59.99</div>
+        <div class="rating">★★★★★ 5.0 (420)</div>
+      </div>
+      <button id="add-GZ-ULTRA" class="add-btn" onclick="addToCart('GZ-ULTRA')">Add to cart</button>
+    </article>
+
+    <article>
+      <div class="product-visual">
+        <span class="product-tag">Wearable</span>
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="24" y="10" width="16" height="44" rx="4" fill="#1e293b"/>
+          <rect x="18" y="20" width="28" height="24" rx="6" fill="#0f172a" stroke="#ec4899" stroke-width="3"/>
+          <circle cx="32" cy="32" r="5" fill="#f472b6"/>
+        </svg>
+      </div>
+      <h3>Gizmo Watch</h3>
+      <p class="product-desc">Titanium smartwatch with continuous ECG health metrics, GPS, and AMOLED display.</p>
+      <div class="product-meta">
+        <div class="price">$89.99</div>
+        <div class="rating">★★★★★ 4.9 (650)</div>
+      </div>
+      <button id="add-GZ-WATCH" class="add-btn" onclick="addToCart('GZ-WATCH')">Add to cart</button>
+    </article>
   </main>
+
+  <div class="toast" id="toast-msg">✓ Item added to cart!</div>
+
+  <footer>
+    <p>Gizmo Shop (Version A) · Kaizen AI Autonomous Self-Healing Pipeline Testbed</p>
+  </footer>
+
   <script>
     async function updateCount() {
-      const res = await fetch('/api/cart');
-      const data = await res.json();
-      document.getElementById('cart-count').textContent = data.items ? data.items.length : 0;
+      try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        document.getElementById('cart-count').textContent = data.items ? data.items.length : 0;
+      } catch (err) {}
     }
     async function addToCart(sku) {
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sku })
-      });
-      const data = await res.json();
-      document.getElementById('cart-count').textContent = data.count;
+      try {
+        const res = await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sku })
+        });
+        const data = await res.json();
+        document.getElementById('cart-count').textContent = data.count;
+        showToast('✓ Added ' + sku + ' to cart!');
+      } catch (err) {}
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast-msg');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2200);
     }
     updateCount();
   </script>
