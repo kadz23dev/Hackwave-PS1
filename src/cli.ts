@@ -416,18 +416,20 @@ program
   .command('serve')
   .description('Start HealTest dashboard server and local API')
   .option('--port <port>', 'Port to listen on', '4300')
+  .option('--host <host>', 'Host to listen on', '0.0.0.0')
   .option('--db <path>', 'Path to SQLite database')
-  .action(async (opts: { port?: string; db?: string }) => {
+  .action(async (opts: { port?: string; host?: string; db?: string }) => {
     try {
-      const port = parseInt(opts.port ?? '4300', 10);
+      const port = parseInt(process.env.PORT || opts.port || '4300', 10);
+      const host = process.env.HOST || opts.host || '0.0.0.0';
       const db = openDb(opts.db);
       const repo = new Repo(db);
       const routes = buildRoutes(repo);
       const staticDir = resolve('dashboard');
       const server = createServer(routes, staticDir);
 
-      server.listen(port, '127.0.0.1', () => {
-        console.log(`HealTest dashboard: http://127.0.0.1:${port}`);
+      server.listen(port, host, () => {
+        console.log(`HealTest dashboard: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
       });
       await new Promise(() => {});
     } catch (e) {

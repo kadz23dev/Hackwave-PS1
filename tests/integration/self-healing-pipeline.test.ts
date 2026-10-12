@@ -77,7 +77,7 @@ describe('Self-Healing Software Testing System — 6 Required Scenarios & Teleme
   // Context-aware matching uses surrounding evidence (nearText, section) to locate it.
   // --------------------------------------------------------------------------
   it('Scenario 2: Button Relocated → Context-aware matching identifies relocated element, HEALED_PASS', async () => {
-    const { db, path: dbPath } = tempDb();
+    const { path: dbPath } = tempDb();
 
     // Baseline on shop-v1
     await runIntent('intents/checkout.intent.yaml', fV1!.url, {
@@ -255,6 +255,7 @@ describe('Self-Healing Software Testing System — 6 Required Scenarios & Teleme
       pagePath: '/bag',
       action: 'click',
       target,
+      dataKey: null,
       provenance: 'planner',
     };
 
@@ -358,6 +359,7 @@ describe('Self-Healing Software Testing System — 6 Required Scenarios & Teleme
       pagePath: '/bag',
       action: 'click',
       target,
+      dataKey: null,
       provenance: 'planner',
     };
 

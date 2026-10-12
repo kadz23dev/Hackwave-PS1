@@ -1022,11 +1022,38 @@ tbody tr:hover {
 }
 
 dialog {
+  position: relative;
   background: var(--card);
   color: var(--ink);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  padding: calc(var(--gap) * 3);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-morphic);
+  border-radius: var(--radius-card);
+  padding: calc(var(--gap) * 3.5);
+  max-width: 420px;
+  width: 90%;
+}
+
+.dialog-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  color: var(--ink-2);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.dialog-close-btn:hover {
+  background: var(--paper);
+  color: var(--ink);
 }
 
 dialog::backdrop {
@@ -2131,6 +2158,18 @@ dialog::backdrop {
   position: relative;
   z-index: 2;
   align-items: flex-start;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.wf-timeline-item:hover {
+  background: var(--paper);
+}
+
+.wf-timeline-item.wf-timeline-item--active {
+  background: var(--crimson-wash);
 }
 
 .wf-timeline-circle {
@@ -2143,6 +2182,7 @@ dialog::backdrop {
   font-weight: 700;
   font-size: 0.85rem;
   flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
 .wf-timeline-circle--done {
@@ -2200,6 +2240,70 @@ dialog::backdrop {
   font-weight: 600;
   color: var(--crimson-deep);
   box-shadow: 0 0 10px var(--crimson-wash);
+}
+
+.wf-candidate-row {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wf-candidate-row:hover {
+  background: var(--paper);
+}
+
+.wf-candidate-row.is-selected {
+  background: var(--crimson-wash);
+}
+
+.wf-candidate-row.is-selected td:first-child {
+  font-weight: 700;
+  color: var(--crimson-deep);
+}
+
+.wf-candidate-row.is-verified {
+  background: var(--jade-wash);
+}
+
+.wf-status-box {
+  margin-top: calc(var(--gap) * 2);
+  padding: calc(var(--gap) * 1.5);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wf-status-box--success {
+  background: var(--jade-wash);
+  border-color: var(--jade);
+  color: var(--jade);
+}
+
+.wf-status-box--testing {
+  background: var(--paper);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.global-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: var(--card);
+  border: 1px solid var(--jade);
+  color: var(--jade);
+  box-shadow: var(--shadow-morphic);
+  padding: 12px 20px;
+  border-radius: var(--radius-card);
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* Analytics 6 Cards Grid */

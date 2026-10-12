@@ -336,7 +336,6 @@ export async function replayWithRepair(
       }
 
       if (m.kind === 'none') {
-        let aiResolved = false;
         let aiInvoked = false;
         let aiReason: string | undefined;
         let aiProposal: string | null = null;
@@ -363,7 +362,6 @@ export async function replayWithRepair(
 
           if (aiRes.kind === 'recovered' && aiRes.candidate) {
             aiValidated = true;
-            aiResolved = true;
             telemetry.recordRun({ aiAssistedRecoveries: 1 });
             repaired = true;
             const replacementEl = aiRes.candidate;

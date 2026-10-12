@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kaizen AI | Autonomous E2E Test Governance</title>
-  <link rel="stylesheet" href="tokens.css?v=18">
-  <link rel="stylesheet" href="app.css?v=18">
-  <link rel="stylesheet" href="/css/ui-premium.css?v=18">
+  <link rel="stylesheet" href="tokens.css?v=21">
+  <link rel="stylesheet" href="app.css?v=21">
+  <link rel="stylesheet" href="/css/ui-premium.css?v=21">
 </head>
 <body>
   <div class="app-layout">
@@ -185,6 +185,7 @@
     </div>
   </div>
   <dialog id="confirm-dialog">
+    <button type="button" class="dialog-close-btn" id="confirm-dialog-close" aria-label="Close dialog" title="Exit">✕</button>
     <form method="dialog">
       <h3>Confirm Action</h3>
       <div class="form-group">
@@ -196,7 +197,7 @@
         <input id="reason" name="reason" type="text" required>
       </div>
       <div class="dialog-actions">
-        <button value="cancel" class="btn">Cancel</button>
+        <button value="cancel" class="btn" id="confirm-dialog-cancel">Exit</button>
         <button value="confirm" id="confirm-btn" class="btn btn--primary">Confirm</button>
       </div>
     </form>
@@ -257,7 +258,7 @@
     <span class="fab-text">Ask AI</span>
   </button>
   <!-- Premium UI/UX Interactions: Mouse gradient, ripple, tilt, reveals -->
-  <script src="ui-premium.js?v=19" defer></script>
-  <script src="app.js?v=19" type="module"></script>
+  <script src="ui-premium.js?v=21" defer></script>
+  <script src="app.js?v=21" type="module"></script>
 </body>
 </html>

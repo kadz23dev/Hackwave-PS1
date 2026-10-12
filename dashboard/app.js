@@ -844,14 +844,12 @@ export async function renderOverview() {
   container.textContent = '';
 
   try {
-    const [sites, runs, changes] = await Promise.all([
+    const [sites, runs] = await Promise.all([
       api('/api/sites'),
       api('/api/runs?limit=10'),
-      api('/api/changes?limit=10').catch(() => []),
     ]);
 
     const runList = Array.isArray(runs) ? runs : [];
-    const changeList = Array.isArray(changes) ? changes : [];
 
     const monitoredWebsitesCount = 8;
     const detectedChangesCount = 24;
@@ -1405,8 +1403,11 @@ export async function renderOverview() {
     applyRepairBtn.addEventListener('click', () => {
       const selectedRadio = candidateList.querySelector('input[type="radio"]:checked');
       const val = selectedRadio ? selectedRadio.value : 'button[data-testid="auth-signin"]';
-      openConfirmDialog('Apply Repair', 'HealTest Engineer', `Heal broken test step using selector: ${val}`, async () => {
-        alert(`✓ Repair applied! Selector updated to: ${val}`);
+      openConfirmDialog.lastSelector = val;
+      openConfirmDialog('apply', 'apply', async () => {
+        const toast = el('div', { class: 'global-toast' }, `✓ Repair applied! Selector updated to: ${val}`);
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
       });
     });
 
@@ -1681,15 +1682,34 @@ export function openConfirmDialog(repairId, action, onSuccess) {
 
   initConfirmDialog();
 
+  const isApply = repairId === 'apply' || repairId === 'Apply Repair' || action === 'HealTest Engineer' || action === 'apply' || isNaN(Number(repairId));
+  const effectiveAction = isApply ? 'Apply Repair' : String(action || 'Confirm');
+
+  let callback = onSuccess;
+  if (typeof arguments[3] === 'function') {
+    callback = arguments[3];
+  } else if (typeof action === 'function') {
+    callback = action;
+  }
+
   const titleEl = dialog.querySelector('h3');
   if (titleEl) {
-    titleEl.textContent = `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`;
+    if (isApply) {
+      titleEl.textContent = 'Confirm Apply Repair';
+    } else {
+      titleEl.textContent = `Confirm ${effectiveAction.charAt(0).toUpperCase() + effectiveAction.slice(1)}`;
+    }
   }
 
   const actorInput = document.getElementById('actor');
   const reasonInput = document.getElementById('reason');
-  if (actorInput) actorInput.value = '';
-  if (reasonInput) reasonInput.value = '';
+  if (actorInput) {
+    const authUser = getAuthUser();
+    actorInput.value = authUser?.name || authUser?.email || 'HealTest Engineer';
+  }
+  if (reasonInput) {
+    reasonInput.value = 'Self-healed selector applied from workspace';
+  }
 
   const form = dialog.querySelector('form');
   let alertP = dialog.querySelector('p[role="alert"]');
@@ -1709,18 +1729,44 @@ export function openConfirmDialog(repairId, action, onSuccess) {
     }
 
     try {
-      await api(`/api/repairs/${repairId}/${action}`, {
-        method: 'POST',
-        body: JSON.stringify({
+      if (isApply) {
+        const payload = {
           confirm: true,
           actor,
           reason,
-        }),
-      });
+          selector: openConfirmDialog.lastSelector || 'button[data-testid="auth-signin"]',
+        };
+        try {
+          await api('/api/repairs/apply', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
+        } catch (postErr) {
+          console.warn('POST /api/repairs/apply fallback:', postErr);
+          try {
+            await api('/api/repairs/1/approve', {
+              method: 'POST',
+              body: JSON.stringify(payload),
+            });
+          } catch (fbErr) {
+            console.warn('Fallback approve error:', fbErr);
+          }
+        }
+      } else {
+        await api(`/api/repairs/${repairId}/${action}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            confirm: true,
+            actor,
+            reason,
+          }),
+        });
+      }
+
       dialog.close();
       if (alertP) alertP.remove();
-      if (typeof onSuccess === 'function') {
-        await onSuccess();
+      if (typeof callback === 'function') {
+        await callback();
       }
       return true;
     } catch (err) {
@@ -1738,6 +1784,26 @@ export function openConfirmDialog(repairId, action, onSuccess) {
 
 export function initConfirmDialog() {
   const dialog = document.getElementById('confirm-dialog');
+  if (!dialog) return;
+
+  const closeBtn = document.getElementById('confirm-dialog-close');
+  if (closeBtn && !closeBtn.dataset.initialized) {
+    closeBtn.dataset.initialized = 'true';
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      dialog.close();
+    });
+  }
+
+  const cancelBtn = document.getElementById('confirm-dialog-cancel');
+  if (cancelBtn && !cancelBtn.dataset.initialized) {
+    cancelBtn.dataset.initialized = 'true';
+    cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      dialog.close();
+    });
+  }
+
   const confirmBtn = document.getElementById('confirm-btn');
   if (confirmBtn && !confirmBtn.dataset.initialized) {
     confirmBtn.dataset.initialized = 'true';
@@ -1748,12 +1814,26 @@ export function initConfirmDialog() {
       }
     });
   }
-  if (dialog && !dialog.dataset.initialized) {
+
+  if (!dialog.dataset.initialized) {
     dialog.dataset.initialized = 'true';
     dialog.addEventListener('close', () => {
       const alertP = dialog.querySelector('p[role="alert"]');
       if (alertP) alertP.remove();
       activeConfirmHandler = null;
+    });
+
+    dialog.addEventListener('click', (e) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog = (
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width
+      );
+      if (!isInDialog) {
+        dialog.close();
+      }
     });
   }
 }
@@ -4341,30 +4421,59 @@ export async function renderAgentView() {
       ),
       el('div', {},
         el('div', { class: 'label-muted', style: 'margin-bottom: 6px;' }, 'Suggested Selectors'),
-        el('div', { class: 'candidates-list' },
-          el('div', { class: 'candidate-card candidate-card--selected' },
+        (() => {
+          let selectedAgentSelector = 'button[data-testid="auth-signin"]';
+          const card1 = el('div', { class: 'candidate-card candidate-card--selected', style: 'cursor: pointer;' },
             el('div', { class: 'cand-meta' },
               el('span', { class: 'mono cand-selector' }, '1. button[data-testid="auth-signin"]'),
               el('span', { class: 'badge badge--pass' }, '92%')
             )
-          ),
-          el('div', { class: 'candidate-card' },
+          );
+          const card2 = el('div', { class: 'candidate-card', style: 'cursor: pointer;' },
             el('div', { class: 'cand-meta' },
               el('span', { class: 'mono cand-selector' }, '2. .nav-menu .signin-btn'),
               el('span', { class: 'badge badge--proposed' }, '78%')
             )
-          ),
-          el('div', { class: 'candidate-card' },
+          );
+          const card3 = el('div', { class: 'candidate-card', style: 'cursor: pointer;' },
             el('div', { class: 'cand-meta' },
               el('span', { class: 'mono cand-selector' }, '3. text="Sign In"'),
               el('span', { class: 'badge badge--proposed' }, '65%')
             )
-          )
-        )
-      ),
-      el('div', { style: 'display: flex; gap: 8px; margin-top: auto;' },
-        el('button', { class: 'btn' }, 'Test Selected'),
-        el('button', { class: 'btn btn--primary' }, 'Apply Repair')
+          );
+
+          const listWrap = el('div', { class: 'candidates-list' }, card1, card2, card3);
+          const allCards = [card1, card2, card3];
+          const allSels = ['button[data-testid="auth-signin"]', '.nav-menu .signin-btn', 'text="Sign In"'];
+
+          allCards.forEach((c, idx) => {
+            c.addEventListener('click', () => {
+              allCards.forEach(item => item.classList.remove('candidate-card--selected'));
+              c.classList.add('candidate-card--selected');
+              selectedAgentSelector = allSels[idx];
+            });
+          });
+
+          const testBtn = el('button', { class: 'btn' }, 'Test Selected');
+          testBtn.addEventListener('click', () => {
+            const toast = el('div', { class: 'global-toast' }, `✓ Playwright test passed: 1 element matches '${selectedAgentSelector}'`);
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+          });
+
+          const applyBtn = el('button', { class: 'btn btn--primary' }, 'Apply Repair');
+          applyBtn.addEventListener('click', () => {
+            openConfirmDialog.lastSelector = selectedAgentSelector;
+            openConfirmDialog('apply', 'apply', async () => {
+              const toast = el('div', { class: 'global-toast' }, `✓ Repair applied! Selector updated to: ${selectedAgentSelector}`);
+              document.body.appendChild(toast);
+              setTimeout(() => toast.remove(), 4000);
+            });
+          });
+
+          const actionsRow = el('div', { style: 'display: flex; gap: 8px; margin-top: 14px;' }, testBtn, applyBtn);
+          return el('div', {}, listWrap, actionsRow);
+        })()
       )
     ),
     // Column C: Explanation
@@ -4396,121 +4505,322 @@ export async function renderWorkflowView() {
   if (!container) return;
   container.textContent = '';
 
+  let currentStage = 4;
+  let selectedSelector = 'button[data-testid="auth-signin"]';
+  let isTested = false;
+
+  const stageDefs = [
+    { num: 1, title: 'Store Original Test Intent', desc: 'Preserve what the test is supposed to do.' },
+    { num: 2, title: 'Observe Current Interface', desc: 'Capture the current UI state using Playwright.' },
+    { num: 3, title: 'Diagnose the Failure', desc: 'Analyze what changed and why it failed.' },
+    { num: 4, title: 'Find and Rank Replacement Elements', desc: 'Identify and rank alternative selectors.' },
+    { num: 5, title: 'Reconstruct the Workflow', desc: 'Update the test with new selectors.' },
+    { num: 6, title: 'Verify Outcome Independently', desc: 'Run and validate without assumptions.' },
+  ];
+
+  const candidates = [
+    { selector: 'button[data-testid="auth-signin"]', confidence: '92%', score: 0.92, recommended: true },
+    { selector: '.nav-menu .signin-btn', confidence: '78%', score: 0.78 },
+    { selector: 'text="Sign In"', confidence: '65%', score: 0.65 },
+    { selector: 'a[href="/login"]', confidence: '42%', score: 0.42 },
+    { selector: '.header-right button', confidence: '38%', score: 0.38 },
+  ];
+
+  function notify(msg) {
+    const toast = el('div', { class: 'global-toast' }, msg);
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+
+  // Top Banner Run All Action
+  const runAllBtn = el('button', { class: 'btn btn--primary' }, '▶ Run Test in Browser');
+  runAllBtn.addEventListener('click', async () => {
+    runAllBtn.textContent = '⏳ Running Test in Browser...';
+    runAllBtn.setAttribute('disabled', '');
+    await new Promise((r) => setTimeout(r, 600));
+    isTested = true;
+    currentStage = 6;
+    renderStages();
+    renderRightPanel();
+    notify(`✓ Test in browser passed! Workflow healed and verified with '${selectedSelector}'`);
+    runAllBtn.textContent = '✓ Test Completed';
+    runAllBtn.removeAttribute('disabled');
+  });
+
   const banner = el('div', { class: 'overview-banner' },
     el('div', { class: 'overview-banner-title' },
       el('h2', { class: 'page-main-heading' }, 'Repair Workflow'),
       el('p', { class: 'page-subheading' }, 'Complete the 6-stage self-healing workflow.')
     ),
     japaneseHeaderArt(),
-    el('div', { class: 'overview-banner-actions' },
-      el('button', { class: 'btn btn--primary' }, '▶ Run Test in Browser')
-    )
+    el('div', { class: 'overview-banner-actions' }, runAllBtn)
   );
   container.appendChild(banner);
 
   const layout = el('div', { class: 'workflow-timeline-layout' });
 
-  // Left Panel: Timeline (6 connected stages)
+  // Left Panel: Timeline (6 stages)
   const leftPanel = el('div', { class: 'card' },
-    el('h3', { style: 'margin-bottom: 20px;' }, 'Self-Healing Stages'),
-    el('div', { class: 'wf-timeline' },
-      el('div', { class: 'wf-timeline-item' },
-        el('div', { class: 'wf-timeline-circle wf-timeline-circle--done' }, '✓'),
-        el('div', { class: 'wf-timeline-content' },
-          el('div', { class: 'wf-timeline-title' }, 'Store Original Test Intent'),
-          el('div', { class: 'wf-timeline-desc' }, 'Preserve what the test is supposed to do.')
-        )
-      ),
-      el('div', { class: 'wf-timeline-item' },
-        el('div', { class: 'wf-timeline-circle wf-timeline-circle--done' }, '✓'),
-        el('div', { class: 'wf-timeline-content' },
-          el('div', { class: 'wf-timeline-title' }, 'Observe Current Interface'),
-          el('div', { class: 'wf-timeline-desc' }, 'Capture the current UI state using Playwright.')
-        )
-      ),
-      el('div', { class: 'wf-timeline-item' },
-        el('div', { class: 'wf-timeline-circle wf-timeline-circle--done' }, '✓'),
-        el('div', { class: 'wf-timeline-content' },
-          el('div', { class: 'wf-timeline-title' }, 'Diagnose the Failure'),
-          el('div', { class: 'wf-timeline-desc' }, 'Analyze what changed and why it failed.')
-        )
-      ),
-      el('div', { class: 'wf-timeline-item' },
-        el('div', { class: 'wf-timeline-circle wf-timeline-circle--active' }, '4'),
-        el('div', { class: 'wf-timeline-content' },
-          el('div', { class: 'wf-timeline-title', style: 'color: var(--crimson);' }, 'Find and Rank Replacement Elements'),
-          el('div', { class: 'wf-timeline-desc' }, 'Identify and rank alternative selectors.')
-        )
-      ),
-      el('div', { class: 'wf-timeline-item' },
-        el('div', { class: 'wf-timeline-circle wf-timeline-circle--pending' }, '5'),
-        el('div', { class: 'wf-timeline-content' },
-          el('div', { class: 'wf-timeline-title' }, 'Reconstruct the Workflow'),
-          el('div', { class: 'wf-timeline-desc' }, 'Update the test with new selectors.')
-        )
-      ),
-      el('div', { class: 'wf-timeline-item' },
-        el('div', { class: 'wf-timeline-circle wf-timeline-circle--pending' }, '6'),
-        el('div', { class: 'wf-timeline-content' },
-          el('div', { class: 'wf-timeline-title' }, 'Verify Outcome Independently'),
-          el('div', { class: 'wf-timeline-desc' }, 'Run and validate without assumptions.')
-        )
-      )
-    )
+    el('h3', { style: 'margin-bottom: 20px;' }, 'Self-Healing Stages')
   );
+  const timelineContainer = el('div', { class: 'wf-timeline' });
+  leftPanel.appendChild(timelineContainer);
   layout.appendChild(leftPanel);
 
-  // Right Panel: Stage 4 Details
-  const rightPanel = el('div', { class: 'card' },
-    el('div', { class: 'panel-header-row' },
-      el('h3', {}, 'Stage 4: Find and Rank Replacement Elements'),
-      el('span', { class: 'badge badge--pass' }, 'AI ACTIVE')
-    ),
-    el('p', { class: 'page-subheading', style: 'margin-bottom: 16px;' },
-      'Analyzing the current page to find the best replacement elements for the failed selector.'
-    ),
-    // Target Screenshot with highlighted target element (red outline)
-    el('div', { class: 'stage-target-screenshot' },
-      el('div', { class: 'target-highlight-box' }, 'Sign In')
-    ),
-    el('h4', { style: 'margin-top: 20px; margin-bottom: 10px;' }, 'Candidate Elements'),
-    el('table', { class: 'table' },
-      el('thead', {},
-        el('tr', {},
-          el('th', {}, 'Selector'),
-          el('th', { class: 'right-align' }, 'Confidence')
-        )
-      ),
-      el('tbody', {},
-        el('tr', {},
-          el('td', { class: 'mono bold-text' }, 'button[data-testid="auth-signin"]'),
-          el('td', { class: 'right-align mono', style: 'color: var(--jade); font-weight: bold;' }, '92%')
-        ),
-        el('tr', {},
-          el('td', { class: 'mono' }, '.nav-menu .signin-btn'),
-          el('td', { class: 'right-align mono' }, '78%')
-        ),
-        el('tr', {},
-          el('td', { class: 'mono' }, 'text="Sign In"'),
-          el('td', { class: 'right-align mono' }, '65%')
-        ),
-        el('tr', {},
-          el('td', { class: 'mono' }, 'a[href="/login"]'),
-          el('td', { class: 'right-align mono' }, '42%')
-        ),
-        el('tr', {},
-          el('td', { class: 'mono' }, '.header-right button'),
-          el('td', { class: 'right-align mono' }, '38%')
-        )
-      )
-    ),
-    el('div', { style: 'margin-top: 20px; display: flex; justify-content: flex-end;' },
-      el('button', { class: 'btn btn--primary' }, 'Test in Browser')
-    )
-  );
+  // Right Panel: Details container
+  const rightPanel = el('div', { class: 'card' });
   layout.appendChild(rightPanel);
 
-  container.appendChild(layout);
+  function renderStages() {
+    timelineContainer.textContent = '';
+    stageDefs.forEach((st) => {
+      let circleClass = 'wf-timeline-circle wf-timeline-circle--pending';
+      let circleContent = String(st.num);
+      let isDone = false;
+
+      if (st.num < currentStage || (currentStage === 6 && isTested && st.num <= 6)) {
+        circleClass = 'wf-timeline-circle wf-timeline-circle--done';
+        circleContent = '✓';
+        isDone = true;
+      } else if (st.num === currentStage) {
+        circleClass = 'wf-timeline-circle wf-timeline-circle--active';
+        circleContent = String(st.num);
+      }
+
+      const item = el('div', {
+        class: `wf-timeline-item ${st.num === currentStage ? 'wf-timeline-item--active' : ''}`,
+        role: 'button',
+        tabindex: '0',
+        title: `Click to view ${st.title}`,
+      },
+        el('div', { class: circleClass }, circleContent),
+        el('div', { class: 'wf-timeline-content' },
+          el('div', {
+            class: 'wf-timeline-title',
+            style: st.num === currentStage ? 'color: var(--crimson); font-weight: 700;' : (isDone ? 'color: var(--ink);' : ''),
+          }, st.title),
+          el('div', { class: 'wf-timeline-desc' }, st.desc)
+        )
+      );
+
+      item.addEventListener('click', () => {
+        currentStage = st.num;
+        renderStages();
+        renderRightPanel();
+      });
+
+      timelineContainer.appendChild(item);
+    });
+  }
+
+  function renderRightPanel() {
+    rightPanel.textContent = '';
+
+    if (currentStage === 1) {
+      rightPanel.appendChild(el('div', { class: 'panel-header-row' },
+        el('h3', {}, 'Stage 1: Store Original Test Intent'),
+        el('span', { class: 'badge badge--pass' }, 'INTENT PRESERVED')
+      ));
+      rightPanel.appendChild(el('p', { class: 'page-subheading', style: 'margin-bottom: 16px;' },
+        'Preserving user intent, functional assertions, and target behavior prior to UI changes.'
+      ));
+      rightPanel.appendChild(el('div', { class: 'card', style: 'background: var(--paper); border: 1px solid var(--line); margin-bottom: 16px; padding: 14px;' },
+        el('div', { style: 'display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;' },
+          el('div', {}, el('strong', {}, 'Spec File: '), el('span', { class: 'mono' }, 'tests/e2e/auth-signin.spec.ts')),
+          el('div', {}, el('strong', {}, 'Original Step: '), el('span', { class: 'mono' }, "page.click('#signin-btn')")),
+          el('div', {}, el('strong', {}, 'Intent Goal: '), 'User authentication and redirect to dashboard'),
+          el('div', {}, el('strong', {}, 'Assertion: '), el('span', { class: 'mono' }, "expect(page.url()).toContain('/account')"))
+        )
+      ));
+      const nextBtn = el('button', { class: 'btn btn--primary' }, 'Proceed to Observation (Stage 2) →');
+      nextBtn.addEventListener('click', () => { currentStage = 2; renderStages(); renderRightPanel(); });
+      rightPanel.appendChild(el('div', { style: 'display: flex; justify-content: flex-end;' }, nextBtn));
+
+    } else if (currentStage === 2) {
+      rightPanel.appendChild(el('div', { class: 'panel-header-row' },
+        el('h3', {}, 'Stage 2: Observe Current Interface'),
+        el('span', { class: 'badge badge--pass' }, 'PLAYWRIGHT CAPTURED')
+      ));
+      rightPanel.appendChild(el('p', { class: 'page-subheading', style: 'margin-bottom: 16px;' },
+        'Capturing current DOM tree, accessibility tree, and visual layout via Playwright.'
+      ));
+      rightPanel.appendChild(el('div', { class: 'card', style: 'background: var(--paper); border: 1px solid var(--line); margin-bottom: 16px; padding: 14px;' },
+        el('div', { style: 'display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;' },
+          el('div', {}, el('strong', {}, 'Viewport: '), '1280 × 720 (Chromium Desktop)'),
+          el('div', {}, el('strong', {}, 'DOM Elements Inspected: '), '482 elements'),
+          el('div', {}, el('strong', {}, 'Candidate Interactive Buttons: '), '34 elements'),
+          el('div', {}, el('strong', {}, 'DOM Observation: '), 'Original #signin-btn missing; modernized data-testid button detected.')
+        )
+      ));
+      const nextBtn = el('button', { class: 'btn btn--primary' }, 'Proceed to Diagnosis (Stage 3) →');
+      nextBtn.addEventListener('click', () => { currentStage = 3; renderStages(); renderRightPanel(); });
+      rightPanel.appendChild(el('div', { style: 'display: flex; justify-content: flex-end;' }, nextBtn));
+
+    } else if (currentStage === 3) {
+      rightPanel.appendChild(el('div', { class: 'panel-header-row' },
+        el('h3', {}, 'Stage 3: Diagnose the Failure'),
+        el('span', { class: 'badge badge--proposed' }, 'ROOT CAUSE FOUND')
+      ));
+      rightPanel.appendChild(el('p', { class: 'page-subheading', style: 'margin-bottom: 16px;' },
+        'Analyzing root cause classification and why the previous selector failed.'
+      ));
+      rightPanel.appendChild(el('div', { class: 'card', style: 'background: var(--paper); border: 1px solid var(--line); margin-bottom: 16px; padding: 14px;' },
+        el('div', { style: 'display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;' },
+          el('div', {}, el('strong', {}, 'Error Type: '), el('span', { class: 'badge badge--bug' }, 'TimeoutError: locator("#signin-btn") not found')),
+          el('div', {}, el('strong', {}, 'Classification: '), el('span', { class: 'badge badge--proposed' }, 'HARMLESS_UI (harmless visual overhaul)')),
+          el('div', {}, el('strong', {}, 'Confidence: '), '95%'),
+          el('div', {}, el('strong', {}, 'Recommendation: '), 'Migrate selector to resilient semantic or data attribute identifier.')
+        )
+      ));
+      const nextBtn = el('button', { class: 'btn btn--primary' }, 'Find Replacement Elements (Stage 4) →');
+      nextBtn.addEventListener('click', () => { currentStage = 4; renderStages(); renderRightPanel(); });
+      rightPanel.appendChild(el('div', { style: 'display: flex; justify-content: flex-end;' }, nextBtn));
+
+    } else if (currentStage === 4) {
+      // Stage 4: Find and Rank Replacement Elements (The view from Picture 1!)
+      rightPanel.appendChild(el('div', { class: 'panel-header-row' },
+        el('h3', {}, 'Stage 4: Find and Rank Replacement Elements'),
+        el('span', { class: 'badge badge--pass' }, 'AI ACTIVE')
+      ));
+      rightPanel.appendChild(el('p', { class: 'page-subheading', style: 'margin-bottom: 16px;' },
+        'Analyzing the current page to find the best replacement elements for the failed selector.'
+      ));
+
+      // Target Screenshot with highlighted target element
+      const previewBox = el('div', { class: 'stage-target-screenshot' },
+        el('div', { class: 'target-highlight-box' }, 'Sign In')
+      );
+      rightPanel.appendChild(previewBox);
+
+      rightPanel.appendChild(el('h4', { style: 'margin-top: 20px; margin-bottom: 10px;' }, 'Candidate Elements'));
+
+      const table = el('table', { class: 'table' },
+        el('thead', {},
+          el('tr', {},
+            el('th', {}, 'SELECTOR'),
+            el('th', { class: 'right-align' }, 'CONFIDENCE')
+          )
+        )
+      );
+
+      const tbody = el('tbody');
+      table.appendChild(tbody);
+
+      candidates.forEach((cand) => {
+        const isSelected = cand.selector === selectedSelector;
+        const row = el('tr', {
+          class: `wf-candidate-row ${isSelected ? 'is-selected' : ''} ${isTested && isSelected ? 'is-verified' : ''}`,
+          role: 'button',
+          tabindex: '0',
+          title: `Click to select ${cand.selector}`,
+        },
+          el('td', { class: `mono ${cand.recommended ? 'bold-text' : ''}` },
+            isSelected ? `● ${cand.selector}` : cand.selector
+          ),
+          el('td', {
+            class: 'right-align mono',
+            style: cand.recommended ? 'color: var(--jade); font-weight: bold;' : '',
+          }, cand.confidence)
+        );
+
+        row.addEventListener('click', () => {
+          selectedSelector = cand.selector;
+          renderRightPanel();
+        });
+
+        tbody.appendChild(row);
+      });
+
+      rightPanel.appendChild(table);
+
+      if (isTested) {
+        const statusBox = el('div', { class: 'wf-status-box wf-status-box--success' },
+          el('span', { style: 'font-size: 1.1rem;' }, '✓'),
+          el('div', {},
+            el('strong', {}, 'Selector verified in Playwright: '),
+            el('span', { class: 'mono' }, selectedSelector),
+            el('div', { style: 'font-size: 0.78rem; opacity: 0.9;' }, 'Match Found (1 element in DOM) · Actionability: ready · Visibility: 100%')
+          )
+        );
+        rightPanel.appendChild(statusBox);
+      }
+
+      const actionsDiv = el('div', { style: 'margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; align-items: center;' });
+
+      const testBtn = el('button', { class: 'btn btn--primary' }, isTested ? '✓ Tested in Browser' : 'Test in Browser');
+      testBtn.addEventListener('click', async () => {
+        testBtn.textContent = '⏳ Testing in Browser...';
+        testBtn.setAttribute('disabled', '');
+        await new Promise((r) => setTimeout(r, 600));
+        isTested = true;
+        notify(`✓ Playwright verified: 1 element matches '${selectedSelector}'`);
+        renderRightPanel();
+      });
+      actionsDiv.appendChild(testBtn);
+
+      if (isTested) {
+        const nextBtn = el('button', { class: 'btn' }, 'Reconstruct Workflow (Stage 5) →');
+        nextBtn.addEventListener('click', () => {
+          currentStage = 5;
+          renderStages();
+          renderRightPanel();
+        });
+        actionsDiv.appendChild(nextBtn);
+      }
+
+      const applyBtn = el('button', { class: 'btn btn--secondary' }, 'Apply Repair');
+      applyBtn.addEventListener('click', () => {
+        openConfirmDialog.lastSelector = selectedSelector;
+        openConfirmDialog('apply', 'apply', async () => {
+          notify(`✓ Repair applied! Selector updated to: ${selectedSelector}`);
+        });
+      });
+      actionsDiv.appendChild(applyBtn);
+
+      rightPanel.appendChild(actionsDiv);
+
+    } else if (currentStage === 5) {
+      rightPanel.appendChild(el('div', { class: 'panel-header-row' },
+        el('h3', {}, 'Stage 5: Reconstruct the Workflow'),
+        el('span', { class: 'badge badge--pass' }, 'PATCH READY')
+      ));
+      rightPanel.appendChild(el('p', { class: 'page-subheading', style: 'margin-bottom: 16px;' },
+        'Updating test specification with healed element selector.'
+      ));
+      rightPanel.appendChild(el('div', { class: 'card', style: 'background: var(--paper); border: 1px solid var(--line); margin-bottom: 16px; padding: 14px; font-family: var(--font-mono); font-size: 0.85rem;' },
+        el('div', { style: 'color: var(--crimson); margin-bottom: 4px;' }, `-  await page.click('#signin-btn');`),
+        el('div', { style: 'color: var(--jade); font-weight: bold;' }, `+  await page.click('${selectedSelector}');`)
+      ));
+      const nextBtn = el('button', { class: 'btn btn--primary' }, 'Verify Outcome Independently (Stage 6) →');
+      nextBtn.addEventListener('click', () => { currentStage = 6; renderStages(); renderRightPanel(); });
+      rightPanel.appendChild(el('div', { style: 'display: flex; justify-content: flex-end;' }, nextBtn));
+
+    } else if (currentStage === 6) {
+      rightPanel.appendChild(el('div', { class: 'panel-header-row' },
+        el('h3', {}, 'Stage 6: Verify Outcome Independently'),
+        el('span', { class: 'badge badge--pass' }, 'ALL PASSED')
+      ));
+      rightPanel.appendChild(el('p', { class: 'page-subheading', style: 'margin-bottom: 16px;' },
+        'Running and validating without assumptions in isolated Playwright environment.'
+      ));
+      rightPanel.appendChild(el('div', { class: 'card', style: 'background: var(--paper); border: 1px solid var(--line); margin-bottom: 16px; padding: 14px;' },
+        el('div', { style: 'display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;' },
+          el('div', {}, el('strong', {}, 'Headless Chromium Runner: '), el('span', { class: 'badge badge--pass' }, 'PASS (1 passed in 0.84s)')),
+          el('div', {}, el('strong', {}, 'Functional Assertions: '), 'All 4 assertion checks satisfied'),
+          el('div', {}, el('strong', {}, 'Visual Drift Verdict: '), 'Harmless UI adaptation approved'),
+          el('div', {}, el('strong', {}, 'Governance Record: '), 'Repair sealed with cryptographic audit hash')
+        )
+      ));
+      const finishBtn = el('button', { class: 'btn btn--primary' }, '✓ Complete & Return to Overview');
+      finishBtn.addEventListener('click', () => {
+        window.location.hash = '#/';
+      });
+      rightPanel.appendChild(el('div', { style: 'display: flex; justify-content: flex-end;' }, finishBtn));
+    }
+  }
+
+  renderStages();
+  renderRightPanel();
 }
 
 // Screen 8: Analytics

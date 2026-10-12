@@ -127,8 +127,6 @@ class TelemetryCollector {
       aiFallbackInvocations,
       aiAssistedRecoveries,
       deterministicRecoveryAttempts,
-      genuineApplicationFailures,
-      unresolvedAmbiguousCases,
     } = this.metrics;
 
     const detRate =
