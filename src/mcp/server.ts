@@ -122,10 +122,19 @@ export function formatSitesAsText(sites: SanitizedSite[]): string {
  * 5. Project root's .healtest/healtest.sqlite (relative to this module, so working directory doesn't divert it)
  */
 export function resolveDbPath(explicitPath?: string): string {
+  const isWindowsAbsolutePath = (candidate: string): boolean =>
+    /^[A-Za-z]:[\\/]/.test(candidate) || candidate.startsWith('\\\\');
+
   if (explicitPath) {
+    if (isWindowsAbsolutePath(explicitPath)) {
+      return explicitPath;
+    }
     return resolve(explicitPath);
   }
   if (process.env.HEALTEST_DB_PATH) {
+    if (isWindowsAbsolutePath(process.env.HEALTEST_DB_PATH)) {
+      return process.env.HEALTEST_DB_PATH;
+    }
     return resolve(process.env.HEALTEST_DB_PATH);
   }
   if (process.env.HEALTEST_HOME) {
