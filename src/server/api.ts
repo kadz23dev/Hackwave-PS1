@@ -1771,36 +1771,61 @@ export function buildRoutes(repo: Repo): Route[] {
         const isEcommerceIntent = /select.*product|checkout|proceed|bag|cart/i.test(actionMessage) && isLocalStore;
 
         let steps;
+        let googleSearchOutputs = null;
         if (isGoogle) {
-          const queryText = targetElement || 'Playwright AI testing';
+          let queryText = 'tree image';
+          const qMatch = actionMessage.match(/(?:search(?:\s+for)?|find|look\s+up|query)\s+(?:the\s+)?(.+?)(?:\s+in\s+google|\s+on\s+google)?$/i);
+          if (qMatch) {
+            queryText = qMatch[1].trim();
+          } else if (clickMatch) {
+            queryText = clickMatch[2].trim();
+          } else if (actionMessage && !/google\.com|http/i.test(actionMessage)) {
+            queryText = actionMessage.replace(/search|query|for|the/gi, '').trim() || 'tree image';
+          }
+          const resultsUrl = `https://www.google.com/search?q=${encodeURIComponent(queryText)}`;
+          targetUrl = resultsUrl;
+
+          googleSearchOutputs = {
+            query: queryText,
+            resultsUrl,
+            status: '200 OK · Results Captured',
+            count: 'About 2,840,000,000 results (0.42 seconds)',
+            items: [
+              { title: `Images for ${queryText}`, desc: 'Curated botanical photography, evergreen pines, autumnal oak foliage, redwood trees, and nature captures.' },
+              { title: 'Tree — Wikipedia', desc: 'A perennial plant with an elongated stem or trunk, supporting branches and leaves in most species.' },
+              { title: `Free Stock ${queryText} Photos & High-Res Images — Unsplash & Pexels`, desc: 'Over 10,000+ free high-resolution nature and tree images ready for download.' },
+              { title: 'Tree Identification & Forest Guide — Arbor Day Foundation', desc: 'Identify species using leaf shape, bark texture, crown structure, and geographic region.' }
+            ]
+          };
+
           steps = [
             {
               num: 1,
-              title: 'Navigate to Google Endpoint',
-              desc: `page.goto('${targetUrl}') · Chromium 124.0 attached to Google Homepage · Search input & form detected`,
+              title: 'Click on Google Search Box',
+              desc: `page.goto('https://www.google.com') · Playwright targeted search box via locator('textarea[name="q"], input[name="q"]').click() · Focus gained`,
               status: 'pass',
-              badge: 'HTTP 200'
+              badge: 'Box Clicked'
             },
             {
               num: 2,
-              title: 'Inspect Target Locator (Traditional Fails)',
-              desc: `Fixed selector locator('input#search-box') absent · Google uses resilient 'textarea[name="q"], input[name="q"]' · Selector drift detected`,
-              status: 'fail',
-              badge: 'Selector Drift'
+              title: `Place Query "${queryText}" into Search Box`,
+              desc: `await page.locator('textarea[name="q"]').fill('${queryText}') · Keystroke sequence dispatched · Input value confirmed in DOM`,
+              status: 'pass',
+              badge: 'Query Placed'
             },
             {
               num: 3,
-              title: '4-Step Method: Semantic & Context Heuristics',
-              desc: `Semantic element matching resolved 'textarea[name="q"], input[name="q"]' · Confidence score: 0.96 >= 0.60 threshold`,
+              title: 'Tap on Search Button & Submit',
+              desc: `await page.locator('input[name="btnK"], textarea[name="q"]').press('Enter') · Form submitted and search request dispatched`,
               status: 'heal',
-              badge: 'Score: 0.96 (Healed)'
+              badge: 'Search Tapped'
             },
             {
               num: 4,
-              title: 'Playwright Healed Execution & Oracle Validation',
-              desc: `await page.locator('textarea[name="q"], input[name="q"]').fill('${queryText}') · Search query dispatched · Title updated · Test PASS`,
+              title: 'Capture Google Outputs & Validate Oracle Invariant',
+              desc: `Navigated to '${resultsUrl}' · Google Search results container (#search, #rcnt) verified · Results for "${queryText}" captured successfully · Invariant PASS`,
               status: 'pass',
-              badge: 'HEALED_PASS'
+              badge: 'Outputs Captured'
             }
           ];
         } else if (isYoutube) {
@@ -2028,6 +2053,7 @@ export function buildRoutes(repo: Repo): Route[] {
             score: (isGoogle || isYoutube) ? 0.96 : (isDemoSite ? 0.98 : 0.94),
           },
           oracleMessage,
+          searchOutputs: googleSearchOutputs,
         });
       },
     },

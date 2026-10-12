@@ -140,5 +140,12 @@ export interface MultiAgentDiagnosticResult {
     tag: string;
     body: string;
   };
+  searchOutputs?: {
+    query: string;
+    resultsUrl: string;
+    status: string;
+    count?: string;
+    items: Array<{ title: string; desc: string }>;
+  } | null;
 }
 

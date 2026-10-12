@@ -5325,3 +5325,126 @@ dialog::backdrop {
 .btn-logout-cancel:hover {
   background: var(--line);
 }
+
+/* Google Search Dynamic Automation & Output Card */
+.google-outputs-card {
+  margin-top: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: 0 4px 14px var(--slate-wash);
+}
+
+.google-outputs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.google-outputs-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+
+.google-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.google-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+
+.google-step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--jade-wash);
+  color: var(--jade);
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.google-step-text strong {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.google-results-container {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.google-results-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  color: var(--slate);
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+}
+
+.google-result-entry {
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  border: 1px solid var(--line);
+  margin-bottom: 6px;
+  transition: border-color 0.15s ease;
+}
+
+.google-result-entry:hover {
+  border-color: var(--crimson);
+}
+
+.google-result-entry-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--crimson);
+  margin-bottom: 3px;
+  text-decoration: none;
+  display: block;
+}
+
+.google-result-entry-snippet {
+  font-size: 0.74rem;
+  color: var(--ink-2);
+  line-height: 1.35;
+}
+
+.google-patch-snippet {
+  margin-top: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-all;
+}

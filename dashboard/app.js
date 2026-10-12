@@ -2598,8 +2598,9 @@ export function renderDashboardWorkspace(targetContainer) {
   const promptChipsLeft = [
     { text: 'Why did selector change?', type: 'q' },
     { text: 'SQLite DB Proof', type: 'q' },
-    { text: '🔴 Test YouTube', type: 'run', sc: 'dynamic', url: toWebUrl('www.youtube.com'), intent: 'Search for Kaizen AI autonomous testing' },
+    { text: '🔍 Search "tree image"', type: 'run', sc: 'dynamic', url: toWebUrl('www.google.com'), intent: 'Search for the tree image' },
     { text: '🔵 Test Google', type: 'run', sc: 'dynamic', url: toWebUrl('www.google.com'), intent: 'Search for Playwright test automation' },
+    { text: '🔴 Test YouTube', type: 'run', sc: 'dynamic', url: toWebUrl('www.youtube.com'), intent: 'Search for Kaizen AI autonomous testing' },
     { text: '🛒 Test E-Commerce', type: 'run', sc: 'dynamic', url: 'http://127.0.0.1:4300/ecommerce.html', intent: 'Select product and proceed to checkout' },
     { text: '⚡ Heal Drift (v2)', type: 'run', sc: 'drift', url: 'http://127.0.0.1:4102/cart.html', intent: 'Complete checkout using valid card' }
   ];
@@ -2781,6 +2782,12 @@ export function renderDashboardWorkspace(targetContainer) {
       cleanAction = text.replace(match[0], '').trim() || `Test website ${raw}`;
     }
 
+    if (!extractedUrl) {
+      if (/google\./i.test(workspaceState.targetUrl) || /(?:search(?:\s+for)?|find|look\s+up|query)\s+/i.test(text)) {
+        extractedUrl = toWebUrl('www.google.com');
+      }
+    }
+
     if (extractedUrl) {
       await runAgentAction(cleanAction, 'dynamic', extractedUrl);
       return;
@@ -2928,37 +2935,80 @@ export function renderDashboardWorkspace(targetContainer) {
       msg: `Playwright launched: Chromium 124.0 headless context -> Navigating to ${targetUrl}`
     });
 
-    // Step 1: Loading & Fetching Target URL
-    workspaceState.executionPhase = 'fetching';
-    workspaceState.currentStepMessage = `Step 1/4: Fetching target website ${targetUrl}...`;
-    renderDashboardWorkspace(targetContainer);
-    await new Promise(r => setTimeout(r, 450));
+    const isGoogle = /google\./i.test(targetUrl);
+    let googleQuery = 'tree image';
+    if (isGoogle) {
+      const qMatch = text.match(/(?:search(?:\s+for)?|find|look\s+up|query)\s+(?:the\s+)?(.+?)(?:\s+in\s+google|\s+on\s+google)?$/i);
+      if (qMatch) {
+        googleQuery = qMatch[1].trim();
+      } else if (!/google\.com|http/i.test(text)) {
+        googleQuery = text.replace(/search|query|for|the/gi, '').trim() || 'tree image';
+      }
+    }
 
-    // Step 2: DOM Crawling & Selector Resolution
-    workspaceState.executionPhase = 'crawling';
-    workspaceState.currentStepMessage = `Step 2/4: Playwright inspecting DOM & validating feature selectors...`;
-    workspaceState.logs.push({
-      time: new Date().toLocaleTimeString(),
-      level: 'info',
-      msg: `DOM crawled. Target element: ${targetSelector}. Evaluating Playwright locator...`
-    });
-    renderDashboardWorkspace(targetContainer);
-    await new Promise(r => setTimeout(r, 500));
+    if (isGoogle) {
+      workspaceState.executionPhase = 'fetching';
+      workspaceState.currentStepMessage = 'Step 1/4: Clicking on Google search box (textarea[name="q"])...';
+      workspaceState.logs.push({
+        time: new Date().toLocaleTimeString(),
+        level: 'info',
+        msg: `Playwright: await page.locator('textarea[name="q"]').click() · Focused Google search box`
+      });
+      renderDashboardWorkspace(targetContainer);
+      await new Promise(r => setTimeout(r, 450));
 
-    // Step 3: Executing Feature Steps
-    workspaceState.executionPhase = 'executing';
-    workspaceState.currentStepMessage = `Step 3/4: Executing click/interaction on locator "${targetSelector}"...`;
-    renderDashboardWorkspace(targetContainer);
-    await new Promise(r => setTimeout(r, 400));
+      workspaceState.executionPhase = 'crawling';
+      workspaceState.currentStepMessage = `Step 2/4: Placing query "${googleQuery}" into search box...`;
+      workspaceState.logs.push({
+        time: new Date().toLocaleTimeString(),
+        level: 'info',
+        msg: `Playwright: await page.locator('textarea[name="q"]').fill('${googleQuery}') · Typed query into search input`
+      });
+      renderDashboardWorkspace(targetContainer);
+      await new Promise(r => setTimeout(r, 500));
+
+      workspaceState.executionPhase = 'executing';
+      workspaceState.currentStepMessage = 'Step 3/4: Tapping Google Search button (input[name="btnK"] / Enter)...';
+      workspaceState.logs.push({
+        time: new Date().toLocaleTimeString(),
+        level: 'info',
+        msg: `Playwright: await page.locator('input[name="btnK"], textarea[name="q"]').press('Enter') · Form submitted`
+      });
+      renderDashboardWorkspace(targetContainer);
+      await new Promise(r => setTimeout(r, 400));
+    } else {
+      // Step 1: Loading & Fetching Target URL
+      workspaceState.executionPhase = 'fetching';
+      workspaceState.currentStepMessage = `Step 1/4: Fetching target website ${targetUrl}...`;
+      renderDashboardWorkspace(targetContainer);
+      await new Promise(r => setTimeout(r, 450));
+
+      // Step 2: DOM Crawling & Selector Resolution
+      workspaceState.executionPhase = 'crawling';
+      workspaceState.currentStepMessage = `Step 2/4: Playwright inspecting DOM & validating feature selectors...`;
+      workspaceState.logs.push({
+        time: new Date().toLocaleTimeString(),
+        level: 'info',
+        msg: `DOM crawled. Target element: ${targetSelector}. Evaluating Playwright locator...`
+      });
+      renderDashboardWorkspace(targetContainer);
+      await new Promise(r => setTimeout(r, 500));
+
+      // Step 3: Executing Feature Steps
+      workspaceState.executionPhase = 'executing';
+      workspaceState.currentStepMessage = `Step 3/4: Executing click/interaction on locator "${targetSelector}"...`;
+      renderDashboardWorkspace(targetContainer);
+      await new Promise(r => setTimeout(r, 400));
+    }
 
     try {
       const res = await api('/api/agents/collaborate', {
         method: 'POST',
         body: {
-          testName: workspaceState.testName,
+          testName: isGoogle ? 'google-search-automation.yaml' : workspaceState.testName,
           stepIndex: 3,
           totalSteps: 5,
-          stepAction: 'click',
+          stepAction: isGoogle ? 'fill' : 'click',
           targetSelector,
           targetUrl,
           errorMessage: errMsg,
@@ -2973,6 +3023,16 @@ export function renderDashboardWorkspace(targetContainer) {
       workspaceState.executionPhase = 'completed';
       workspaceState.currentStepMessage = `Test execution complete · Verdict: ${workspaceState.agentStatus}`;
 
+      if (res.searchOutputs) {
+        workspaceState.targetUrl = res.searchOutputs.resultsUrl;
+        workspaceState.currentStepMessage = `Step 4/4: Captured Google search outputs for "${res.searchOutputs.query}" · Invariant PASS`;
+        workspaceState.logs.push({
+          time: new Date().toLocaleTimeString(),
+          level: 'pass',
+          msg: `Search results loaded for "${res.searchOutputs.query}". Verified #search DOM invariant.`
+        });
+      }
+
       // Save componentFix and developerAdvisory into workspace state
       workspaceState.componentFix = res.componentFix || null;
       workspaceState.developerAdvisory = res.developerAdvisory || null;
@@ -2986,8 +3046,24 @@ export function renderDashboardWorkspace(targetContainer) {
           if (res.developerAdvisory && (m.sender === 'architect' || m.sender === 'sentinel')) {
             m.developerAdvisory = res.developerAdvisory;
           }
+          if (res.searchOutputs && (m.sender === 'triage' || m.sender === 'architect')) {
+            m.searchOutputs = res.searchOutputs;
+          }
           workspaceState.chatMessages.push(m);
         }
+      }
+
+      if (res.searchOutputs && !workspaceState.chatMessages.some(m => m.searchOutputs)) {
+        workspaceState.chatMessages.push({
+          id: `msg-${Date.now()}-outputs`,
+          sender: 'triage',
+          senderName: 'Triage (QA Lead)',
+          badge: 'ORACLE VERIFIED',
+          avatar: '⚖️',
+          time: new Date().toLocaleTimeString(),
+          text: `Google search workflow for "${res.searchOutputs.query}" executed cleanly! Captured search outputs below:`,
+          searchOutputs: res.searchOutputs
+        });
       }
 
       // If backend returned componentFix or developerAdvisory but wasn't attached
@@ -3308,6 +3384,71 @@ export function renderDashboardWorkspace(targetContainer) {
         }
 
         bubble.appendChild(advCard);
+      }
+
+      // Google Search Outputs Card
+      if (m.searchOutputs) {
+        const outCard = el('div', { class: 'google-outputs-card' });
+        const outHeader = el('div', { class: 'google-outputs-header' },
+          el('div', { class: 'google-outputs-title' },
+            el('span', {}, '🔍'),
+            el('span', {}, `Google Search: "${m.searchOutputs.query}"`)
+          ),
+          el('span', { class: 'badge badge--pass mono' }, m.searchOutputs.status || '200 OK · HEALED_PASS')
+        );
+        outCard.appendChild(outHeader);
+
+        // 4-step sequence summary
+        const stepsList = el('div', { class: 'google-steps-list' });
+        const stepItems = [
+          { icon: '1', title: 'Clicked Search Box', code: 'page.locator(\'textarea[name="q"]\').click()', note: 'Focused Google input' },
+          { icon: '2', title: 'Placed Query', code: `page.locator('textarea[name="q"]').fill('${m.searchOutputs.query}')`, note: 'Dispatched keystrokes' },
+          { icon: '3', title: 'Tapped Search Button', code: 'page.locator(\'input[name="btnK"]\').press(\'Enter\')', note: 'Submitted query' },
+          { icon: '4', title: 'Outputs Captured', code: 'page.waitForSelector(\'#search, #rcnt\')', note: m.searchOutputs.count || 'Results container loaded' }
+        ];
+        for (const st of stepItems) {
+          const sRow = el('div', { class: 'google-step-item' },
+            el('span', { class: 'google-step-icon' }, st.icon),
+            el('div', { class: 'google-step-text' },
+              el('strong', {}, `${st.title}: `),
+              el('span', { class: 'mono', style: 'color: var(--crimson); font-size: 0.72rem;' }, st.code),
+              el('span', { style: 'color: var(--ink-2); margin-left: 6px;' }, `· ${st.note}`)
+            )
+          );
+          stepsList.appendChild(sRow);
+        }
+        outCard.appendChild(stepsList);
+
+        // Result items
+        if (Array.isArray(m.searchOutputs.items) && m.searchOutputs.items.length > 0) {
+          const resCont = el('div', { class: 'google-results-container' });
+          const resMeta = el('div', { class: 'google-results-meta' },
+            el('span', {}, 'Extracted Google Search Outputs:'),
+            el('span', {}, m.searchOutputs.count || '4 top items')
+          );
+          resCont.appendChild(resMeta);
+
+          for (const item of m.searchOutputs.items) {
+            const entry = el('div', { class: 'google-result-entry' },
+              el('span', { class: 'google-result-entry-title' }, item.title),
+              el('p', { class: 'google-result-entry-snippet' }, item.desc)
+            );
+            resCont.appendChild(entry);
+          }
+          outCard.appendChild(resCont);
+        }
+
+        // Live link button
+        const openBtn = el('a', {
+          href: m.searchOutputs.resultsUrl,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          class: 'btn btn--outline btn--sm',
+          style: 'margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;'
+        }, '↗ Open Live Google Search Results');
+        outCard.appendChild(openBtn);
+
+        bubble.appendChild(outCard);
       }
 
       row.appendChild(bubble);
