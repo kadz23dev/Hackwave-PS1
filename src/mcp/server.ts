@@ -122,7 +122,10 @@ export function formatSitesAsText(sites: SanitizedSite[]): string {
  * 5. Project root's .healtest/healtest.sqlite (relative to this module, so working directory doesn't divert it)
  */
 export function resolveDbPath(explicitPath?: string): string {
-  const isWindowsAbsolutePath = (value: string) => /^[A-Za-z]:[\\/]/.test(value) || value.startsWith('\\\\');
+
+const isWindowsAbsolutePath = (value: string): boolean =>
+  /^[A-Za-z]:[\\/]/.test(value) || value.startsWith('\\\\');
+ main
 
   if (explicitPath) {
     if (isWindowsAbsolutePath(explicitPath)) {
