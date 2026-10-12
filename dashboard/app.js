@@ -903,8 +903,8 @@ export async function renderOverview() {
           ),
           el('span', { class: 'bell-dot-badge' })
         ),
-        // User Profile Pill
-        el('div', { class: 'header-user-profile', tabindex: '0', role: 'button', 'aria-label': 'User menu' },
+        // User Profile Pill (clickable to view account / logout)
+        el('div', { class: 'header-user-profile', tabindex: '0', role: 'button', 'aria-label': 'User menu', onclick: () => openLogoutModal() },
           el('div', { class: 'user-avatar-circle' }, initials),
           el('div', { class: 'user-meta-stack' },
             el('span', { class: 'user-name-text' }, userName),
@@ -913,6 +913,21 @@ export async function renderOverview() {
           el('svg', { width: '12', height: '12', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5' },
             el('polyline', { points: '6 9 12 15 18 9' })
           )
+        ),
+        // Logout Button Chip (Styled like Login Page)
+        el('button', {
+          type: 'button',
+          class: 'header-logout-chip',
+          id: 'header-logout-btn',
+          title: 'Log out to Landing Page',
+          onclick: () => openLogoutModal()
+        },
+          el('svg', { width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+            el('path', { d: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' }),
+            el('polyline', { points: '16 17 21 12 16 7' }),
+            el('line', { x1: '21', y1: '12', x2: '9', y2: '12' })
+          ),
+          el('span', {}, 'Log Out')
         )
       )
     );
@@ -6290,7 +6305,132 @@ export function initAiChat() {
   });
 }
 
+/* ==========================================================================
+   LOGOUT SYSTEM & MODAL WORKFLOW (Matching Login Page UI & Aesthetics)
+   ========================================================================== */
+export function openLogoutModal() {
+  const modal = document.getElementById('logout-modal');
+  if (!modal) {
+    executeLogout();
+    return;
+  }
+
+  // Populate dynamic user info if available
+  try {
+    const authUser = getAuthUser();
+    const nameEl = document.getElementById('modal-logout-user-name');
+    const avatarEl = document.getElementById('modal-logout-user-avatar');
+    const metaEl = document.getElementById('modal-logout-user-meta');
+
+    let displayName = 'Piyush Sharma';
+    let org = 'Acme Corp';
+
+    const sidebarName = document.getElementById('sidebar-user-name')?.textContent?.trim();
+    const sidebarOrg = document.getElementById('sidebar-user-org')?.textContent?.trim();
+
+    if (sidebarName) displayName = sidebarName;
+    if (sidebarOrg) org = sidebarOrg;
+
+    if (authUser) {
+      displayName = authUser.displayName || authUser.name || authUser.email?.split('@')[0] || displayName;
+      if (authUser.org) org = authUser.org;
+    }
+
+    if (nameEl) nameEl.textContent = displayName;
+    if (avatarEl) avatarEl.textContent = (displayName.charAt(0) || 'P').toUpperCase();
+    if (metaEl) metaEl.textContent = `${org} · Active Session`;
+  } catch {
+    // Non-blocking fallback
+  }
+
+  modal.removeAttribute('hidden');
+}
+
+export function closeLogoutModal() {
+  const modal = document.getElementById('logout-modal');
+  if (modal) {
+    modal.setAttribute('hidden', '');
+  }
+}
+
+export function executeLogout() {
+  try {
+    localStorage.removeItem('healtest_user');
+    sessionStorage.clear();
+  } catch {
+    // Ignore storage errors
+  }
+
+  // Optional backend notification
+  try {
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  } catch {
+    // Ignore fetch error
+  }
+
+  // Redirect cleanly to KaizenAI landing page
+  window.location.href = '/landing.html';
+}
+
+export function initLogoutModal() {
+  const modal = document.getElementById('logout-modal');
+  const sidebarBtn = document.getElementById('sidebar-logout-btn');
+  const closeBtn = document.getElementById('logout-modal-close');
+  const cancelBtn = document.getElementById('logout-modal-cancel');
+  const confirmBtn = document.getElementById('logout-modal-confirm');
+
+  if (sidebarBtn) {
+    sidebarBtn.onclick = (e) => {
+      e.preventDefault();
+      openLogoutModal();
+    };
+  }
+
+  if (closeBtn) {
+    closeBtn.onclick = (e) => {
+      e.preventDefault();
+      closeLogoutModal();
+    };
+  }
+
+  if (cancelBtn) {
+    cancelBtn.onclick = (e) => {
+      e.preventDefault();
+      closeLogoutModal();
+    };
+  }
+
+  if (confirmBtn) {
+    confirmBtn.onclick = (e) => {
+      e.preventDefault();
+      confirmBtn.setAttribute('disabled', 'true');
+      confirmBtn.innerHTML = '<span>Signing Out...</span>';
+      executeLogout();
+    };
+  }
+
+  if (modal) {
+    // Clicking on backdrop (outside card) dismisses modal
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeLogoutModal();
+      }
+    });
+  }
+
+  // Escape key closes modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && !modal.hasAttribute('hidden')) {
+      closeLogoutModal();
+    }
+  });
+}
+
 if (typeof window !== 'undefined') {
+  window.openLogoutModal = openLogoutModal;
+  window.closeLogoutModal = closeLogoutModal;
+  window.executeLogout = executeLogout;
+
   window.App = {
     el,
     api,
@@ -6326,6 +6466,10 @@ if (typeof window !== 'undefined') {
     updateNavAuth,
     initAuth,
     initAiChat,
+    openLogoutModal,
+    closeLogoutModal,
+    executeLogout,
+    initLogoutModal,
   };
   window.addEventListener('hashchange', route);
   if (typeof document !== 'undefined') {
@@ -6335,6 +6479,7 @@ if (typeof window !== 'undefined') {
       if (typeof initDemoVideoModal === 'function') initDemoVideoModal();
       if (typeof initAuth === 'function') initAuth();
       if (typeof initAiChat === 'function') initAiChat();
+      if (typeof initLogoutModal === 'function') initLogoutModal();
       api('/api/settings').then((data) => {
         if (data && data.name) updateSidebarProfile(data.name);
       }).catch(() => {});
@@ -6347,4 +6492,5 @@ if (typeof window !== 'undefined') {
     }
   }
 }
+
 

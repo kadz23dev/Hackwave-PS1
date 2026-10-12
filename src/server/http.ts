@@ -155,6 +155,10 @@ export function createServer(routes: Route[], staticDir: string): http.Server {
         // Sign In / Sign Up Page
         const candidate = resolve(rootDir, 'signup.html');
         resolvedFile = existsSync(candidate) ? candidate : resolve(dashboardDir, 'index.html');
+      } else if (pathname === '/logout.html' || pathname === '/logout') {
+        // Logout Page
+        const candidate = resolve(rootDir, 'logout.html');
+        resolvedFile = existsSync(candidate) ? candidate : resolve(rootDir, 'landing.html');
       } else if (pathname === '/demo.html' || pathname === '/demo') {
         // User Demo Website (Nexora single-page site)
         const candidate = resolve(rootDir, 'demo.html');

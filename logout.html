@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signed Out | KaizenAI — Autonomous E2E Test Governance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Poppins:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/morphism.css?v=2">
+  <link rel="stylesheet" href="css/signup.css?v=2">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <style>
+    .logout-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      background: rgba(185, 28, 28, 0.1);
+      border: 1px solid rgba(185, 28, 28, 0.25);
+      color: #b91c1c;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .user-session-card {
+      background: rgba(251, 247, 246, 0.85);
+      border: 1px solid rgba(155, 74, 87, 0.15);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .user-avatar-lg {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #7A3441 0%, #D2410D 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      font-family: 'Montserrat', sans-serif;
+      box-shadow: 0 4px 14px rgba(185, 28, 28, 0.3);
+    }
+    .user-session-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .user-session-name {
+      font-weight: 700;
+      color: #2A1418;
+      font-size: 0.95rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .user-session-meta {
+      font-size: 0.8rem;
+      color: #7C6A6D;
+    }
+    .countdown-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: rgba(155, 74, 87, 0.1);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 18px;
+    }
+    .countdown-bar-progress {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #7A3441, #D2410D);
+      border-radius: 9999px;
+      transition: width 0.1s linear;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Floating Liquid Glow Orbs (Dynamic Refraction Layer matching Login Page) -->
+  <div class="ambient-glow-container">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+  </div>
+
+  <!-- Subtle Cyber Grid Background -->
+  <div class="cyber-grid"></div>
+
+  <!-- Back to Home Floating Badge -->
+  <div class="back-home-wrap">
+    <a href="/landing.html" class="back-home-link">
+      <span>←</span>
+      <span>Back to KaizenAI Home</span>
+    </a>
+  </div>
+
+  <!-- Main Multi-Segment Card (Same Layout & Styling as Login Page) -->
+  <main class="card signup" id="auth-card" style="max-width: 900px;">
+    
+    <!-- 1. Horizontal Top Header with Logo -->
+    <header class="card-nav">
+      <a href="/landing.html" class="logo-wrap" title="KaizenAI Home">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4C5 3.45 5.45 3 6 3C6.55 3 7 3.45 7 4V20C7 20.55 6.55 21 6 21C5.45 21 5 20.55 5 20V4Z" fill="white"/>
+            <path d="M19 4.2C19.6 3.6 20.5 3.6 21.1 4.2C21.7 4.8 21.7 5.7 21.1 6.3L12.5 14.8C11.9 15.4 11 15.4 10.4 14.8C9.8 14.2 9.8 13.3 10.4 12.7L19 4.2Z" fill="white"/>
+            <path d="M11.6 11.4C11 10.8 11 9.9 11.6 9.3C12.2 8.7 13.1 8.7 13.7 9.3L21.1 16.7C21.7 17.3 21.7 18.2 21.1 18.8C20.5 19.4 19.6 19.4 19 18.8L11.6 11.4Z" fill="#ffccd2"/>
+          </svg>
+        </div>
+        <span class="logo-brand">Kaizen<span>AI</span></span>
+      </a>
+
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+        <span class="logout-status-badge" style="margin-bottom: 0;">
+          <span>✓</span> Safe Sign-Out
+        </span>
+      </div>
+    </header>
+
+    <!-- 2. Horizontal Body: Hero Left & Form Right -->
+    <div class="card-body">
+      
+      <!-- Left Hero Banner -->
+      <aside class="card-hero">
+        <div class="card-hero-bg"></div>
+        <div class="hero-carousel-viewport">
+          <div class="hero-carousel-track">
+            <div class="hero-pane hero-pane-signin" style="opacity: 1; transform: none;">
+              <span class="hero-tag">WORKSPACE SESSION</span>
+              <h2>Logged out safely</h2>
+              <h3>Your workspace session has ended. All autonomous test runs and repaired intents remain securely persisted.</h3>
+              <a href="/landing.html" class="hero-link">Back to Landing Page ↗</a>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Form Section -->
+      <section class="card-form" style="padding: 40px 36px; display: flex; flex-direction: column; justify-content: center;">
+        
+        <div class="form-pane active">
+          
+          <div class="form-header" style="margin-bottom: 20px;">
+            <h1 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 6px;">You are now signed out</h1>
+            <p style="color: #7C6A6D; font-size: 0.9rem;">Thank you for using KaizenAI Autonomous E2E Test Governance.</p>
+          </div>
+
+          <div class="user-session-card">
+            <div class="user-avatar-lg" id="logout-user-avatar">P</div>
+            <div class="user-session-info">
+              <span class="user-session-name" id="logout-user-name">Piyush Sharma</span>
+              <span class="user-session-meta" id="logout-user-meta">Acme Corp · Enterprise Workspace</span>
+            </div>
+          </div>
+
+          <div class="form-alert success" style="display: flex; margin-bottom: 24px;">
+            <span>✓ Session credentials cleared. Ready to return to the landing page.</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button type="button" class="card-submit-btn" onclick="goToLanding()" style="margin-top: 0;">
+              <span>Return to Landing Page</span>
+              <span>→</span>
+            </button>
+
+            <a href="signup.html?mode=signin" class="back-home-link" style="justify-content: center; width: 100%; padding: 12px; font-weight: 600;">
+              <span>🔑 Sign In Again</span>
+            </a>
+          </div>
+
+          <div style="margin-top: 20px; text-align: center; font-size: 0.8rem; color: #7C6A6D;">
+            <span id="countdown-text">Redirecting to landing page in 5s...</span>
+            <div class="countdown-bar-wrap">
+              <div class="countdown-bar-progress" id="countdown-progress"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <script>
+    // Invalidate session on load
+    try {
+      const rawUser = localStorage.getItem('healtest_user');
+      if (rawUser) {
+        const u = JSON.parse(rawUser);
+        if (u.displayName || u.name || u.email) {
+          const name = u.displayName || u.name || u.email.split('@')[0];
+          document.getElementById('logout-user-name').textContent = name;
+          document.getElementById('logout-user-avatar').textContent = (name[0] || 'U').toUpperCase();
+          document.getElementById('logout-user-meta').textContent = (u.org || 'Acme Corp') + ' · Session Inactivated';
+        }
+      }
+      localStorage.removeItem('healtest_user');
+      sessionStorage.clear();
+      fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    } catch (e) {
+      // Storage access error handling
+    }
+
+    function goToLanding() {
+      window.location.href = '/landing.html';
+    }
+
+    // Auto-redirect timer to landing page
+    let timeLeft = 5000;
+    const interval = 100;
+    const bar = document.getElementById('countdown-progress');
+    const label = document.getElementById('countdown-text');
+
+    const timer = setInterval(() => {
+      timeLeft -= interval;
+      const pct = (timeLeft / 5000) * 100;
+      if (bar) bar.style.width = Math.max(0, pct) + '%';
+      if (label) label.textContent = `Redirecting to landing page in ${Math.ceil(timeLeft / 1000)}s...`;
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        goToLanding();
+      }
+    }, interval);
+  </script>
+</body>
+</html>

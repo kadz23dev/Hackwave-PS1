@@ -16,7 +16,7 @@
         <a href="#/" class="brand sidebar-title-link">
           <span class="brand-text">Kaizen AI</span>
         </a>
-        <a href="/" class="btn-icon-round" title="Back to Landing Page" style="margin-left: auto; font-size: 0.85rem; text-decoration: none; color: var(--sidebar-muted); display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--sidebar-sub);" aria-label="Back to Landing Page">⌂</a>
+        <a href="/landing.html" class="btn-icon-round" title="Back to Landing Page" style="margin-left: auto; font-size: 0.85rem; text-decoration: none; color: var(--sidebar-muted); display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--sidebar-sub);" aria-label="Back to Landing Page">⌂</a>
       </div>
       <nav class="sidebar-nav" role="navigation">
         <a href="#/" class="nav-item">
@@ -147,14 +147,22 @@
         </svg>
       </div>
       <div class="sidebar-footer">
-        <div class="user-profile">
-          <div class="user-avatar">P</div>
+        <div class="user-profile" id="sidebar-user-profile">
+          <div class="user-avatar" id="sidebar-user-avatar">P</div>
           <div class="user-meta">
-            <span class="user-name">Piyush Sharma</span>
-            <span class="user-org">Acme Corp</span>
+            <span class="user-name" id="sidebar-user-name">Piyush Sharma</span>
+            <span class="user-org" id="sidebar-user-org">Acme Corp</span>
           </div>
           <button id="theme-toggle" class="btn btn-icon-round" aria-label="Toggle theme" title="Toggle theme" style="margin-left: auto; width: 30px; height: 30px; font-size: 0.85rem; border: 1px solid var(--sidebar-sub); background: transparent; color: var(--sidebar-text);">◐</button>
         </div>
+        <button id="sidebar-logout-btn" class="sidebar-logout-btn" type="button" title="Log out to Landing Page">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Log Out to Landing Page</span>
+        </button>
       </div>
     </aside>
 
@@ -202,6 +210,45 @@
       </div>
     </form>
   </dialog>
+
+  <!-- Logout Confirmation Modal (Matching Login Page UI & Design Language) -->
+  <div id="logout-modal" class="logout-modal-backdrop" hidden>
+    <div class="logout-modal-card">
+      <div class="logout-modal-header">
+        <div class="logout-modal-brand">
+          <span>⚡</span>
+          <span>Kaizen<span>AI</span></span>
+        </div>
+        <button type="button" id="logout-modal-close" class="logout-modal-close-btn" aria-label="Close dialog">✕</button>
+      </div>
+      <div class="logout-modal-hero">
+        <span class="logout-modal-hero-tag">WORKSPACE SESSION</span>
+        <h2>Sign Out of Workspace?</h2>
+        <p>You will be logged out of your Acme Corp enterprise tenant and redirected to the KaizenAI Landing Page.</p>
+      </div>
+      <div class="logout-modal-body">
+        <div class="logout-user-box">
+          <div class="logout-user-avatar" id="modal-logout-user-avatar">P</div>
+          <div class="logout-user-info">
+            <span class="logout-user-name" id="modal-logout-user-name">Piyush Sharma</span>
+            <span class="logout-user-meta" id="modal-logout-user-meta">Acme Corp · Active Session</span>
+          </div>
+        </div>
+        <div class="logout-modal-alert">
+          <span>✓</span>
+          <span>All your autonomous test runs, healed repairs, and simulation artifacts remain securely saved in the database.</span>
+        </div>
+        <div class="logout-actions-group">
+          <button type="button" id="logout-modal-cancel" class="btn-logout-cancel">Stay in Dashboard</button>
+          <button type="button" id="logout-modal-confirm" class="btn-logout-confirm">
+            <span>Log Out to Landing Page</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating AI Assistant Chat Bot (Gemini / ChatGPT Minimalist Architecture) -->
   <div id="ai-chat-drawer" class="chat-drawer" hidden>
     <div class="chat-header">

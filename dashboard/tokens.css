@@ -96,6 +96,7 @@
   --sidebar-muted: #7C6A6D;
   --glass-surface: rgba(255, 255, 255, 0.85);
   --glass-blur: blur(14px);
+  --modal-backdrop: rgba(42, 20, 24, 0.72);
   --border-hairline: 1px solid rgba(155, 74, 87, 0.12);
   --border-subtle: 1px solid rgba(155, 74, 87, 0.08);
 
@@ -171,6 +172,7 @@
   --donut-low: #64748B;
   --chart-grid: #3A2F28;
   --avatar-red: #DC2626;
+  --modal-backdrop: rgba(10, 8, 7, 0.82);
 }
 
 
