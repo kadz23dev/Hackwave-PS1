@@ -3,7 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import type Database from 'better-sqlite3';
 import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, resolve, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from '../db/index.js';
 import { Repo, type StoredSite } from '../db/repo.js';
@@ -123,9 +123,15 @@ export function formatSitesAsText(sites: SanitizedSite[]): string {
  */
 export function resolveDbPath(explicitPath?: string): string {
   if (explicitPath) {
+    if (win32.isAbsolute(explicitPath)) {
+      return explicitPath;
+    }
     return resolve(explicitPath);
   }
   if (process.env.HEALTEST_DB_PATH) {
+    if (win32.isAbsolute(process.env.HEALTEST_DB_PATH)) {
+      return process.env.HEALTEST_DB_PATH;
+    }
     return resolve(process.env.HEALTEST_DB_PATH);
   }
   if (process.env.HEALTEST_HOME) {
