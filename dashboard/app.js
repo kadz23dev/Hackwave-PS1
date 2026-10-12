@@ -3236,30 +3236,6 @@ export function renderDashboardWorkspace(targetContainer) {
   // 4. Floating Command Capsule
   const inputContainer = el('div', { class: 'qa-input-bar-container' });
 
-  // Prompt Starter Chips
-  const startersRow = el('div', { class: 'chat-prompt-starters', style: 'padding: 0 4px;' });
-  const promptPills = [
-    { text: 'Why did #add-to-cart change to #add-to-bag?', type: 'question' },
-    { text: 'Verify SQLite database orders increment proof', type: 'question' },
-    { text: 'Diagnose Redesign Drift on 127.0.0.1:4102', scenario: 'drift', type: 'run' },
-    { text: 'Test Server 500 checkout error', scenario: 'bug', type: 'run' }
-  ];
-
-  for (const p of promptPills) {
-    const pill = el('button', { class: 'prompt-starter-chip', type: 'button' }, p.text);
-    pill.addEventListener('click', () => {
-      if (p.type === 'question') {
-        if (promptInput) promptInput.value = p.text;
-        handleUserQuestion(p.text);
-      } else {
-        if (promptInput) promptInput.value = p.text;
-        runAgentAction(p.text, p.scenario);
-      }
-    });
-    startersRow.appendChild(pill);
-  }
-  inputContainer.appendChild(startersRow);
-
   // Floating Capsule
   const form = el('form', { class: 'chat-input-capsule', style: 'width: 100%;' });
   const sparkle = el('span', { class: 'capsule-sparkle-icon', 'aria-hidden': 'true' }, '✦');
