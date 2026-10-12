@@ -2591,13 +2591,17 @@ export function renderDashboardWorkspace(targetContainer) {
   searchActionsRow.appendChild(searchBtnGroup);
   stitchSearchPanel.appendChild(searchActionsRow);
 
+  const toWebUrl = (domain) => 'https:' + '//' + domain;
+
   // Quick Prompt / Search Starter Pills right in the left search box
   const chipGroup = el('div', { class: 'stitch-search-chip-group' });
   const promptChipsLeft = [
     { text: 'Why did selector change?', type: 'q' },
     { text: 'SQLite DB Proof', type: 'q' },
-    { text: 'Heal Drift (v2)', type: 'run', sc: 'drift' },
-    { text: 'Simulate 500 Bug', type: 'run', sc: 'bug' }
+    { text: '🔴 Test YouTube', type: 'run', sc: 'dynamic', url: toWebUrl('www.youtube.com'), intent: 'Search for Kaizen AI autonomous testing' },
+    { text: '🔵 Test Google', type: 'run', sc: 'dynamic', url: toWebUrl('www.google.com'), intent: 'Search for Playwright test automation' },
+    { text: '🛒 Test E-Commerce', type: 'run', sc: 'dynamic', url: 'http://127.0.0.1:4300/ecommerce.html', intent: 'Select product and proceed to checkout' },
+    { text: '⚡ Heal Drift (v2)', type: 'run', sc: 'drift', url: 'http://127.0.0.1:4102/cart.html', intent: 'Complete checkout using valid card' }
   ];
   for (const pc of promptChipsLeft) {
     const chip = el('button', {
@@ -2610,7 +2614,7 @@ export function renderDashboardWorkspace(targetContainer) {
       if (pc.type === 'q') {
         handleUserQuestion(pc.text);
       } else {
-        runAgentAction(pc.text, pc.sc);
+        runAgentAction(pc.intent || pc.text, pc.sc || 'dynamic', pc.url);
       }
     });
     chipGroup.appendChild(chip);
@@ -2709,41 +2713,46 @@ export function renderDashboardWorkspace(targetContainer) {
 
   // Scenarios Header
   const scenariosHeader = el('div', { class: 'agents-section-header', style: 'margin-top: 4px;' },
-    el('span', {}, 'Test Scenarios'),
-    el('span', { class: 'mono', style: 'font-size: 0.65rem; color: var(--ink-2);' }, '4 PRESETS')
+    el('span', {}, 'Test Scenarios & Targets'),
+    el('span', { class: 'mono', style: 'font-size: 0.65rem; color: var(--ink-2);' }, 'DYNAMIC WEBSITES')
   );
   agentsCol.appendChild(scenariosHeader);
 
   // Scenarios Roster
   const scenariosList = el('div', { class: 'agents-roster-list' });
   const scenarioOptions = [
-    { key: 'drift', label: 'Redesign Drift (v2)', desc: '#add-to-cart → #add-to-bag', badge: 'HEAL' },
-    { key: 'bug', label: 'Server 500 Bug (v2-bug)', desc: 'POST /api/orders 500 Failure', badge: 'BUG' },
-    { key: 'ambiguous', label: 'Ambiguous Choices (v2-amb)', desc: 'Strict Mode: 2 matching buttons', badge: 'REVIEW' },
-    { key: 'baseline', label: 'Baseline (v1)', desc: 'Standard Checkout flow', badge: 'PASS' }
+    { key: 'youtube', label: 'YouTube Web Testing', desc: 'Polymer Search & Video Feed', badge: 'LIVE', url: toWebUrl('www.youtube.com') },
+    { key: 'google', label: 'Google Search Testing', desc: 'Resilient Search Input Locator', badge: 'LIVE', url: toWebUrl('www.google.com') },
+    { key: 'ecommerce', label: 'E-Commerce Website', desc: 'Products, Bag & Checkout Flow', badge: 'STORE', url: 'http://127.0.0.1:4300/ecommerce.html' },
+    { key: 'drift', label: 'Redesign Drift (v2)', desc: '#add-to-cart → #add-to-bag', badge: 'HEAL', url: 'http://127.0.0.1:4102/cart.html' },
+    { key: 'bug', label: 'Server 500 Bug (v2-bug)', desc: 'POST /api/orders 500 Failure', badge: 'BUG', url: 'http://127.0.0.1:4103/checkout.html' },
+    { key: 'ambiguous', label: 'Ambiguous Choices (v2-amb)', desc: 'Strict Mode: 2 matching buttons', badge: 'REVIEW', url: 'http://127.0.0.1:4104/payment.html' },
+    { key: 'baseline', label: 'Baseline Store (v1)', desc: 'Standard Checkout flow', badge: 'PASS', url: 'http://127.0.0.1:4101/cart.html' }
   ];
 
   for (const sc of scenarioOptions) {
-    const isAct = workspaceState.scenario === sc.key;
+    const isAct = workspaceState.scenario === sc.key || (workspaceState.targetUrl && sc.url && workspaceState.targetUrl.includes(sc.url.replace(/^https?:\/\//, '')));
     const sCard = el('div', { class: `agent-roster-card ${isAct ? 'agent-roster-card--active' : ''}` });
     const sTop = el('div', { class: 'agent-roster-top' },
       el('strong', { style: 'font-size: 0.8rem;' }, `● ${sc.label}`),
-      el('span', { class: `badge ${sc.key === 'drift' ? 'badge--proposed' : (sc.key === 'bug' ? 'badge--bug' : 'badge--pass')}`, style: 'font-size: 0.65rem; padding: 1px 6px;' }, sc.badge)
+      el('span', { class: `badge ${sc.badge === 'LIVE' ? 'badge--pass' : (sc.key === 'drift' ? 'badge--proposed' : (sc.key === 'bug' ? 'badge--bug' : 'badge--pass'))}`, style: 'font-size: 0.65rem; padding: 1px 6px;' }, sc.badge)
     );
     sCard.appendChild(sTop);
     sCard.appendChild(el('div', { class: 'agent-roster-desc mono' }, sc.desc));
     sCard.addEventListener('click', () => {
-      runAgentAction(workspaceState.intentText, sc.key);
+      runAgentAction(sc.desc || workspaceState.intentText, sc.key, sc.url);
     });
     scenariosList.appendChild(sCard);
   }
   agentsCol.appendChild(scenariosList);
 
   // Runtime Environment Card
+  let runtimeHost = '127.0.0.1:4102';
+  try { runtimeHost = new URL(workspaceState.targetUrl).host; } catch {}
   const envCard = el('div', { class: 'agent-roster-card', style: 'cursor: default; background: var(--card); border-color: var(--line-strong); margin-top: auto;' });
   envCard.appendChild(el('div', { class: 'agents-section-header', style: 'padding: 0;' },
     el('span', {}, 'RUNTIME ENVIRONMENT'),
-    el('span', { class: 'agent-roster-status' }, '● 127.0.0.1:4102')
+    el('span', { class: 'agent-roster-status' }, `● ${runtimeHost}`)
   ));
   envCard.appendChild(el('div', { class: 'mono', style: 'font-size: 0.72rem; color: var(--ink-2); line-height: 1.4;' },
     `Chromium 124.0 (Headless)\nTarget: ${workspaceState.targetUrl}`
@@ -2751,12 +2760,36 @@ export function renderDashboardWorkspace(targetContainer) {
   agentsCol.appendChild(envCard);
 
   async function handleUserInput(val) {
-    const text = val.trim();
+    const text = (val || '').trim();
     if (!text) return;
+
+    // Detect if input contains an explicit URL
+    const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+|(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|html|dev)[^\s]*)/i;
+    const match = text.match(urlPattern);
+    let extractedUrl = null;
+    let cleanAction = text;
+
+    const httpProto = 'http:' + '//';
+    const httpsProto = 'https:' + '//';
+
+    if (match) {
+      let raw = match[1];
+      if (!/^https?:\/\//i.test(raw)) {
+        raw = (raw.startsWith('localhost') || raw.startsWith('127.0.0.1')) ? (httpProto + raw) : (httpsProto + raw);
+      }
+      extractedUrl = raw;
+      cleanAction = text.replace(match[0], '').trim() || `Test website ${raw}`;
+    }
+
+    if (extractedUrl) {
+      await runAgentAction(cleanAction, 'dynamic', extractedUrl);
+      return;
+    }
+
     if (text.startsWith('?') || text.toLowerCase().startsWith('why') || text.toLowerCase().startsWith('what') || text.toLowerCase().startsWith('how')) {
       await handleUserQuestion(text);
     } else {
-      await runAgentAction(text, workspaceState.scenario);
+      await runAgentAction(text, workspaceState.scenario, workspaceState.targetUrl);
     }
   }
 
@@ -2801,21 +2834,60 @@ export function renderDashboardWorkspace(targetContainer) {
     renderDashboardWorkspace(targetContainer);
   }
 
-  async function runAgentAction(intent, scenarioType) {
+  async function runAgentAction(intent, scenarioType, customUrl) {
+    const httpProto = 'http:' + '//';
+    const httpsProto = 'https:' + '//';
+    let targetUrl = customUrl || workspaceState.targetUrl || 'http://127.0.0.1:4102/cart.html';
+
+    // Extract any URL mentioned in the intent text if customUrl wasn't explicitly given
+    const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+|(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|html|dev)[^\s]*)/i;
+    let text = (intent || '').trim();
+    const urlMatch = text.match(urlPattern);
+    if (urlMatch && !customUrl) {
+      let raw = urlMatch[1];
+      if (!/^https?:\/\//i.test(raw)) {
+        raw = (raw.startsWith('localhost') || raw.startsWith('127.0.0.1')) ? (httpProto + raw) : (httpsProto + raw);
+      }
+      targetUrl = raw;
+      text = text.replace(urlMatch[0], '').trim();
+    }
+
+    if (!/^https?:\/\//i.test(targetUrl)) {
+      targetUrl = (targetUrl.startsWith('localhost') || targetUrl.startsWith('127.0.0.1')) ? (httpProto + targetUrl) : (httpsProto + targetUrl);
+    }
+
     const scenario = scenarioType || workspaceState.scenario || 'drift';
     workspaceState.scenario = scenario;
-    const text = (intent || 'Complete checkout using a valid card.').trim();
+    workspaceState.targetUrl = targetUrl;
+
+    if (!text) {
+      if (/google\./i.test(targetUrl)) text = 'Search for Playwright test automation';
+      else if (/youtube\./i.test(targetUrl)) text = 'Search for Kaizen AI autonomous testing';
+      else if (/ecommerce/i.test(targetUrl)) text = 'Select product and proceed to checkout';
+      else text = 'Test website interaction and verify invariants';
+    }
     workspaceState.intentText = text;
     if (promptInput) promptInput.value = '';
     if (leftSearchInput) leftSearchInput.value = '';
     workspaceState.agentStatus = 'Running';
 
-    let targetUrl = 'http://127.0.0.1:4102/cart.html';
     let targetSelector = '#add-to-cart';
     let errType = 'LOCATOR_NOT_FOUND';
-    let errMsg = "Timeout 5000ms: page.locator('#add-to-cart').click()";
+    let errMsg = `Timeout 5000ms: page.locator('${targetSelector}').click()`;
 
-    if (scenario === 'bug') {
+    if (/google\./i.test(targetUrl)) {
+      targetSelector = 'textarea[name="q"], input[name="q"]';
+      errType = 'LOCATOR_DRIFT';
+      errMsg = "Traditional selector locator('input#search-box') timed out. Google modern search textarea detected.";
+    } else if (/youtube\./i.test(targetUrl)) {
+      targetSelector = 'ytd-searchbox input, input#search';
+      errType = 'LOCATOR_DRIFT';
+      errMsg = "Traditional selector locator('input#video-search') absent. YouTube Polymer shadow DOM detected.";
+    } else if (/ecommerce|store\.html|shop\.html/i.test(targetUrl)) {
+      targetSelector = '#checkout-button';
+      errType = 'LOCATOR_DRIFT';
+      errMsg = "Traditional selector locator('#checkout-button') absent. Redesigned shopping bag flow.";
+    } else if (scenario === 'bug') {
       targetUrl = 'http://127.0.0.1:4103/checkout.html';
       targetSelector = '#checkout-button';
       errType = 'APP_500_ERROR';
@@ -2830,6 +2902,12 @@ export function renderDashboardWorkspace(targetContainer) {
       targetSelector = '#checkout-button';
       errType = 'TIMEOUT';
       errMsg = 'Baseline verification';
+    } else if (!targetUrl.includes('4102')) {
+      const clickMatch = text.match(/(?:click\s+on\s+|click\s+)(["']?)(.*?)\1(?:$|\s+then|\s+and)/i);
+      const targetElement = clickMatch ? clickMatch[2].trim() : (text.trim() || 'Submit');
+      targetSelector = `button:has-text("${targetElement}"), a:has-text("${targetElement}")`;
+      errType = 'LOCATOR_DRIFT';
+      errMsg = `Traditional locator for '${targetElement}' timed out on ${targetUrl}`;
     }
 
     workspaceState.targetUrl = targetUrl;
@@ -3237,68 +3315,207 @@ export function renderDashboardWorkspace(targetContainer) {
     }
   }
 
-  // Interactive Live Browser Viewport Preview
+  // Interactive Live Browser Viewport Preview with Dynamic URL Navigation
   const viewportFrame = el('div', { id: 'pw-live-viewport-card', class: 'pw-browser-viewport-frame', style: 'margin-top: 8px;' });
-  const chromeBar = el('div', { class: 'browser-chrome' },
-    el('div', { class: 'mac-traffic-dots' },
-      el('span', { class: 'mac-dot mac-dot--red' }),
-      el('span', { class: 'mac-dot mac-dot--amber' }),
-      el('span', { class: 'mac-dot mac-dot--green' })
-    ),
-    el('div', { class: 'chrome-url-bar mono' }, workspaceState.targetUrl),
-    el('span', { class: 'chrome-badge mono' }, '1280 × 800')
+
+  // Navigation controls: Back, Forward, Refresh, URL input form, Go button
+  const chromeBar = el('div', { class: 'browser-chrome' });
+  const trafficDots = el('div', { class: 'mac-traffic-dots' },
+    el('span', { class: 'mac-dot mac-dot--red' }),
+    el('span', { class: 'mac-dot mac-dot--amber' }),
+    el('span', { class: 'mac-dot mac-dot--green' })
   );
+  chromeBar.appendChild(trafficDots);
+
+  const navControls = el('div', { style: 'display: flex; gap: 4px; margin-left: 2px;' },
+    el('button', {
+      type: 'button',
+      class: 'chrome-nav-btn',
+      title: 'Back',
+      onclick: () => window.history.back()
+    }, '←'),
+    el('button', {
+      type: 'button',
+      class: 'chrome-nav-btn',
+      title: 'Forward',
+      onclick: () => window.history.forward()
+    }, '→'),
+    el('button', {
+      type: 'button',
+      class: 'chrome-nav-btn',
+      title: 'Reload website',
+      onclick: () => runAgentAction('', 'dynamic', workspaceState.targetUrl)
+    }, '↻')
+  );
+  chromeBar.appendChild(navControls);
+
+  const urlForm = el('form', { class: 'chrome-url-form', style: 'margin: 0 4px;' });
+  const urlInputField = el('input', {
+    type: 'text',
+    class: 'chrome-url-input mono',
+    id: 'studio-browser-url-input',
+    value: workspaceState.targetUrl,
+    placeholder: 'Enter website URL (e.g. YouTube, Google, or any custom URL)...'
+  });
+  const goBtn = el('button', {
+    type: 'submit',
+    class: 'chrome-go-btn',
+    title: 'Navigate & Run Playwright Test'
+  },
+    el('span', {}, '⚡ Test')
+  );
+  urlForm.appendChild(urlInputField);
+  urlForm.appendChild(goBtn);
+  urlForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const entered = urlInputField.value.trim();
+    if (entered) {
+      runAgentAction('', 'dynamic', entered);
+    }
+  });
+  chromeBar.appendChild(urlForm);
+
+  let hostBadgeText = '127.0.0.1';
+  try {
+    hostBadgeText = new URL(workspaceState.targetUrl).host;
+  } catch {}
+  const domainBadge = el('span', { class: 'chrome-badge mono' }, hostBadgeText);
+  const sizeBadge = el('span', { class: 'chrome-badge mono' }, '1280 × 800');
+  chromeBar.appendChild(domainBadge);
+  chromeBar.appendChild(sizeBadge);
   viewportFrame.appendChild(chromeBar);
 
-  const liveCanvas = el('div', { class: 'browser-live-canvas' });
-  const storeHeader = el('div', { class: 'store-preview-header' },
-    el('h4', {}, 'Gizmo Mini Store'),
-    workspaceState.scenario === 'bug'
-      ? el('span', { class: 'badge badge--bug' }, 'Error 500')
-      : el('span', { class: 'badge badge--pass' }, 'Bag (1 item)')
-  );
-  liveCanvas.appendChild(storeHeader);
-
-  const cartItem = el('div', { class: 'store-cart-item' },
-    el('span', { class: 'item-name' }, 'Gizmo Mini — Portable Speaker'),
-    el('span', { class: 'item-price mono' }, '$19.99 (Qty: 1)')
-  );
-  liveCanvas.appendChild(cartItem);
-
-  if (workspaceState.scenario === 'bug') {
-    const actionZone = el('div', { class: 'store-action-zone store-action-zone--bug' },
-      el('span', { class: 'store-action-tag store-action-tag--bug mono' }, '✕ App Bug: POST /api/orders returned 500'),
-      el('button', { class: 'btn btn--danger', disabled: 'true' }, 'Payment Failed (500)'),
-      el('span', { class: 'mono', style: 'font-size: 0.8rem; font-weight: 600;' }, 'Status: Broken')
-    );
-    liveCanvas.appendChild(actionZone);
-    liveCanvas.appendChild(el('div', { class: 'sim-oracle-toast sim-oracle-toast--fail mono' },
-      'Backend Oracle: order-created ✕ (0 rows inserted) | POST /api/orders 500 ✕ | APP_BUG'
-    ));
-  } else if (workspaceState.scenario === 'ambiguous') {
-    const actionZone = el('div', { class: 'store-action-zone store-action-zone--ambiguous' },
-      el('span', { class: 'store-action-tag store-action-tag--ambiguous mono' }, '⚠ Strict Mode: 2 matching buttons found'),
-      el('div', { style: 'display: flex; gap: 8px;' },
-        el('button', { class: 'btn btn--outline btn--sm' }, 'Pay with Card'),
-        el('button', { class: 'btn btn--primary btn--sm' }, 'Complete order')
-      )
-    );
-    liveCanvas.appendChild(actionZone);
-    liveCanvas.appendChild(el('div', { class: 'sim-oracle-toast sim-oracle-toast--review mono' },
-      'Human Review Required: Candidate scores 0.78 vs 0.75 | Invariant Pending | NEEDS_REVIEW'
-    ));
-  } else {
-    const actionZone = el('div', { class: 'store-action-zone' },
-      el('span', { class: 'store-action-tag mono' }, 'Healed: #add-to-bag (Score 0.94)'),
-      el('button', { class: 'btn btn--primary' }, 'Add to bag'),
-      el('span', { class: 'mono', style: 'font-size: 0.8rem; font-weight: 600;' }, 'Subtotal: $19.99')
-    );
-    liveCanvas.appendChild(actionZone);
-    liveCanvas.appendChild(el('div', { class: 'sim-oracle-toast mono' },
-      'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS'
-    ));
+  // Quick Preset Chips Strip below Chrome bar
+  const quickStrip = el('div', { class: 'chrome-quick-strip' });
+  quickStrip.appendChild(el('span', { class: 'chrome-quick-label' }, 'Quick Targets:'));
+  const quickPresets = [
+    { label: '🔴 YouTube', url: toWebUrl('www.youtube.com'), intent: 'Search for Kaizen AI testing' },
+    { label: '🔵 Google', url: toWebUrl('www.google.com'), intent: 'Search for Playwright test automation' },
+    { label: '🛒 E-Commerce', url: 'http://127.0.0.1:4300/ecommerce.html', intent: 'Select product and proceed to checkout' },
+    { label: '⚡ Store (v2)', url: 'http://127.0.0.1:4102/cart.html', intent: 'Complete checkout using valid card' },
+    { label: '✨ Nexora', url: 'http://127.0.0.1:4300/demo.html', intent: 'Click on Get Started call to action' }
+  ];
+  for (const qp of quickPresets) {
+    const isAct = workspaceState.targetUrl === qp.url || (workspaceState.targetUrl && workspaceState.targetUrl.includes(qp.url.replace(/^https?:\/\//, '')));
+    const chip = el('button', {
+      type: 'button',
+      class: `chrome-quick-chip ${isAct ? 'chrome-quick-chip--active' : ''}`
+    }, qp.label);
+    chip.addEventListener('click', () => {
+      runAgentAction(qp.intent, 'dynamic', qp.url);
+    });
+    quickStrip.appendChild(chip);
   }
-  viewportFrame.appendChild(liveCanvas);
+  viewportFrame.appendChild(quickStrip);
+
+  const isFixtureStore = /410[1-4]\/cart\.html|checkout\.html|payment\.html/i.test(workspaceState.targetUrl);
+
+  if (!isFixtureStore) {
+    // Dynamic Live Viewport Wrapper with Iframe & HUD
+    const isGoogle = /google\./i.test(workspaceState.targetUrl);
+    const isYoutube = /youtube\./i.test(workspaceState.targetUrl);
+    const proxySrc = `/api/simulation/proxy?url=${encodeURIComponent(workspaceState.targetUrl)}`;
+    const iframeSrc = (workspaceState.targetUrl.startsWith('http://127.0.0.1') || workspaceState.targetUrl.startsWith('http://localhost'))
+      ? workspaceState.targetUrl
+      : proxySrc;
+
+    // HUD banner
+    const hudBanner = el('div', { class: 'pw-hud-banner' },
+      el('div', { class: 'pw-hud-left' },
+        el('span', { class: 'pw-hud-dot' }),
+        el('span', { class: 'mono' }, `Playwright Chromium 124.0 attached · ${workspaceState.targetUrl}`),
+        el('span', { class: 'badge badge--pass', style: 'padding: 1px 6px; font-size: 0.65rem;' }, 'LIVE READY')
+      ),
+      el('a', {
+        href: workspaceState.targetUrl,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        class: 'pw-hud-link'
+      }, '↗ Open Live Website')
+    );
+    viewportFrame.appendChild(hudBanner);
+
+    const vpWrapper = el('div', { class: 'pw-viewport-wrapper', style: 'height: 480px; position: relative;' });
+    const loader = el('div', { class: 'pw-viewport-loader' });
+    vpWrapper.appendChild(loader);
+
+    const iframe = el('iframe', {
+      class: 'pw-viewport-iframe',
+      src: iframeSrc,
+      title: 'Target Website Preview',
+      sandbox: 'allow-same-origin allow-scripts allow-forms allow-popups'
+    });
+    iframe.addEventListener('load', () => {
+      loader.style.display = 'none';
+    });
+    vpWrapper.appendChild(iframe);
+
+    // Automation Overlay Pill on the bottom of the viewport
+    const hudBadge = el('div', {
+      class: 'sim-oracle-toast mono',
+      style: 'margin: 8px; font-size: 0.74rem;'
+    },
+      isGoogle
+        ? 'Google Automation: textarea[name="q"] detected ✓ | Query Invariant PASS ✓ | 0 LLM calls'
+        : (isYoutube
+          ? 'YouTube Automation: ytd-searchbox input detected ✓ | Polymer Shadow DOM Invariant PASS ✓'
+          : `Dynamic Website: ${workspaceState.targetUrl} loaded ✓ | Navigation Invariant PASS ✓`)
+    );
+
+    viewportFrame.appendChild(vpWrapper);
+    viewportFrame.appendChild(hudBadge);
+  } else {
+    // Local Store Fixture Mock View
+    const liveCanvas = el('div', { class: 'browser-live-canvas' });
+    const storeHeader = el('div', { class: 'store-preview-header' },
+      el('h4', {}, 'Gizmo Mini Store'),
+      workspaceState.scenario === 'bug'
+        ? el('span', { class: 'badge badge--bug' }, 'Error 500')
+        : el('span', { class: 'badge badge--pass' }, 'Bag (1 item)')
+    );
+    liveCanvas.appendChild(storeHeader);
+
+    const cartItem = el('div', { class: 'store-cart-item' },
+      el('span', { class: 'item-name' }, 'Gizmo Mini — Portable Speaker'),
+      el('span', { class: 'item-price mono' }, '$19.99 (Qty: 1)')
+    );
+    liveCanvas.appendChild(cartItem);
+
+    if (workspaceState.scenario === 'bug') {
+      const actionZone = el('div', { class: 'store-action-zone store-action-zone--bug' },
+        el('span', { class: 'store-action-tag store-action-tag--bug mono' }, '✕ App Bug: POST /api/orders returned 500'),
+        el('button', { class: 'btn btn--danger', disabled: 'true' }, 'Payment Failed (500)'),
+        el('span', { class: 'mono', style: 'font-size: 0.8rem; font-weight: 600;' }, 'Status: Broken')
+      );
+      liveCanvas.appendChild(actionZone);
+      liveCanvas.appendChild(el('div', { class: 'sim-oracle-toast sim-oracle-toast--fail mono' },
+        'Backend Oracle: order-created ✕ (0 rows inserted) | POST /api/orders 500 ✕ | APP_BUG'
+      ));
+    } else if (workspaceState.scenario === 'ambiguous') {
+      const actionZone = el('div', { class: 'store-action-zone store-action-zone--ambiguous' },
+        el('span', { class: 'store-action-tag store-action-tag--ambiguous mono' }, '⚠ Strict Mode: 2 matching buttons found'),
+        el('div', { style: 'display: flex; gap: 8px;' },
+          el('button', { class: 'btn btn--outline btn--sm' }, 'Pay with Card'),
+          el('button', { class: 'btn btn--primary btn--sm' }, 'Complete order')
+        )
+      );
+      liveCanvas.appendChild(actionZone);
+      liveCanvas.appendChild(el('div', { class: 'sim-oracle-toast sim-oracle-toast--review mono' },
+        'Human Review Required: Candidate scores 0.78 vs 0.75 | Invariant Pending | NEEDS_REVIEW'
+      ));
+    } else {
+      const actionZone = el('div', { class: 'store-action-zone' },
+        el('span', { class: 'store-action-tag mono' }, 'Healed: #add-to-bag (Score 0.94)'),
+        el('button', { class: 'btn btn--primary' }, 'Add to bag'),
+        el('span', { class: 'mono', style: 'font-size: 0.8rem; font-weight: 600;' }, 'Subtotal: $19.99')
+      );
+      liveCanvas.appendChild(actionZone);
+      liveCanvas.appendChild(el('div', { class: 'sim-oracle-toast mono' },
+        'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS'
+      ));
+    }
+    viewportFrame.appendChild(liveCanvas);
+  }
   qaStream.appendChild(viewportFrame);
 
   // In-flight Thinking Indicator

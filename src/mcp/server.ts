@@ -125,7 +125,6 @@ export function resolveDbPath(explicitPath?: string): string {
 
 const isWindowsAbsolutePath = (value: string): boolean =>
   /^[A-Za-z]:[\\/]/.test(value) || value.startsWith('\\\\');
- main
 
   if (explicitPath) {
     if (isWindowsAbsolutePath(explicitPath)) {

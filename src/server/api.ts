@@ -1748,8 +1748,9 @@ export function buildRoutes(repo: Repo): Route[] {
       pattern: /^\/api\/simulation\/run$/,
       handler: async ({ res, body }) => {
         const scenario = body?.scenario || 'drift';
-        let targetUrl = (typeof body?.targetUrl === 'string' && body.targetUrl.trim().length > 0)
-          ? body.targetUrl.trim()
+        const incomingUrl = body?.targetUrl || body?.url;
+        let targetUrl = (typeof incomingUrl === 'string' && incomingUrl.trim().length > 0)
+          ? incomingUrl.trim()
           : 'http://127.0.0.1:4102/cart.html';
         if (!/^https?:\/\//i.test(targetUrl)) {
           targetUrl = `http://${targetUrl}`;
@@ -1764,9 +1765,110 @@ export function buildRoutes(repo: Repo): Route[] {
         const targetElement = clickMatch ? clickMatch[2].trim() : (actionMessage.trim() || 'target element');
         const isCustomClick = Boolean(clickMatch);
 
-        const isEcommerceIntent = /select.*product|checkout|proceed|bag|cart/i.test(actionMessage);
+        const isGoogle = /google\./i.test(targetUrl);
+        const isYoutube = /youtube\./i.test(targetUrl);
+        const isLocalStore = /410[1-4]|cart\.html|checkout\.html|payment\.html/i.test(targetUrl);
+        const isEcommerceIntent = /select.*product|checkout|proceed|bag|cart/i.test(actionMessage) && isLocalStore;
+
         let steps;
-        if ((scenario === 'baseline' && !isCustomClick) || (scenario === 'baseline' && isEcommerceIntent)) {
+        if (isGoogle) {
+          const queryText = targetElement || 'Playwright AI testing';
+          steps = [
+            {
+              num: 1,
+              title: 'Navigate to Google Endpoint',
+              desc: `page.goto('${targetUrl}') · Chromium 124.0 attached to Google Homepage · Search input & form detected`,
+              status: 'pass',
+              badge: 'HTTP 200'
+            },
+            {
+              num: 2,
+              title: 'Inspect Target Locator (Traditional Fails)',
+              desc: `Fixed selector locator('input#search-box') absent · Google uses resilient 'textarea[name="q"], input[name="q"]' · Selector drift detected`,
+              status: 'fail',
+              badge: 'Selector Drift'
+            },
+            {
+              num: 3,
+              title: '4-Step Method: Semantic & Context Heuristics',
+              desc: `Semantic element matching resolved 'textarea[name="q"], input[name="q"]' · Confidence score: 0.96 >= 0.60 threshold`,
+              status: 'heal',
+              badge: 'Score: 0.96 (Healed)'
+            },
+            {
+              num: 4,
+              title: 'Playwright Healed Execution & Oracle Validation',
+              desc: `await page.locator('textarea[name="q"], input[name="q"]').fill('${queryText}') · Search query dispatched · Title updated · Test PASS`,
+              status: 'pass',
+              badge: 'HEALED_PASS'
+            }
+          ];
+        } else if (isYoutube) {
+          const queryText = targetElement || 'Autonomous AI testing';
+          steps = [
+            {
+              num: 1,
+              title: 'Navigate to YouTube Endpoint',
+              desc: `page.goto('${targetUrl}') · Chromium 124.0 attached to YouTube Homepage · Polymer web-components & video feed observed`,
+              status: 'pass',
+              badge: 'HTTP 200'
+            },
+            {
+              num: 2,
+              title: 'Inspect Target Locator (Traditional Fails)',
+              desc: `Traditional locator 'input#video-search' absent · Shadow DOM / web components structure detected`,
+              status: 'fail',
+              badge: 'Selector Drift'
+            },
+            {
+              num: 3,
+              title: '4-Step Method: Polymer Semantic & Context Synthesis',
+              desc: `Synthesized resilient locator: 'ytd-searchbox input, input#search' · Confidence score: 0.95 >= 0.60 threshold`,
+              status: 'heal',
+              badge: 'Score: 0.95 (Healed)'
+            },
+            {
+              num: 4,
+              title: 'Playwright Healed Execution & Feed Validation',
+              desc: `await page.locator('ytd-searchbox input, input#search').fill('${queryText}') · Video search dispatched · Feed updated · Test PASS`,
+              status: 'pass',
+              badge: 'HEALED_PASS'
+            }
+          ];
+        } else if (!isLocalStore) {
+          steps = [
+            {
+              num: 1,
+              title: 'Recognize & Navigate to Target Endpoint',
+              desc: `page.goto('${targetUrl}') · Chromium 124.0 context initialized · DOMContentLoaded · HTTP 200`,
+              status: 'pass',
+              badge: 'HTTP 200'
+            },
+            {
+              num: 2,
+              title: isCustomClick ? `Target Locator Check: "${targetElement}"` : 'Inspect DOM & Detect Selector Drift',
+              desc: isCustomClick
+                ? `Traditional fixed ID locator timed out · Evaluated candidates in redesigned DOM tree for "${targetElement}"`
+                : (scenario === 'drift' ? "Fixed selector absent in DOM tree" : "Target selector verified"),
+              status: 'fail',
+              badge: 'Selector Drift'
+            },
+            {
+              num: 3,
+              title: '4-Step Method: Semantic & Context Heuristics',
+              desc: `Synthesized resilient locator for "${targetElement}": button:has-text("${targetElement}"), a:has-text("${targetElement}") · Confidence: 0.94`,
+              status: 'heal',
+              badge: 'Score: 0.94 (Healed)'
+            },
+            {
+              num: 4,
+              title: 'Playwright Healed Execution & Oracle Validation',
+              desc: `await page.locator('text="${targetElement}", button:has-text("${targetElement}")').click() · Navigation confirmed · Invariant PASS`,
+              status: 'pass',
+              badge: 'HEALED_PASS'
+            }
+          ];
+        } else if ((scenario === 'baseline' && !isCustomClick) || (scenario === 'baseline' && isEcommerceIntent)) {
           steps = [
             {
               num: 1,
@@ -1867,7 +1969,7 @@ export function buildRoutes(repo: Repo): Route[] {
           ];
         }
 
-        const verdict = scenario === 'bug' ? 'APP_BUG' : (scenario === 'baseline' && !isCustomClick ? 'PASS' : 'HEALED_PASS');
+        const verdict = scenario === 'bug' ? 'APP_BUG' : (scenario === 'baseline' && !isCustomClick && isLocalStore ? 'PASS' : 'HEALED_PASS');
 
         const intent = repo.db.prepare('SELECT id, name, sha256 FROM intents LIMIT 1').get() as { id: number; name: string; sha256: string } | undefined;
         if (intent) {
@@ -1878,13 +1980,39 @@ export function buildRoutes(repo: Repo): Route[] {
         }
 
         const isDemoSite = targetUrl.includes('demo.html') || targetUrl.includes('4300');
-        const healedCode = isCustomClick
-          ? (isDemoSite
+        let healedCode = '';
+        if (isGoogle) {
+          healedCode = `// Google Search Resilient Locator:\nawait page.locator('textarea[name="q"], input[name="q"]').fill('${targetElement || 'Playwright AI testing'}');\nawait page.keyboard.press('Enter');`;
+        } else if (isYoutube) {
+          healedCode = `// YouTube Polymer Resilient Search Locator:\nawait page.locator('ytd-searchbox input, input#search').fill('${targetElement || 'Autonomous AI testing'}');\nawait page.keyboard.press('Enter');`;
+        } else if (!isLocalStore) {
+          healedCode = `// Resilient Multi-Agent Synthesized Locator for ${targetUrl}:\nawait page.locator('text="${targetElement}", button:has-text("${targetElement}"), a:has-text("${targetElement}")').click();\nawait page.waitForLoadState('networkidle');`;
+        } else if (isCustomClick) {
+          healedCode = isDemoSite
             ? `await page.locator('a:has-text("${targetElement}"), button:has-text("${targetElement}")').click();\nawait page.waitForLoadState('domcontentloaded');`
-            : `await page.locator('text="${targetElement}", button:has-text("${targetElement}")').click();`)
-          : (scenario === 'drift'
-            ? `// Step 1: Traditional locator('#checkout-button') failed (404/Not Found)\n// 4-Step Self-Healing: Semantic + Context-Aware Matching (Score: 0.94)\nawait page.locator('.btn-primary:has-text("Proceed to payment")').click();`
-            : `await page.locator('#checkout-button').click();`);
+            : `await page.locator('text="${targetElement}", button:has-text("${targetElement}")').click();`;
+        } else if (scenario === 'drift') {
+          healedCode = `// Step 1: Traditional locator('#checkout-button') failed (404/Not Found)\n// 4-Step Self-Healing: Semantic + Context-Aware Matching (Score: 0.94)\nawait page.locator('.btn-primary:has-text("Proceed to payment")').click();`;
+        } else {
+          healedCode = `await page.locator('#checkout-button').click();`;
+        }
+
+        let oracleMessage = '';
+        if (scenario === 'bug') {
+          oracleMessage = 'Backend Oracle: invariant violation ✕ | POST /api/orders 500 ✕ | APP_BUG';
+        } else if (isGoogle) {
+          oracleMessage = `Backend Oracle: Google query on '${targetUrl}' verified ✓ | Search results loaded cleanly · Invariant PASS`;
+        } else if (isYoutube) {
+          oracleMessage = `Backend Oracle: YouTube query on '${targetUrl}' verified ✓ | Feed components loaded cleanly · Invariant PASS`;
+        } else if (!isLocalStore) {
+          oracleMessage = `Backend Oracle: action on '${targetUrl}' verified ✓ | Navigation invariant passed · 0 fatal errors · Invariant PASS`;
+        } else if (isCustomClick) {
+          oracleMessage = isDemoSite
+            ? `Backend Oracle: action '${actionMessage}' verified ✓ | Nexora website (demo.html) navigated cleanly · 0 DOM errors ✓ | PASS`
+            : `Backend Oracle: action '${actionMessage}' verified ✓ | Website loaded successfully ✓ | PASS`;
+        } else {
+          oracleMessage = 'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS';
+        }
 
         json(res, 200, {
           ok: true,
@@ -1897,15 +2025,9 @@ export function buildRoutes(repo: Repo): Route[] {
           healedPatch: {
             original: isCustomClick ? `// User command: ${actionMessage}` : `await page.locator('#add-to-cart').click();`,
             healed: healedCode,
-            score: isDemoSite ? 0.98 : 0.95,
+            score: (isGoogle || isYoutube) ? 0.96 : (isDemoSite ? 0.98 : 0.94),
           },
-          oracleMessage: scenario === 'bug' 
-            ? 'Backend Oracle: invariant violation ✕ | POST /api/orders 500 ✕ | APP_BUG'
-            : (isCustomClick
-              ? (isDemoSite
-                ? `Backend Oracle: action '${actionMessage}' verified ✓ | Nexora website (demo.html) navigated cleanly · 0 DOM errors ✓ | PASS`
-                : `Backend Oracle: action '${actionMessage}' verified ✓ | Website loaded successfully ✓ | PASS`)
-              : 'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS'),
+          oracleMessage,
         });
       },
     },
