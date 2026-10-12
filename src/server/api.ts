@@ -1748,57 +1748,135 @@ export function buildRoutes(repo: Repo): Route[] {
       pattern: /^\/api\/simulation\/run$/,
       handler: async ({ res, body }) => {
         const scenario = body?.scenario || 'drift';
-        const targetUrl = body?.targetUrl || 'http://127.0.0.1:4102/cart.html';
+        let targetUrl = (typeof body?.targetUrl === 'string' && body.targetUrl.trim().length > 0)
+          ? body.targetUrl.trim()
+          : 'http://127.0.0.1:4102/cart.html';
+        if (!/^https?:\/\//i.test(targetUrl)) {
+          targetUrl = `http://${targetUrl}`;
+        }
         const intentText = body?.intentText || 'Test add to bag checkout flow';
+        const actionMessage = (typeof body?.actionMessage === 'string' && body.actionMessage.trim().length > 0)
+          ? body.actionMessage.trim()
+          : intentText;
+
+        // Parse custom intent e.g. "click on get started" or "click on Add to bag"
+        const clickMatch = actionMessage.match(/(?:click\s+on\s+|click\s+)(["']?)(.*?)\1(?:$|\s+then|\s+and)/i);
+        const targetElement = clickMatch ? clickMatch[2].trim() : (actionMessage.trim() || 'target element');
+        const isCustomClick = Boolean(clickMatch);
 
         const steps = [
-          { num: 1, title: 'Navigate to Target Endpoint', desc: `page.goto('${targetUrl}')`, status: 'pass', badge: 'HTTP 200' },
+          {
+            num: 1,
+            title: 'Recognize & Navigate to Target Endpoint',
+            desc: `page.goto('${targetUrl}')`,
+            status: 'pass',
+            badge: 'HTTP 200'
+          },
           { 
             num: 2, 
-            title: 'Inspect DOM & Detect Selector Drift', 
-            desc: scenario === 'drift' ? "locator('#add-to-cart') absent in DOM tree" : "locator resolved",
-            status: scenario === 'drift' ? 'fail' : 'pass', 
-            badge: scenario === 'drift' ? 'Drift' : 'Matched' 
+            title: isCustomClick ? `AI Intent: Target "${targetElement}"` : 'Inspect DOM & Detect Selector Drift', 
+            desc: isCustomClick
+              ? `Synthesized resilient locator: button:has-text("${targetElement}") / a:has-text("${targetElement}")`
+              : (scenario === 'drift' ? "locator('#add-to-cart') absent in DOM tree" : "locator resolved"),
+            status: (scenario === 'drift' && !isCustomClick) ? 'fail' : 'pass', 
+            badge: isCustomClick ? 'AI Intent' : (scenario === 'drift' ? 'Drift' : 'Matched') 
           },
           { 
             num: 3, 
-            title: 'AI Healing & Selector Synthesis', 
-            desc: scenario === 'drift' ? 'Synthesized #add-to-bag with 94% confidence score' : 'No healing needed', 
-            status: scenario === 'drift' ? 'heal' : 'pass', 
-            badge: scenario === 'drift' ? 'Synthesized' : 'Skipped' 
+            title: isCustomClick ? `Dispatch Action & Observe Load` : 'AI Healing & Selector Synthesis', 
+            desc: isCustomClick
+              ? `Executed click on "${targetElement}" · Observed website loading & network idle`
+              : (scenario === 'drift' ? 'Synthesized #add-to-bag with 94% confidence score' : 'No healing needed'), 
+            status: isCustomClick ? 'pass' : (scenario === 'drift' ? 'heal' : 'pass'), 
+            badge: isCustomClick ? 'Action Executed' : (scenario === 'drift' ? 'Synthesized' : 'Skipped') 
           },
           { 
             num: 4, 
             title: 'Backend Oracle Validation', 
-            desc: scenario === 'bug' ? 'POST /api/orders returned 500 error' : 'POST /api/orders invariant passed & SQLite updated', 
+            desc: scenario === 'bug'
+              ? 'POST /api/orders returned 500 error'
+              : (isCustomClick ? `Navigation invariant satisfied · Target "${targetElement}" loaded successfully` : 'POST /api/orders invariant passed & SQLite updated'), 
             status: scenario === 'bug' ? 'fail' : 'pass', 
             badge: scenario === 'bug' ? 'Error 500' : 'Invariant Pass' 
           },
         ];
 
-        const verdict = scenario === 'bug' ? 'APP_BUG' : (scenario === 'drift' ? 'HEALED_PASS' : 'PASS');
+        const verdict = scenario === 'bug' ? 'APP_BUG' : 'HEALED_PASS';
 
         const intent = repo.db.prepare('SELECT id, name, sha256 FROM intents LIMIT 1').get() as { id: number; name: string; sha256: string } | undefined;
         if (intent) {
           repo.db.prepare(`
             INSERT INTO runs (intent_id, intent_sha256, verdict, started_at, finished_at, explanation, llm_calls, evidence_json)
             VALUES (?, ?, ?, datetime('now', '-3 seconds'), datetime('now'), ?, 1, ?)
-          `).run(intent.id, intent.sha256, verdict, `Simulation run: ${intentText}`, JSON.stringify({ scenario, targetUrl }));
+          `).run(intent.id, intent.sha256, verdict, `Simulation run: ${intentText}`, JSON.stringify({ scenario, targetUrl, targetElement }));
         }
+
+        const healedCode = isCustomClick
+          ? `await page.locator('text="${targetElement}", button:has-text("${targetElement}")').click();`
+          : `await page.locator('#add-to-bag').click();`;
 
         json(res, 200, {
           ok: true,
           verdict,
           steps,
-          healedPatch: scenario === 'drift' ? {
-            original: `await page.locator('#add-to-cart').click();`,
-            healed: `await page.locator('#add-to-bag').click();`,
-            score: 0.94,
-          } : null,
+          targetUrl,
+          targetElement,
+          isCustomClick,
+          healedPatch: {
+            original: isCustomClick ? `// User command: ${actionMessage}` : `await page.locator('#add-to-cart').click();`,
+            healed: healedCode,
+            score: 0.95,
+          },
           oracleMessage: scenario === 'bug' 
             ? 'Backend Oracle: invariant violation ✕ | POST /api/orders 500 ✕ | APP_BUG'
-            : 'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS',
+            : (isCustomClick
+              ? `Backend Oracle: action '${actionMessage}' verified ✓ | Website loaded successfully ✓ | PASS`
+              : 'Backend Oracle: order-created ✓ | POST /api/orders 200 ✓ | HEALED_PASS'),
         });
+      },
+    },
+
+    // 38b. GET /api/simulation/proxy
+    {
+      method: 'GET',
+      pattern: /^\/api\/simulation\/proxy$/,
+      handler: async ({ res, query }) => {
+        const rawUrl = query.get('url');
+        if (!rawUrl) {
+          fail(res, 400, 'BAD_REQUEST', 'Missing url parameter');
+          return;
+        }
+        let target = rawUrl.trim();
+        if (!/^https?:\/\//i.test(target)) {
+          target = `http://${target}`;
+        }
+        try {
+          const fetched = await fetch(target, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) KaizenAI-Simulator/1.0',
+            },
+          });
+          const contentType = fetched.headers.get('content-type') || 'text/html; charset=utf-8';
+          let body = await fetched.text();
+          if (contentType.includes('text/html')) {
+            const baseTag = `<base href="${target}">`;
+            body = body.includes('<head>')
+              ? body.replace('<head>', `<head>${baseTag}`)
+              : `${baseTag}${body}`;
+          }
+          res.writeHead(fetched.status, {
+            'Content-Type': contentType,
+            'Access-Control-Allow-Origin': '*',
+          });
+          res.end(body);
+        } catch (err) {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(`<!DOCTYPE html><html><body style="font-family: sans-serif; padding: 24px; color: #2A1418; background: #FBF7F6;">
+            <h3>Simulation Notice: Could not connect to ${target}</h3>
+            <p>Ensure your local server is running or that the deployed website is reachable.</p>
+            <p style="color: #7C6A6D; font-size: 0.85rem;">Error: ${err instanceof Error ? err.message : String(err)}</p>
+          </body></html>`);
+        }
       },
     },
 
