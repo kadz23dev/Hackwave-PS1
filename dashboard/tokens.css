@@ -950,3 +950,110 @@
   color: var(--color-maroon-primary);
   border: 1px solid rgba(185, 28, 28, 0.25);
 }
+
+/* ─── 3. WEBSITE CLEARANCE AUDIT & CERTIFICATE MODAL ─── */
+.pw-clearance-audit-btn {
+  background: var(--jade);
+  color: var(--on-fill);
+  border: 1px solid var(--jade);
+  border-radius: var(--radius-sm);
+  padding: 8px 18px;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.pw-clearance-audit-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.pw-clearance-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.pw-clearance-modal {
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  max-width: 820px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px;
+}
+
+.pw-clearance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+}
+
+.pw-clearance-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pw-clearance-cert-ribbon {
+  background: var(--jade-wash);
+  border: 1px solid var(--jade);
+  border-radius: var(--radius-md);
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pw-cert-grade {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--jade);
+}
+
+.pw-clearance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.pw-clearance-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pw-clearance-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}

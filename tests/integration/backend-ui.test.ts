@@ -286,5 +286,27 @@ describe('UI Backend Endpoints & Auth Integration', () => {
     expect(simData.ok).toBe(true);
     expect(simData.verdict).toBe('HEALED_PASS');
     expect(simData.steps.length).toBe(4);
+
+    // 8. GET /demo.html (serves demo website)
+    const demoHtmlRes = await fetch(`${baseUrl}/demo.html`);
+    expect(demoHtmlRes.status).toBe(200);
+    const demoHtmlText = await demoHtmlRes.text();
+    expect(demoHtmlText).toContain('Nexora');
+    expect(demoHtmlText).toContain('Get Started');
+
+    // 9. POST /api/simulation/clearance (runs website clearance audit)
+    const clrRes = await fetch(`${baseUrl}/api/simulation/clearance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetUrl: 'http://127.0.0.1:4300/demo.html',
+      }),
+    });
+    expect(clrRes.status).toBe(200);
+    const clrData = await clrRes.json();
+    expect(clrData.ok).toBe(true);
+    expect(clrData.clearanceStatus).toBe('GRANTED');
+    expect(clrData.clearanceCertificate.grade).toContain('A+');
+    expect(clrData.checks.length).toBe(6);
   });
 });
